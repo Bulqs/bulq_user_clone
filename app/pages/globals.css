@@ -1,0 +1,336 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+:root {
+ --appWhite: #FFF;
+  --appBlack: #000;
+   --appLightBlack: #1C1C1C;
+  --appBanner:#28A99E;
+  --appNav:#008088;
+  --appTitleBgColor:#114949;
+  --appRed: red;
+  --appYellow: #eef21c;
+}
+
+body, *{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+    scroll-behavior: smooth;
+}
+
+/* Modal styles */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  body.modal-open {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+
+/* Code for driver dashboard */
+
+/* Custom animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.group-open .group-open\:animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Code  for Driver Dashboard ends here */
+
+
+h1 {
+  @apply text-appWhite font-medium text-5xl;
+}
+
+h2 {
+  @apply text-appWhite font-medium  text-xl md:text-3xl;
+}
+
+h3 {
+  @apply text-appWhite md:text-2xl text-xl font-medium ;
+}
+
+h4 {
+  @apply text-xl font-semibold;
+}
+
+h5 {
+  @apply text-lg font-semibold;
+}
+
+.title-header-div {
+  @apply w-full flex items-center bg-appWhite h-12 pl-6;
+}
+
+
+
+.download-app-button {
+  @apply flex border-2 md:border-4 items-center justify-evenly border-appWhite px-2 py-1 lg:px-3 rounded-lg mt-2 md:mt-0 gap-x-1 md:gap-x-0 hover:bg-appNav focus:bg-appNav hover:text-appWhite focus:text-appWhite;
+}
+/* .officialvendor-singleimg-container {
+  @apply aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-lg bg-gray-200 xl:aspect-h-8 xl:aspect-w-7 h-72 ;
+} */
+
+/* Logistics landing page section goes here */
+
+.headWrapper {
+  @apply flex flex-col w-full bg-appWhite lg:rounded-lg overflow-hidden items-center justify-center md:mb-[-24] md:py-8 py-4; 
+}
+
+
+.headWrapper .hompagecardh2 {
+  @apply font-bold md:font-semibold text-base md:text-4xl text-appBlack font-mono;
+
+}
+
+.headWrapper .hompagecardPara {
+   @apply font-serif font-medium text-sm md:text-lg text-appBlack lg:mt-4;
+
+}
+
+.cardWrapper {
+  @apply flex flex-wrap w-full bg-appTitleBgColor lg:rounded-lg overflow-hidden relative; 
+}
+
+.cardWrapper .Card {
+  @apply w-full md:w-6/12 bg-appBanner lg:max-h-64 lg:h-64 px-4 py-6 lg:px-4 lg:py-8;
+}
+
+.cardWrapper .Card:hover {
+  @apply bg-appTitleBgColor ;
+}
+
+.cardWrapper .Card .hompagecardh2 {
+  @apply font-sans font-semibold text-base md:text-3xl text-appWhite;
+
+}
+
+.cardWrapper .Card .hompagecardPara{
+  @apply font-serif font-medium text-sm lg:text-lg text-appWhite lg:mt-4 justify-between;
+}
+
+.cardWrapper .CardImage {
+  @apply w-6/12 lg:max-h-64 lg:h-64 md:flex flex-wrap overflow-hidden items-center justify-start hidden md:block;
+}
+
+
+/* this code base is for card component3 */
+.cardWrapper .CardTransparent {
+  @apply w-full md:w-6/12 bg-[#000033] lg:max-h-64 lg:h-64 px-4 py-6 lg:px-4 lg:py-8 md:rounded-r-xl;
+}
+
+.cardWrapper .CardTransparent:hover {
+  @apply bg-appTitleBgColor ;
+}
+
+.cardWrapper .CardTransparent .hompagecardh2 {
+  @apply font-sans font-semibold text-base md:text-3xl text-appWhite;
+}
+
+.cardWrapper .CardTransparent .hompagecardPara{
+  @apply font-serif font-medium text-sm lg:text-lg text-appWhite lg:mt-4;
+}
+/* this code base is for card component3 */
+
+/* this sectioin is for card offer */
+
+
+.offerheadWrapper {
+  @apply flex flex-col w-10/12 md:w-full lg:rounded-lg overflow-hidden items-center justify-center mb-8 md:mb-[-24]; 
+}
+
+
+.offerheadWrapper .hompagecardh2 {
+  @apply font-bold text-2xl md:text-4xl text-appWhite font-sans italic;
+
+}
+
+.offerheadWrapper .hompagecardPara {
+   @apply font-serif font-medium lg:text-lg text-appBlack mt-4 lg:mt-4;
+
+}
+
+.offerWrapper {
+  @apply flex flex-col w-10/12  md:w-full bg-appTitleBgColor overflow-hidden relative rounded-lg; 
+}
+
+.offerWrapper:hover {
+  @apply shadow-lg shadow-appBanner/50 ; 
+}
+
+.offerWrapper .Card {
+  @apply w-full bg-appBanner px-2 py-1 lg:max-h-24 lg:h-24 lg:px-4 lg:py-2;
+}
+
+.offerWrapper .Card:hover {
+  @apply bg-appNav ;
+}
+
+.offerWrapper .Card .hompagecardh2 {
+  @apply font-sans font-semibold text-base md:text-lg text-appWhite;
+
+}
+
+.offerWrapper .Card .hompagecardPara{
+  @apply font-serif font-medium text-sm lg:text-base text-appWhite lg:mt-1;
+}
+
+
+.offerWrapper .CardImage {
+  @apply w-full lg:max-h-[450px] lg:h-[450px] flex flex-wrap overflow-hidden items-center justify-start;
+}
+/* card offer section goes here */
+
+/* landingBanner Section  Goes here */
+
+.bannerboxWrapper {
+  @apply w-10/12 md:w-4/12 bg-appTitleBgColor text-white border-2 border-white h-auto p-6 items-center justify-center flex flex-wrap rounded-lg;  
+}
+
+.bannerboxWrapper:hover {
+  @apply bg-appBlack cursor-pointer transition-all duration-300 ease-in-out md:hover:scale-125 hover:shadow-lg hover:shadow-appTitleBgColor;  
+}
+
+
+
+.bannerboxWrapper .bannerboxcardh4 {
+  @apply font-sans font-semibold flex text-center text-base md:text-lg text-appWhite bg-appBanner px-2 py-1 rounded-2xl;
+
+}
+
+.bannerboxWrapper:hover .bannerboxcardh4 {
+  @apply text-appBlack bg-appWhite;  
+}
+
+
+.bannerboxWrapper .bannerboxcardPara{
+  @apply font-sans font-medium text-sm md:text-base text-appWhite mt-2 lg:mt-1 text-center ;
+}
+
+/* for bannerboxwrapper2 */
+.bannerboxWrapper2 {
+  @apply md:w-3/12 bg-appWhite text-appBlack border-2 border-white h-auto p-6 items-center justify-center flex flex-wrap rounded-lg;  
+}
+
+.bannerboxWrapper2:hover {
+  @apply bg-appBlack cursor-pointer transition-all duration-300 ease-in-out md:hover:scale-125 hover:shadow-lg hover:shadow-appTitleBgColor;  
+}
+
+
+.bannerboxWrapper2 .bannerboxcardh4 {
+  @apply font-sans font-semibold flex text-center text-sm md:text-base text-appWhite bg-appBlack px-2 py-1 rounded-2xl;
+
+}
+
+.bannerboxWrapper2:hover .bannerboxcardh4 {
+  @apply text-appBlack bg-appWhite;  
+}
+
+.bannerboxWrapper2 .bannerboxcardPara{
+  @apply font-sans text-xs md:text-base text-appBlack mt-1 text-center font-semibold ;
+}
+
+.bannerboxWrapper2:hover .bannerboxcardPara{
+  @apply font-sans font-medium text-xs md:text-base text-appWhite ;
+}
+
+
+.h2Banner{
+    @apply font-serif font-bold md:text-2xl lg:text-4xl xl:text-6xl text-center;
+}
+
+.sec {
+  @apply text-blue-500;
+}
+/* .h2Banner{
+    @apply font-serif font-bold md:text-2xl lg:text-4xl xl:text-6xl text-center;
+} */
+
+
+/* landingBanner Section ends here */
+
+
+/* modal close button */
+.modalClose {
+  @apply flex items-center justify-center gap-2 mt-4 px-4 py-2 bg-red-900 text-white rounded-md border-2 ;
+}
+
+.modalClose:hover {
+  @apply flex items-center justify-center gap-2 mt-4 px-4 py-2 bg-appBlack text-white rounded-xl border-2 border-appWhite;
+}
+/* modal close button */
+
+
+/* Logistics Header Section Goes Here*/
+
+.logisticsHeaderUl{
+  @apply overflow-hidden absolute mt-6 w-48 md:bg-appTitleBgColor text-white rounded-md shadow-md shadow-appTitleBgColor md:border-b md:border-2 md:border-appTitleBgColor;
+}
+
+.logisticsHeaderLi {
+  @apply px-4 py-2 font-medium md:font-semibold hover:bg-gray-100 hover:text-appTitleBgColor;
+}
+
+.logisticsHeaderp {
+  @apply font-semibold text-appWhite border-2 border-appNav hover:border-appTitleBgColor px-2 hover:bg-appTitleBgColor hover:text-appWhite;
+} 
+/* Logisteics Header Section Ends Here */
+
+/* animation toggle section goes here */
+.animation-paused {
+  animation-play-state: paused;
+}
+/* animation toggle section ends here */
+
+/*********** USER DASHBOARD ASIDE NAVIGATION GOES HERE ****************/
+
+.userdashboardasidestyle {
+  @apply px-1 md:px-3 gap-2 md:gap-4 py-2 rounded-md flex items-center justify-start;
+}
+
+.userdashboardasidestyleText {
+  @apply md:text-base text-sm font-semibold;
+}
+
+.userdashboardasidestyle2 {
+  @apply md:w-full p-1 md:px-3 gap-2 md:gap-4  md:py-2 rounded-md flex md:items-center justify-start;
+}
+
+.userdashboardasidestyleText2 {
+  @apply md:text-base text-sm font-semibold;
+}
+
+/*********** USER DASHBOARD ASIDE NAVIGATION ENDS HERE ****************/
+
+/*********** LOGISTICS LANDNG PAGE START HERE ****************/
+
+.newlandingHeader2Li{
+  @apply border-b-2 hover:border-b-0 border-appTitleBgColor cursor-pointer;
+}
+
+
+/*********** LOGISTICS LANDNG PAGE ENDS HERE ****************/
