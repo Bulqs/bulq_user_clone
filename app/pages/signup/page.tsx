@@ -17,9 +17,6 @@ import { RegisterUser } from '@/types/user';
 const page: React.FC = () => {
     const [isPaused, setIsPaused] = useState(false);
 
-    // 1. ADDED: A separate state just to hold the dropdown dial code
-    const [phoneCode, setPhoneCode] = useState(""); 
-
     const [formData, setFormData] = useState<RegisterUser>({
         firstName: '',
         lastName: '',
@@ -59,13 +56,28 @@ const page: React.FC = () => {
 
         (async function () {
             try {
-                // 2. MODIFIED: Simply merge the phoneCode (+234) with the phoneNumber
-                // formData.country is untouched, so it naturally sends the full country name!
+                // --- FOCUS: Capture and convert country code to full name for the API ---
+                let fullCountryName = formData.country;
+                
+                // If it's a 2-letter code (like 'NG' or 'US'), translate it to the full name.
+                // If the user already typed a full name, it leaves it alone.
+                if (fullCountryName && fullCountryName.length === 2) {
+                    try {
+                        const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+                        fullCountryName = regionNames.of(fullCountryName.toUpperCase()) || fullCountryName;
+                    } catch (e) {
+                        console.warn("Could not convert country code to name", e);
+                    }
+                }
+
+                // Create a new payload specifically for the API with the translated country name
                 const apiPayload = {
                     ...formData,
-                    phoneNumber: `${phoneCode}${formData.phoneNumber}` 
+                    country: fullCountryName
                 };
+                // -------------------------------------------------------------------------
 
+                // Send apiPayload instead of formData
                 const response: AuthResponse = await Register(apiPayload);
 
                 if (!response) {
@@ -88,9 +100,11 @@ const page: React.FC = () => {
         });
     };
 
-    // 3. MODIFIED: Updates only the phone dropdown code, NOT formData.country
     const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setPhoneCode(e.target.value);
+        setFormData({
+            ...formData,
+            country: e.target.value,
+        });
     };
 
     return (
@@ -214,8 +228,7 @@ const page: React.FC = () => {
                                                         value={formData.phoneNumber}  
                                                         placeholder="Input your mobile number"
                                                         required={true}
-                                                        // 4. MODIFIED: Feeds the UI the isolated phone code
-                                                        countryCode={phoneCode} 
+                                                        countryCode={formData.country} 
                                                         onChange={handleInputChange}
                                                         onCountryCodeChange={handleCountryCodeChange} 
                                                         className="bg-white"
