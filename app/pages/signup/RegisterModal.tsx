@@ -35,13 +35,26 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
     const [cities, setCities] = useState<{ label: string; value: string }[]>([]);
     const [loadingLocations, setLoadingLocations] = useState(true);
 
+    // =========================================================================
+    // RESTORED: Logs the entire object state whenever it finishes updating
+    // =========================================================================
     useEffect(() => {
-        if (!isOpen) return;
+        console.log("Current Form Data Object:", formData);
+    }, [formData]);
+
+    // RESTORED: API Fetch for Countries
+    useEffect(() => {
+        if (!isOpen) return; // Only fetch when modal is open
         const fetchCountries = async () => {
             try {
                 const data = await getSupportedCountries();
                 if (data && Array.isArray(data)) {
-                    setCountries(data.map((c) => ({ label: c.countryName, value: c.countryName })));
+                    const formattedCountries = data.map((c) => ({
+                        label: c.countryName,
+                        value: c.countryName
+                    }));
+                    setCountries(formattedCountries);
+                    console.log("Fetched Countries:", formattedCountries); // Restored log
                 }
             } catch (err) {
                 console.error("Failed to fetch countries", err);
@@ -52,6 +65,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
         fetchCountries();
     }, [isOpen]);
 
+    // RESTORED: API Fetch for Cities
     useEffect(() => {
         const fetchCities = async () => {
             if (!formData.country) {
@@ -61,7 +75,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             try {
                 const data = await getSupportedCities(formData.country);
                 if (data && Array.isArray(data)) {
-                    setCities(data.map((cityName) => ({ label: cityName, value: cityName })));
+                    const formattedCities = data.map((cityName) => ({
+                        label: cityName,
+                        value: cityName
+                    }));
+                    setCities(formattedCities);
                 }
             } catch (err) {
                 console.error("Failed to fetch cities", err);
@@ -70,17 +88,34 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
         fetchCities();
     }, [formData.country]);
 
+    // =========================================================================
+    // RESTORED: Console logs immediately as each specific field changes
+    // =========================================================================
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+
+        // Log exactly which field changed and its new value
+        console.log(`Field Changed => [${name}]:`, value);
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+        console.log("Current Country:", formData.country);
     };
 
     const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setPhoneCode(e.target.value);
+        const newCode = e.target.value;
+
+        // Log the phone dial code change
+        console.log("Dial Code Changed =>", newCode);
+        setPhoneCode(newCode);
     };
+    // =========================================================================
 
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
+
         setSubmissionPending(true);
         setErrorMessage("");
 
@@ -96,11 +131,18 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                     phoneNumber: `${phoneCode}${formData.phoneNumber}`
                 };
 
+                // RESTORED: Logs the final merged payload sent to your backend
+                console.log("FINAL API PAYLOAD:", apiPayload);
+
                 const response: AuthResponse = await Register(apiPayload);
-                if (!response) throw new Error("Failed to register");
+
+                if (!response) {
+                    throw new Error("Failed to register");
+                }
                 
                 onClose();
-                router.push("/login"); 
+                router.push("/login");
+
             } catch (error) {
                 setErrorMessage("Error validating credentials!");
                 setSubmissionPending(false);
@@ -111,20 +153,17 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
     if (!isOpen) return null;
 
     return (
-        // 1. OVERLAY: Fades in smoothly
         <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 sm:p-6 lg:p-8"
         >
-            {/* 2. MODAL CONTAINER: Springs up and scales in */}
             <motion.div 
                 initial={{ scale: 0.95, opacity: 0, y: 30 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="relative flex w-full max-w-6xl h-[95vh] lg:h-[85vh] bg-appTitleBgColor rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden border border-gray-800"
             >
-                {/* CLOSE BUTTON */}
                 <button
                     onClick={onClose}
                     className="absolute top-6 right-6 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white hover:bg-red-500 hover:text-white transition-all duration-300 backdrop-blur-md"
@@ -132,10 +171,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                     ✕
                 </button>
 
-                {/* LEFT SIDE: Scrollable Form Area */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-10 lg:p-12 custom-scrollbar relative z-10">
                     
-                    {/* Header Section */}
                     <div className='w-full mb-8 text-center'>
                         <Image src="/images/logo5.svg" alt="BulQ Logo" width={200} height={50} className="mx-auto mb-4" />
                         <h2 className="inline-block text-xl md:text-2xl font-bold text-white bg-white/5 backdrop-blur-sm px-6 py-2 rounded-xl border border-white/10 shadow-inner">
@@ -143,7 +180,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                         </h2>
                     </div>
 
-                    {/* Form Section */}
                     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
                         
                         {error && (
@@ -154,7 +190,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
 
                         <div className="flex flex-col bg-white/5 backdrop-blur-sm p-6 gap-y-5 rounded-2xl border border-white/10">
                             
-                            {/* Row 1 */}
                             <div className="flex flex-col md:flex-row gap-5">
                                 <div className='w-full'>
                                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">First Name</label>
@@ -166,7 +201,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                                 </div>
                             </div>
 
-                            {/* Row 2 */}
                             <div className="flex flex-col md:flex-row gap-5">
                                 <div className='w-full'>
                                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Username</label>
@@ -178,13 +212,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                                 </div>
                             </div>
 
-                            {/* Row 3 */}
                             <div className="w-full">
                                 <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Mobile Number</label>
                                 <InputField isPhone={true} name="phoneNumber" value={formData.phoneNumber} placeholder="Mobile number" required countryCode={phoneCode} onChange={handleChange} onCountryCodeChange={handleCountryCodeChange} />
                             </div>
 
-                            {/* Row 4 */}
                             <div className="flex flex-col md:flex-row gap-5">
                                 <div className=' w-full'>
                                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Password</label>
@@ -196,13 +228,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                                 </div>
                             </div>
 
-                            {/* Row 5 */}
                             <div className="w-full">
                                 <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Address</label>
                                 <InputField type="text" name="address" value={formData.address} placeholder="Enter your full address" required onChange={handleChange} />
                             </div>
 
-                            {/* Row 6 */}
                             <div className="flex flex-col md:flex-row gap-5">
                                 <div className=' w-full'>
                                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">State</label>
@@ -215,7 +245,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                             </div>
                         </div>
 
-                        {/* Submit Button */}
                         <Button type="submit" className='group relative w-full overflow-hidden bg-appNav py-4 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-300 active:scale-[0.98]'>
                             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
                             <div className="relative flex justify-center items-center gap-3 text-white font-bold text-lg">
@@ -228,7 +257,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                         </Button>
                     </form>
 
-                    {/* Footer Actions */}
                     <div className="mt-8 max-w-2xl mx-auto">
                         <div className="relative mb-6">
                             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-700" /></div>
@@ -253,17 +281,13 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                     </div>
                 </div>
 
-                {/* RIGHT SIDE: Graphic Animation Panel */}
                 <div className="hidden lg:flex w-5/12 relative items-center justify-center overflow-hidden bg-black">
-                    {/* Background Image */}
                     <div 
                         className="absolute inset-0 opacity-40 bg-cover bg-center"
                         style={{ backgroundImage: "url('/images/shipping.jpg')" }}
                     />
-                    {/* Gradient Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-br from-appTitleBgColor/90 via-appNav/40 to-black/80"></div>
 
-                    {/* Floating Abstract Shape */}
                     <motion.div 
                         animate={{ y: [-15, 15, -15], rotate: [0, 5, -5, 0] }}
                         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
@@ -274,13 +298,12 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                         </div>
                     </motion.div>
 
-                   {/* Decorative text overlay */}
                     <div className="absolute bottom-10 left-10 right-10 z-10 text-center">
                         <p className="text-blue-200/60 font-medium tracking-widest text-sm uppercase">Global Logistics Network</p>
                     </div>
                 </div>
-            </motion.div> {/* <--- FIXED: Closes the Modal Container */}
-        </motion.div> 
+            </motion.div>
+        </motion.div>
     );
 }
 

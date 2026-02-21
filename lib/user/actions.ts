@@ -339,6 +339,7 @@ export async function getSupportedCountries(): Promise<CountryDTO[]> {
     const authHeader = await getAuthHeader();
 
     try {
+        console.log(CUSTOMER_BASE_URL)
         const res = await fetch(`${CUSTOMER_BASE_URL}/countries`, {
             method: 'GET',
             headers: { 
