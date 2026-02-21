@@ -1,9 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image';
-import logo from '@/images/logo4.svg';
-import logo2 from '@/images/logo5.svg';
-import shipping from '@/images/shipping.jpg'; //public/images/shipping.jpg
 import Button from '@/app/components/inputs/Button';
 import Link from 'next/link';
 import InputField from '../../components/inputs/InputField';
@@ -47,7 +44,6 @@ const page: React.FC = () => {
                         value: c.countryName
                     }));
                     setCountries(formattedCountries);
-                    console.log("Fetched Countries:", formattedCountries);
                 }
             } catch (err) {
                 console.error("Failed to fetch countries", err);
@@ -80,31 +76,17 @@ const page: React.FC = () => {
         fetchCities();
     }, [formData.country]);
 
-    // =========================================================================
-    // MODIFIED: Console logs immediately as each specific field changes
-    // =========================================================================
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-
-        // Log exactly which field changed and its new value
-        console.log(`Field Changed => [${name}]:`, value);
-
         setFormData((prev) => ({
             ...prev,
             [name]: value,
         }));
-        console.log(formData.country)
     };
 
     const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newCode = e.target.value;
-
-        // Log the phone dial code change
-        console.log("Dial Code Changed =>", newCode);
-
-        setPhoneCode(newCode);
+        setPhoneCode(e.target.value);
     };
-    // =========================================================================
 
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -124,9 +106,6 @@ const page: React.FC = () => {
                     phoneNumber: `${phoneCode}${formData.phoneNumber}`
                 };
 
-                // Logs the final merged payload sent to your backend
-                console.log("FINAL API PAYLOAD:", apiPayload);
-
                 const response: AuthResponse = await Register(apiPayload);
 
                 if (!response) {
@@ -142,8 +121,9 @@ const page: React.FC = () => {
     }
 
     return (
+        // 1. FIXED THE BACKGROUND IMAGE PATH HERE
         <div className='w-full min-h-screen md:min-h-screen bg-appBlue/20 overflow-hidden'
-            style={{ backgroundImage: `url(${shipping.src})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+            style={{ backgroundImage: "url('/images/shipping.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
 
             <div className="flex min-h-screen md:min-h-screen flex-1 py-0 px-3 md:py-4 md:px-10 bg-black/70 overflow-hidden">
                 <div className="flex flex-1 flex-col justify-center  py-0 md:py-4 px-1 sm:px-3 md:px-6 lg:flex-none w-[330px] md:w-[550px] lg:px-16 xl:px-16 lg:w-[900px]">
@@ -151,7 +131,8 @@ const page: React.FC = () => {
 
                         <div className='w-full'>
                             <div className="flex items-center justify-center">
-                                <Image src={logo2} alt="Description of the image" width={300} height={400} className="w-36 md:w-72" />
+                                {/* 2. FIXED LOGO2 PATH HERE */}
+                                <Image src="/images/logo5.svg" alt="Description of the image" width={300} height={400} className="w-36 md:w-72" />
                             </div>
                             <h2 className="flex mt-2 text-base md:text-2xl font-bold mx-auto w-10/12 md:w-96 leading-9 tracking-tight items-center justify-center text-white bg-appNav/55 px-2 md:py-1 rounded-md md:rounded-xl">
                                 Create Your Shipping Account
@@ -328,7 +309,8 @@ const page: React.FC = () => {
                     >
                         <div className="relative  w-full h-full bg-appTitleBgColor rounded-tr-[450px] rounded-bl-[450px] shadow-2xl shadow-appTitleBgColor">
                             <div className=" bg-white absolute w-full h-full rounded-tl-[450px] rounded-br-[450px] flex items-center kustify-center overflow-hidden shadow-2xl shadow-appTitleBgColor ">
-                                <Image src={logo} alt="logo" width={100} height={100} className="bg-appWhite h-full w-full -rotate-45" />
+                                {/* 3. FIXED LOGO PATH HERE */}
+                                <Image src="/images/logo4.svg" alt="logo" width={100} height={100} className="bg-appWhite h-full w-full -rotate-45" />
                             </div>
                         </div>
                     </div>
