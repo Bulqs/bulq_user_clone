@@ -14,11 +14,21 @@ import { AuthResponse, Register } from '@/lib/user/actions';
 import { useRouter } from 'next/navigation';
 import { RegisterUser } from '@/types/user';
 
+// Simple map to convert the 2-letter UI code to the dial digits for your database
+const dialCodeMap: Record<string, string> = {
+    "NG": "+234",
+    "US": "+1",
+    "GB": "+44",
+    "CA": "+1",
+    // Add any others your dropdown specifically supports, 
+    // or if your InputField emits the dial code directly, we can capture it!
+};
+
 const page: React.FC = () => {
     const [isPaused, setIsPaused] = useState(false);
 
-    // 1. ADDED: Dedicated state for the phone dial code (defaults to +234)
-    const [dialCode, setDialCode] = useState("+234");
+    // FIX: State holds the 2-letter ISO code so the UI dropdown renders the correct flag/number
+    const [phoneIsoCode, setPhoneIsoCode] = useState("NG"); 
 
     const [formData, setFormData] = useState<RegisterUser>({
         firstName: '',
@@ -59,10 +69,13 @@ const page: React.FC = () => {
 
         (async function () {
             try {
-                // 2. ADDED: Merge dial code with phone number before sending to API
+                // Determine the correct dial digits based on the UI selection (fallback to +234)
+                const actualDialCode = dialCodeMap[phoneIsoCode.toUpperCase()] || "+234";
+
+                // Merge the dial code with the phone number before sending to API
                 const apiPayload = {
                     ...formData,
-                    phoneNumber: `${dialCode}${formData.phoneNumber}`
+                    phoneNumber: `${actualDialCode}${formData.phoneNumber}`
                 };
 
                 const response: AuthResponse = await Register(apiPayload);
@@ -87,9 +100,9 @@ const page: React.FC = () => {
         });
     };
 
-    // 3. MODIFIED: Only update the dialCode state, leave formData.country alone!
+    // Updates the visual UI flag/dropdown state
     const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setDialCode(e.target.value);
+        setPhoneIsoCode(e.target.value);
     };
 
     return (
@@ -213,8 +226,8 @@ const page: React.FC = () => {
                                                         value={formData.phoneNumber}  
                                                         placeholder="Input your mobile number"
                                                         required={true}
-                                                        // 4. MODIFIED: Bind to dialCode state
-                                                        countryCode={dialCode} 
+                                                        // FIX: Pass the UI code ("NG") so the visual dropdown works properly
+                                                        countryCode={phoneIsoCode} 
                                                         onChange={handleInputChange}
                                                         onCountryCodeChange={handleCountryCodeChange} 
                                                         className="bg-white"
@@ -303,8 +316,8 @@ const page: React.FC = () => {
                                                 <div className="mt-2">
                                                     <InputField
                                                         type="password"
-                                                        id="password" // Might want to fix this id later since it's duplicate
-                                                        name="password" // Same here
+                                                        id="passwordConfirm" 
+                                                        name="password" 
                                                         value={formData.password}  
                                                         placeholder="Confirm your password"
                                                         required={true}
