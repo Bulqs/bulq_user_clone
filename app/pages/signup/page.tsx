@@ -1,10 +1,10 @@
 "use client"
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image';
-import logo from '../../../public/images/logo4.svg';
-import logo2 from '../../../public/images/logo5.svg';
-import shipping from '../../../public/images/shipping.jpg';
-import Button from '../../components/inputs/Button';
+import logo from '@/images/logo4.svg';
+import logo2 from '@/images/logo5.svg';
+import shipping from '@/images/shipping.jpg'; //public/images/shipping.jpg
+import Button from '@/app/components/inputs/Button';
 import Link from 'next/link';
 import InputField from '../../components/inputs/InputField';
 import { IoHome } from "react-icons/io5";
@@ -14,14 +14,10 @@ import { AuthResponse, getSupportedCities, getSupportedCountries, Register } fro
 import { useRouter } from 'next/navigation';
 import { RegisterUser } from '@/types/user';
 
-// Import your new API functions (ensure this path matches where you placed them!)
-// import { getSupportedCountries, getSupportedCities } from '@/lib/user/location.actions';
-
 const page: React.FC = () => {
     const [isPaused, setIsPaused] = useState(false);
 
-    // 1. Isolated state for phone dial code (+234, +1, etc.)
-    const [phoneCode, setPhoneCode] = useState("+234"); 
+    const [phoneCode, setPhoneCode] = useState("+234");
 
     const [formData, setFormData] = useState<RegisterUser>({
         firstName: '', lastName: '', username: '', email: '', phoneNumber: '',
@@ -32,24 +28,26 @@ const page: React.FC = () => {
     const [submissionPending, setSubmissionPending] = useState<boolean>(false);
     const router = useRouter();
 
-    // --- API States for Location Dropdowns ---
     const [countries, setCountries] = useState<{ label: string; value: string }[]>([]);
     const [cities, setCities] = useState<{ label: string; value: string }[]>([]);
     const [loadingLocations, setLoadingLocations] = useState(true);
 
-    // 2. Fetch Countries on Component Mount
+    // Logs the entire object state whenever it finishes updating
+    useEffect(() => {
+        console.log("Current Form Data Object:", formData);
+    }, [formData]);
+
     useEffect(() => {
         const fetchCountries = async () => {
             try {
                 const data = await getSupportedCountries();
                 if (data && Array.isArray(data)) {
-                    // Map to match InputField dropdownOptions format
-                    // IMPORTANT: Setting value to countryName ensures the form saves the NAME, not the code.
                     const formattedCountries = data.map((c) => ({
-                        label: c.countryName, 
-                        value: c.countryName 
+                        label: c.countryName,
+                        value: c.countryName
                     }));
                     setCountries(formattedCountries);
+                    console.log("Fetched Countries:", formattedCountries);
                 }
             } catch (err) {
                 console.error("Failed to fetch countries", err);
@@ -60,7 +58,6 @@ const page: React.FC = () => {
         fetchCountries();
     }, []);
 
-    // 3. Fetch Cities whenever the selected Country Name changes
     useEffect(() => {
         const fetchCities = async () => {
             if (!formData.country) {
@@ -68,12 +65,10 @@ const page: React.FC = () => {
                 return;
             }
             try {
-                // Pass the countryName to your endpoint
-                const data = await getSupportedCities(formData.country); 
+                const data = await getSupportedCities(formData.country);
                 if (data && Array.isArray(data)) {
-                    // Your endpoint returns an array of strings, so we map them to label/value objects
                     const formattedCities = data.map((cityName) => ({
-                        label: cityName, 
+                        label: cityName,
                         value: cityName
                     }));
                     setCities(formattedCities);
@@ -85,13 +80,31 @@ const page: React.FC = () => {
         fetchCities();
     }, [formData.country]);
 
+    // =========================================================================
+    // MODIFIED: Console logs immediately as each specific field changes
+    // =========================================================================
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+
+        // Log exactly which field changed and its new value
+        console.log(`Field Changed => [${name}]:`, value);
+
         setFormData((prev) => ({
             ...prev,
             [name]: value,
         }));
+        console.log(formData.country)
     };
+
+    const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newCode = e.target.value;
+
+        // Log the phone dial code change
+        console.log("Dial Code Changed =>", newCode);
+
+        setPhoneCode(newCode);
+    };
+    // =========================================================================
 
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -106,11 +119,13 @@ const page: React.FC = () => {
 
         (async function () {
             try {
-                // 4. Merge phone code with the phone number. Country is naturally the full name!
                 const apiPayload = {
                     ...formData,
                     phoneNumber: `${phoneCode}${formData.phoneNumber}`
                 };
+
+                // Logs the final merged payload sent to your backend
+                console.log("FINAL API PAYLOAD:", apiPayload);
 
                 const response: AuthResponse = await Register(apiPayload);
 
@@ -126,14 +141,10 @@ const page: React.FC = () => {
         })();
     }
 
-    const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setPhoneCode(e.target.value);
-    };
-
     return (
         <div className='w-full min-h-screen md:min-h-screen bg-appBlue/20 overflow-hidden'
             style={{ backgroundImage: `url(${shipping.src})`, backgroundSize: "cover", backgroundPosition: "center" }}>
-            
+
             <div className="flex min-h-screen md:min-h-screen flex-1 py-0 px-3 md:py-4 md:px-10 bg-black/70 overflow-hidden">
                 <div className="flex flex-1 flex-col justify-center  py-0 md:py-4 px-1 sm:px-3 md:px-6 lg:flex-none w-[330px] md:w-[550px] lg:px-16 xl:px-16 lg:w-[900px]">
                     <div className=" w-full max-w-sm lg:w-full lg:max-w-full bg-appTitleBgColor rounded-xl p-4 lg:p-6">
@@ -151,7 +162,7 @@ const page: React.FC = () => {
                             <div>
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="flex flex-col bg-appNav/55 px-2  py-4 gap-y-2 lg:gap-y-2 rounded-2xl">
-                                        
+
                                         <div className="flex items-center justify-center w-full gap-4">
                                             <div className='w-full'>
                                                 <label htmlFor="firstName" className="block text-sm font-medium leading-6 text-white">First Name</label>
@@ -190,12 +201,12 @@ const page: React.FC = () => {
                                                         isPhone={true}
                                                         id="phoneNumber"
                                                         name="phoneNumber"
-                                                        value={formData.phoneNumber}  
+                                                        value={formData.phoneNumber}
                                                         placeholder="Input your mobile number"
                                                         required={true}
-                                                        countryCode={phoneCode} 
+                                                        countryCode={phoneCode}
                                                         onChange={handleChange}
-                                                        onCountryCodeChange={handleCountryCodeChange} 
+                                                        onCountryCodeChange={handleCountryCodeChange}
                                                         className="bg-white"
                                                     />
                                                 </div>
@@ -212,11 +223,10 @@ const page: React.FC = () => {
                                             <div className=' w-full'>
                                                 <label htmlFor="country" className="block text-sm font-medium leading-6 text-white">Country</label>
                                                 <div className="mt-2">
-                                                    {/* Dropdown populated by getSupportedCountries */}
                                                     <InputField
                                                         id="country"
                                                         name="country"
-                                                        value={formData.country}  
+                                                        value={formData.country}
                                                         placeholder={loadingLocations ? "Loading countries..." : "Select your country"}
                                                         required={true}
                                                         dropdownOptions={countries}
@@ -255,11 +265,10 @@ const page: React.FC = () => {
                                             <div className=' w-full'>
                                                 <label htmlFor="city" className="block text-sm font-medium leading-6 text-white">City</label>
                                                 <div className="mt-2">
-                                                    {/* Dropdown populated by getSupportedCities */}
                                                     <InputField
                                                         id="city"
                                                         name="city"
-                                                        value={formData.city}  
+                                                        value={formData.city}
                                                         placeholder={!formData.country ? "Select country first" : "Select your City"}
                                                         required={true}
                                                         dropdownOptions={cities}
@@ -311,11 +320,11 @@ const page: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                
+
                 <div className="relative hidden w-0 flex-1 lg:block py-16 px-3 md:flex items-center-justify-center">
                     <div className={`overflow-hidden expand animate-roundedTransition ${isPaused ? 'animation-paused' : ''}`}
-                        onMouseEnter={() => setIsPaused(true)}  
-                        onMouseLeave={() => setIsPaused(false)} 
+                        onMouseEnter={() => setIsPaused(true)}
+                        onMouseLeave={() => setIsPaused(false)}
                     >
                         <div className="relative  w-full h-full bg-appTitleBgColor rounded-tr-[450px] rounded-bl-[450px] shadow-2xl shadow-appTitleBgColor">
                             <div className=" bg-white absolute w-full h-full rounded-tl-[450px] rounded-br-[450px] flex items-center kustify-center overflow-hidden shadow-2xl shadow-appTitleBgColor ">
