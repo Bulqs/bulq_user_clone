@@ -14,9 +14,11 @@ import { AuthResponse, Register } from '@/lib/user/actions';
 import { useRouter } from 'next/navigation';
 import { RegisterUser } from '@/types/user';
 
-
 const page: React.FC = () => {
     const [isPaused, setIsPaused] = useState(false);
+
+    // 1. ADDED: A separate state just to hold the dropdown dial code
+    const [phoneCode, setPhoneCode] = useState(""); 
 
     const [formData, setFormData] = useState<RegisterUser>({
         firstName: '',
@@ -30,76 +32,53 @@ const page: React.FC = () => {
         city: '',
         state: '',
         termsAndConditions: ''
-
     });
 
     const [error, setErrorMessage] = useState<String>("");
-  const [submissionPending, setSubmissionPending] = useState<boolean>(false);
-  const router = useRouter();
+    const [submissionPending, setSubmissionPending] = useState<boolean>(false);
+    const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-    console.log(formData);
-  };
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
 
-    // Set button pending state
-    setSubmissionPending(true);
+        setSubmissionPending(true);
+        setErrorMessage("");
 
-    // Clear error messages
-    setErrorMessage("");
-
-    if (!formData) {
-      setErrorMessage("Incomplete credentials");
-      return;
-    }
-
-    (async function () {
-      try {
-        // --- ADDED: Convert 2-letter country code to full name for the API ---
-        let fullCountryName = formData.country;
-        
-        // If it's a 2-letter code (like 'US', 'NG'), convert it. 
-        // If they typed a full name manually, it ignores this and sends what they typed.
-        if (fullCountryName && fullCountryName.length === 2) {
-            try {
-                const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
-                fullCountryName = regionNames.of(fullCountryName.toUpperCase()) || fullCountryName;
-            } catch (e) {
-                console.warn("Could not convert country code to name", e);
-            }
+        if (!formData) {
+            setErrorMessage("Incomplete credentials");
+            return;
         }
 
-        // Create a new payload object specifically for the API
-        const apiPayload = {
-            ...formData,
-            country: fullCountryName
-        };
-        // ----------------------------------------------------------------------
+        (async function () {
+            try {
+                // 2. MODIFIED: Simply merge the phoneCode (+234) with the phoneNumber
+                // formData.country is untouched, so it naturally sends the full country name!
+                const apiPayload = {
+                    ...formData,
+                    phoneNumber: `${phoneCode}${formData.phoneNumber}` 
+                };
 
-        // Send apiPayload instead of formData
-        const response: AuthResponse = await Register(apiPayload);
-        
-        console.log(response);
+                const response: AuthResponse = await Register(apiPayload);
 
-        if (!response) {
-            throw new Error("Failed to register");
-          }
-          router.push("/login");
+                if (!response) {
+                    throw new Error("Failed to register");
+                }
+                router.push("/login");
 
-      } catch (error) {
-        setErrorMessage("Error validating credentials!");
-        // Clear pending state
-        setSubmissionPending(false);
-      }
-    })();
-  }
+            } catch (error) {
+                setErrorMessage("Error validating credentials!");
+                setSubmissionPending(false);
+            }
+        })();
+    }
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -109,12 +88,9 @@ const page: React.FC = () => {
         });
     };
 
-    // Handle country code change separately
+    // 3. MODIFIED: Updates only the phone dropdown code, NOT formData.country
     const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setFormData({
-            ...formData,
-            country: e.target.value,
-        });
+        setPhoneCode(e.target.value);
     };
 
     return (
@@ -150,7 +126,7 @@ const page: React.FC = () => {
                             <div>
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="flex flex-col bg-appNav/55 px-2  py-4 gap-y-2 lg:gap-y-2 rounded-2xl">
-                                        {/* first and last name goes here */}
+                                        
                                         <div className="flex items-center justify-center w-full gap-4">
                                             <div className='w-full'>
                                                 <label htmlFor="firstName" className="block text-sm font-medium leading-6 text-white">
@@ -161,7 +137,7 @@ const page: React.FC = () => {
                                                         type="text"
                                                         id="firstName"
                                                         name="firstName"
-                                                        value={formData.firstName}  // Your state value
+                                                        value={formData.firstName}  
                                                         placeholder="Enter your first name"
                                                         required={true}
                                                         onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
@@ -169,7 +145,6 @@ const page: React.FC = () => {
                                                     />
                                                 </div>
                                             </div>
-
 
                                             <div className=' w-full'>
                                                 <label htmlFor="lastName" className="block text-sm font-medium leading-6 text-white">
@@ -180,7 +155,7 @@ const page: React.FC = () => {
                                                         type="text"
                                                         id="lastName"
                                                         name="lastName"
-                                                        value={formData.lastName}  // Your state value
+                                                        value={formData.lastName}  
                                                         placeholder="Enter your last name"
                                                         required={true}
                                                         onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
@@ -188,9 +163,7 @@ const page: React.FC = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* first and last name ends here */}
 
-                                        {/* Email and username section goes here */}
                                         <div className="flex items-center justify-center w-full gap-4">
                                             <div className='w-full'>
                                                 <label htmlFor="username" className="block text-sm font-medium leading-6 text-white">
@@ -201,7 +174,7 @@ const page: React.FC = () => {
                                                         type="text"
                                                         id="username"
                                                         name="username"
-                                                        value={formData.username}  // Your state value
+                                                        value={formData.username}  
                                                         placeholder="choose a username"
                                                         required={true}
                                                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
@@ -209,7 +182,6 @@ const page: React.FC = () => {
                                                     />
                                                 </div>
                                             </div>
-
 
                                             <div className='w-full'>
                                                 <label htmlFor="email" className="block text-sm font-medium leading-6 text-white">
@@ -220,7 +192,7 @@ const page: React.FC = () => {
                                                         type="email"
                                                         id="email"
                                                         name="email"
-                                                        value={formData.email}  // Your state value
+                                                        value={formData.email}  
                                                         placeholder="Enter your email address"
                                                         required={true}
                                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -228,9 +200,7 @@ const page: React.FC = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* Email and username section ends here */}
 
-                                        {/* Number Goes Here */}
                                         <div className="flex items-center justify-center w-full gap-4">
                                             <div className=' w-full'>
                                                 <label htmlFor="phoneNumber" className="block text-sm font-medium leading-6 text-white">
@@ -241,24 +211,20 @@ const page: React.FC = () => {
                                                         isPhone={true}
                                                         id="phoneNumber"
                                                         name="phoneNumber"
-                                                        value={formData.phoneNumber}  // Your state value
+                                                        value={formData.phoneNumber}  
                                                         placeholder="Input your mobile number"
                                                         required={true}
-                                                        countryCode={formData.country} // Pass selected country code
+                                                        // 4. MODIFIED: Feeds the UI the isolated phone code
+                                                        countryCode={phoneCode} 
                                                         onChange={handleInputChange}
-                                                        onCountryCodeChange={handleCountryCodeChange} // Pass handler for country code change
+                                                        onCountryCodeChange={handleCountryCodeChange} 
                                                         className="bg-white"
                                                     />
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* Number Ends Here */}
 
-
-
-                                        {/* Passsword, Confirm Password Goes Here */}
                                         <div className="flex items-center justify-center w-full gap-4">
-
                                             <div className=' w-full'>
                                                 <label htmlFor="password" className="block text-sm font-medium leading-6 text-white">
                                                     Password
@@ -268,7 +234,7 @@ const page: React.FC = () => {
                                                         type="password"
                                                         id="password"
                                                         name="password"
-                                                        value={formData.password}  // Your state value
+                                                        value={formData.password}  
                                                         placeholder="Enter your password"
                                                         required={true}
                                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -285,20 +251,16 @@ const page: React.FC = () => {
                                                         type="country"
                                                         id="country"
                                                         name="country"
-                                                        value={formData.country}  // Your state value
-                                                        placeholder="Enter your password"
+                                                        value={formData.country}  
+                                                        placeholder="Enter your country"
                                                         required={true}
                                                         onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                                                     />
                                                 </div>
                                             </div>
-
                                         </div>
-                                        {/* Address, City Goes Here */}
+
                                         <div className="flex items-center justify-center w-full gap-4">
-
-                                            
-
                                             <div className=' w-full'>
                                                 <label htmlFor="address" className="block text-sm font-medium leading-6 text-white">
                                                     Address
@@ -308,22 +270,16 @@ const page: React.FC = () => {
                                                         type="address"
                                                         id="address"
                                                         name="address"
-                                                        value={formData.address}  // Your state value
+                                                        value={formData.address}  
                                                         placeholder="Enter your address"
                                                         required={true}
                                                         onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                                     />
                                                 </div>
                                             </div>
-
                                         </div>
 
-                                        {/* Address, City Goes Here */}
                                         <div className="flex items-center justify-center w-full gap-4">
-
-                                            
-
-                                            
                                             <div className=' w-full'>
                                                 <label htmlFor="state" className="block text-sm font-medium leading-6 text-white">
                                                     State
@@ -333,7 +289,7 @@ const page: React.FC = () => {
                                                         type="state"
                                                         id="state"
                                                         name="state"
-                                                        value={formData.state}  // Your state value
+                                                        value={formData.state}  
                                                         placeholder="Enter your state"
                                                         required={true}
                                                         onChange={(e) => setFormData({ ...formData, state: e.target.value })}
@@ -348,9 +304,9 @@ const page: React.FC = () => {
                                                 <div className="mt-2">
                                                     <InputField
                                                         type="password"
-                                                        id="password"
+                                                        id="passwordConfirm"
                                                         name="password"
-                                                        value={formData.password}  // Your state value
+                                                        value={formData.password}  
                                                         placeholder="Confirm your password"
                                                         required={true}
                                                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -358,12 +314,8 @@ const page: React.FC = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* Passsword, Confirm Password Ends Here */}
+
                                         <div className="flex items-center justify-center w-full gap-4">
-
-                                            
-
-                                            
                                             <div className=' w-full'>
                                                 <label htmlFor="city" className="block text-sm font-medium leading-6 text-white">
                                                     City
@@ -373,7 +325,7 @@ const page: React.FC = () => {
                                                         type="city"
                                                         id="city"
                                                         name="city"
-                                                        value={formData.city}  // Your state value
+                                                        value={formData.city}  
                                                         placeholder="Enter your City"
                                                         required={true}
                                                         onChange={(e) => setFormData({ ...formData, city: e.target.value })}
@@ -404,7 +356,7 @@ const page: React.FC = () => {
 
                                 <div className="mt-3 grid grid-cols-2 gap-4">
                                     <Button className='bg-appNav/70 w-full flex justify-center items-center'>
-                                        <Link href="pages//signin" className=" flex justify-center items-center gap-1 md:gap-3 ">
+                                        <Link href="/pages/signin" className=" flex justify-center items-center gap-1 md:gap-3 ">
                                             <RiLoginCircleFill className="text-2xl" /> <span className=""> Login Account </span>
                                         </Link>
                                     </Button>
@@ -421,10 +373,9 @@ const page: React.FC = () => {
                 </div>
                 
                 <div className="relative hidden w-0 flex-1 lg:block py-16 px-3 md:flex items-center-justify-center">
-                    <div className={`overflow-hidden expand animate-roundedTransition ${isPaused ? 'animation-paused' : ''
-                        }`}
-                        onMouseEnter={() => setIsPaused(true)}  // Pause animation on hover
-                        onMouseLeave={() => setIsPaused(false)} // Resume animation on mouse leave
+                    <div className={`overflow-hidden expand animate-roundedTransition ${isPaused ? 'animation-paused' : ''}`}
+                        onMouseEnter={() => setIsPaused(true)}  
+                        onMouseLeave={() => setIsPaused(false)} 
                     >
                         <div className="relative  w-full h-full bg-appTitleBgColor rounded-tr-[450px] rounded-bl-[450px] shadow-2xl shadow-appTitleBgColor">
                             <div className=" bg-white absolute w-full h-full rounded-tl-[450px] rounded-br-[450px] flex items-center kustify-center overflow-hidden shadow-2xl shadow-appTitleBgColor ">
@@ -438,12 +389,10 @@ const page: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                   
                 </div>
             </div>
         </div>
     );
-
 }
 
 export default page;
