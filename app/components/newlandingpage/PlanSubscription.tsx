@@ -12,7 +12,7 @@ const plans = [
         title: 'Basic',
         tag: null,
         features: ['Up to 10 deliveries per month', 'No repacking', 'Pay-per-shipment insurance', 'Monthly delivery frequency'],
-        buttonText: 'Get Basic',
+        buttonText: 'Coming Soon...',
         isPopular: false,
     },
     {
@@ -22,7 +22,7 @@ const plans = [
         title: 'Standard',
         tag: 'Most Popular',
         features: ['Up to 20 deliveries per month', 'Bi-weekly delivery options', 'Light repacking included', 'Insurance up to $500 included'],
-        buttonText: 'Get Standard',
+        buttonText: 'Coming Soon...',
         isPopular: true,
     },
     {
@@ -32,7 +32,7 @@ const plans = [
         title: 'Premium',
         tag: null,
         features: ['Up to 40 deliveries per month', 'Weekly delivery options', 'Full repacking/consolidation', 'Insurance up to $2,000 included'],
-        buttonText: 'Get Premium',
+        buttonText: 'Coming Soon...',
         isPopular: false,
     },
     {
