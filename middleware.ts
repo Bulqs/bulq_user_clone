@@ -11,6 +11,7 @@ export default async function middleware(req: NextRequest) {
   const publicRoutes = [
     // Authentication
     NAVIGATION.LOGIN?.toString(), 
+    NAVIGATION.WELCOME?.toString(),
     NAVIGATION.SIGNUP?.toString(), 
     NAVIGATION.CHANGE_PASSWORD?.toString(), 
     NAVIGATION.CALLBACK?.toString(),
@@ -18,6 +19,7 @@ export default async function middleware(req: NextRequest) {
     // Fallback static strings just in case the ENUMs fail
     "/pages/signin",
     "/pages/signup",
+    "/pages/welcome",
     
     // Marketing & Info Pages
     NAVIGATION.ABOUT_US?.toString(),
@@ -36,7 +38,7 @@ export default async function middleware(req: NextRequest) {
 
   // 2. Redirect Root to Login (If that is your intended app behavior)
   if (path === "/") {
-    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/signin", req.nextUrl));
+    return NextResponse.redirect(new URL(NAVIGATION.WELCOME || "/pages/welcome", req.nextUrl));
   }
 
   // 3. Allow Access to Public Routes
@@ -53,7 +55,7 @@ export default async function middleware(req: NextRequest) {
   const cookie = cookieStore.get("session")?.value;
 
   if (!cookie) {
-    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/signin", req.nextUrl));
+    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/welcome", req.nextUrl));
   }
 
   // 5. Decrypt session securely
@@ -62,12 +64,12 @@ export default async function middleware(req: NextRequest) {
     session = await decrypt(cookie);
   } catch (error) {
     // If token is invalid/expired, force re-login
-    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/signin", req.nextUrl));
+    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/welcome", req.nextUrl));
   }
 
   // 6. Validate user authorities/roles exist
   if (!session?.authorities || session.authorities.length === 0) {
-    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/signin", req.nextUrl));
+    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/welcome", req.nextUrl));
   }
 
   const userRole = session.authorities[0]?.authority;
@@ -77,26 +79,26 @@ export default async function middleware(req: NextRequest) {
   // Driver Dashboard Protection
   const isDriverProtectedRoute = path.startsWith(NAVIGATION.DRIVER?.toString() || '/driver');
   if (isDriverProtectedRoute && userRole !== ROLES.DRIVER) {
-    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/signin", req.nextUrl));
+    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/welcome", req.nextUrl));
   }
 
   // Vendor Dashboard Protection
   const isVendorProtectedRoute = path.startsWith(NAVIGATION.VENDOR?.toString() || '/vendor');
   if (isVendorProtectedRoute && userRole !== ROLES.VENDOR) {
-    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/signin", req.nextUrl));
+    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/welcome", req.nextUrl));
   }
 
   // User Dashboard Protection (Protecting /newuser, /user routes)
   const isUserProtectedRoute = path.startsWith(NAVIGATION.NEWUSERDASHBOARD?.toString() || '/newuser') || path.startsWith('/user');
   if (isUserProtectedRoute && userRole !== ROLES.USER) {
-    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/signin", req.nextUrl));
+    return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/welcome", req.nextUrl));
   }
 
   // Admin Dashboard Protection 
   // (Assuming you have a ROLES.ADMIN. If not, this at least ensures they are authenticated. 
   // Update `ROLES.ADMIN` if your enum uses a different key).
   if (path.startsWith('/pages/admindashboard') && userRole !== ROLES.ADMIN) {
-     return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/signin", req.nextUrl));
+     return NextResponse.redirect(new URL(NAVIGATION.LOGIN || "/pages/welcome", req.nextUrl));
   }
 
   // If they passed all checks, grant access to the requested protected route

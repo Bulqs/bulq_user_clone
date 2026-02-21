@@ -291,6 +291,7 @@ export enum NAVIGATION {
 
   /*************************** Public Routes ********************************************/
   LOGIN = `/pages/signin`,
+  WELCOME = `/pages/welcome`,
   USERDASHBOARD = '/pages/',
   SIGNUP = `/pages/signup`,
   CHANGE_PASSWORD = `/pages/changepassword`,
