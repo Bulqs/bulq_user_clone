@@ -17,8 +17,8 @@ import { RegisterUser } from '@/types/user';
 const page: React.FC = () => {
     const [isPaused, setIsPaused] = useState(false);
 
-    // 1. NEW STATE: Isolates the phone dropdown from the Country text field
-    const [phoneCode, setPhoneCode] = useState(""); 
+    // 1. ADDED: Isolated state strictly for the phone dropdown so it reflects on the UI
+    const [phoneDialCode, setPhoneDialCode] = useState(""); 
 
     const [formData, setFormData] = useState<RegisterUser>({
         firstName: '',
@@ -59,10 +59,10 @@ const page: React.FC = () => {
 
         (async function () {
             try {
-                // 2. MERGE: Combines the dropdown code (e.g. +234) with the phone number
+                // 2. MODIFIED: Merge the phone dial code with the phone number, leave country alone
                 const apiPayload = {
                     ...formData,
-                    phoneNumber: `${phoneCode}${formData.phoneNumber}`
+                    phoneNumber: `${phoneDialCode}${formData.phoneNumber}`
                 };
 
                 const response: AuthResponse = await Register(apiPayload);
@@ -87,9 +87,9 @@ const page: React.FC = () => {
         });
     };
 
-    // 3. HANDLER: Updates only the phoneCode state, leaving formData.country strictly for the text field
+    // 3. MODIFIED: This now updates ONLY the phone dial code state, completely detaching it from formData.country
     const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setPhoneCode(e.target.value);
+        setPhoneDialCode(e.target.value);
     };
 
     return (
@@ -213,8 +213,8 @@ const page: React.FC = () => {
                                                         value={formData.phoneNumber}  
                                                         placeholder="Input your mobile number"
                                                         required={true}
-                                                        // 4. BINDING: Use the new isolated state for the UI
-                                                        countryCode={phoneCode} 
+                                                        // 4. BINDING: Pass the isolated state back to the UI so the dropdown visibly changes
+                                                        countryCode={phoneDialCode} 
                                                         onChange={handleInputChange}
                                                         onCountryCodeChange={handleCountryCodeChange} 
                                                         className="bg-white"
@@ -250,7 +250,6 @@ const page: React.FC = () => {
                                                         type="country"
                                                         id="country"
                                                         name="country"
-                                                        // formData.country naturally holds the country name you type here
                                                         value={formData.country}  
                                                         placeholder="Enter your country"
                                                         required={true}
@@ -304,8 +303,8 @@ const page: React.FC = () => {
                                                 <div className="mt-2">
                                                     <InputField
                                                         type="password"
-                                                        id="passwordConfirm"
-                                                        name="password"
+                                                        id="passwordConfirm" 
+                                                        name="password" 
                                                         value={formData.password}  
                                                         placeholder="Confirm your password"
                                                         required={true}
