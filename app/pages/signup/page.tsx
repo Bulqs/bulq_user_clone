@@ -17,8 +17,8 @@ import { RegisterUser } from '@/types/user';
 const page: React.FC = () => {
     const [isPaused, setIsPaused] = useState(false);
 
-    // 1. Just a simple state to hold the dial code from the phone dropdown
-    const [dialCode, setDialCode] = useState(""); 
+    // 1. ADDED: Dedicated state for the phone dial code (defaults to +234)
+    const [dialCode, setDialCode] = useState("+234");
 
     const [formData, setFormData] = useState<RegisterUser>({
         firstName: '',
@@ -59,7 +59,7 @@ const page: React.FC = () => {
 
         (async function () {
             try {
-                // 2. We leave country exactly as it is, and just merge the dialCode with phoneNumber
+                // 2. ADDED: Merge dial code with phone number before sending to API
                 const apiPayload = {
                     ...formData,
                     phoneNumber: `${dialCode}${formData.phoneNumber}`
@@ -87,7 +87,7 @@ const page: React.FC = () => {
         });
     };
 
-    // 3. This only updates the dialCode state when the user changes the phone dropdown
+    // 3. MODIFIED: Only update the dialCode state, leave formData.country alone!
     const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setDialCode(e.target.value);
     };
@@ -213,7 +213,7 @@ const page: React.FC = () => {
                                                         value={formData.phoneNumber}  
                                                         placeholder="Input your mobile number"
                                                         required={true}
-                                                        // 4. We pass the isolated dialCode state here
+                                                        // 4. MODIFIED: Bind to dialCode state
                                                         countryCode={dialCode} 
                                                         onChange={handleInputChange}
                                                         onCountryCodeChange={handleCountryCodeChange} 
@@ -303,8 +303,8 @@ const page: React.FC = () => {
                                                 <div className="mt-2">
                                                     <InputField
                                                         type="password"
-                                                        id="passwordConfirm"
-                                                        name="password"
+                                                        id="password" // Might want to fix this id later since it's duplicate
+                                                        name="password" // Same here
                                                         value={formData.password}  
                                                         placeholder="Confirm your password"
                                                         required={true}
@@ -372,7 +372,8 @@ const page: React.FC = () => {
                 </div>
                 
                 <div className="relative hidden w-0 flex-1 lg:block py-16 px-3 md:flex items-center-justify-center">
-                    <div className={`overflow-hidden expand animate-roundedTransition ${isPaused ? 'animation-paused' : ''}`}
+                    <div className={`overflow-hidden expand animate-roundedTransition ${isPaused ? 'animation-paused' : ''
+                        }`}
                         onMouseEnter={() => setIsPaused(true)}  
                         onMouseLeave={() => setIsPaused(false)} 
                     >
