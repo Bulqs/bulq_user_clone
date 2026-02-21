@@ -17,9 +17,9 @@ import { RegisterUser } from '@/types/user';
 const page: React.FC = () => {
     const [isPaused, setIsPaused] = useState(false);
 
-    // --- ADDED: Separate state specifically for the phone dial code ---
-    const [phoneCode, setPhoneCode] = useState("+1"); 
-    
+    // 1. ADDED: Dedicated state for the phone dial code (defaults to +234)
+    const [dialCode, setDialCode] = useState("+234");
+
     const [formData, setFormData] = useState<RegisterUser>({
         firstName: '',
         lastName: '',
@@ -59,26 +59,14 @@ const page: React.FC = () => {
 
         (async function () {
             try {
-                let fullCountryName = formData.country;
-                
-                if (fullCountryName && fullCountryName.length === 2) {
-                    try {
-                        const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
-                        fullCountryName = regionNames.of(fullCountryName.toUpperCase()) || fullCountryName;
-                    } catch (e) {
-                        console.warn("Could not convert country code to name", e);
-                    }
-                }
-
-                // --- MODIFIED: Merge the phone code and phone number here ---
+                // 2. ADDED: Merge dial code with phone number before sending to API
                 const apiPayload = {
                     ...formData,
-                    country: fullCountryName,
-                    phoneNumber: `${phoneCode}${formData.phoneNumber}` // e.g., "+1" + "5551234567"
+                    phoneNumber: `${dialCode}${formData.phoneNumber}`
                 };
 
                 const response: AuthResponse = await Register(apiPayload);
-                
+
                 if (!response) {
                     throw new Error("Failed to register");
                 }
@@ -99,9 +87,9 @@ const page: React.FC = () => {
         });
     };
 
-    // --- MODIFIED: Update the dedicated phone code state instead of formData.country ---
+    // 3. MODIFIED: Only update the dialCode state, leave formData.country alone!
     const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setPhoneCode(e.target.value);
+        setDialCode(e.target.value);
     };
 
     return (
@@ -225,7 +213,8 @@ const page: React.FC = () => {
                                                         value={formData.phoneNumber}  
                                                         placeholder="Input your mobile number"
                                                         required={true}
-                                                        countryCode={phoneCode} // <-- MODIFIED: Use the new phoneCode state
+                                                        // 4. MODIFIED: Bind to dialCode state
+                                                        countryCode={dialCode} 
                                                         onChange={handleInputChange}
                                                         onCountryCodeChange={handleCountryCodeChange} 
                                                         className="bg-white"
@@ -314,8 +303,8 @@ const page: React.FC = () => {
                                                 <div className="mt-2">
                                                     <InputField
                                                         type="password"
-                                                        id="password"
-                                                        name="password"
+                                                        id="password" // Might want to fix this id later since it's duplicate
+                                                        name="password" // Same here
                                                         value={formData.password}  
                                                         placeholder="Confirm your password"
                                                         required={true}
@@ -366,7 +355,7 @@ const page: React.FC = () => {
 
                                 <div className="mt-3 grid grid-cols-2 gap-4">
                                     <Button className='bg-appNav/70 w-full flex justify-center items-center'>
-                                        <Link href="pages//signin" className=" flex justify-center items-center gap-1 md:gap-3 ">
+                                        <Link href="/pages/signin" className=" flex justify-center items-center gap-1 md:gap-3 ">
                                             <RiLoginCircleFill className="text-2xl" /> <span className=""> Login Account </span>
                                         </Link>
                                     </Button>
@@ -400,12 +389,10 @@ const page: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                   
                 </div>
             </div>
         </div>
     );
-
 }
 
 export default page;
