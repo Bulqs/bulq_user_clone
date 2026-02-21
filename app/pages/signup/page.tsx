@@ -14,21 +14,11 @@ import { AuthResponse, Register } from '@/lib/user/actions';
 import { useRouter } from 'next/navigation';
 import { RegisterUser } from '@/types/user';
 
-// Simple map to convert the 2-letter UI code to the dial digits for your database
-const dialCodeMap: Record<string, string> = {
-    "NG": "+234",
-    "US": "+1",
-    "GB": "+44",
-    "CA": "+1",
-    // Add any others your dropdown specifically supports, 
-    // or if your InputField emits the dial code directly, we can capture it!
-};
-
 const page: React.FC = () => {
     const [isPaused, setIsPaused] = useState(false);
 
-    // FIX: State holds the 2-letter ISO code so the UI dropdown renders the correct flag/number
-    const [phoneIsoCode, setPhoneIsoCode] = useState("NG"); 
+    // 1. NEW STATE: Isolates the phone dropdown from the Country text field
+    const [phoneCode, setPhoneCode] = useState(""); 
 
     const [formData, setFormData] = useState<RegisterUser>({
         firstName: '',
@@ -69,13 +59,10 @@ const page: React.FC = () => {
 
         (async function () {
             try {
-                // Determine the correct dial digits based on the UI selection (fallback to +234)
-                const actualDialCode = dialCodeMap[phoneIsoCode.toUpperCase()] || "+234";
-
-                // Merge the dial code with the phone number before sending to API
+                // 2. MERGE: Combines the dropdown code (e.g. +234) with the phone number
                 const apiPayload = {
                     ...formData,
-                    phoneNumber: `${actualDialCode}${formData.phoneNumber}`
+                    phoneNumber: `${phoneCode}${formData.phoneNumber}`
                 };
 
                 const response: AuthResponse = await Register(apiPayload);
@@ -100,9 +87,9 @@ const page: React.FC = () => {
         });
     };
 
-    // Updates the visual UI flag/dropdown state
+    // 3. HANDLER: Updates only the phoneCode state, leaving formData.country strictly for the text field
     const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setPhoneIsoCode(e.target.value);
+        setPhoneCode(e.target.value);
     };
 
     return (
@@ -226,8 +213,8 @@ const page: React.FC = () => {
                                                         value={formData.phoneNumber}  
                                                         placeholder="Input your mobile number"
                                                         required={true}
-                                                        // FIX: Pass the UI code ("NG") so the visual dropdown works properly
-                                                        countryCode={phoneIsoCode} 
+                                                        // 4. BINDING: Use the new isolated state for the UI
+                                                        countryCode={phoneCode} 
                                                         onChange={handleInputChange}
                                                         onCountryCodeChange={handleCountryCodeChange} 
                                                         className="bg-white"
@@ -263,6 +250,7 @@ const page: React.FC = () => {
                                                         type="country"
                                                         id="country"
                                                         name="country"
+                                                        // formData.country naturally holds the country name you type here
                                                         value={formData.country}  
                                                         placeholder="Enter your country"
                                                         required={true}
@@ -316,8 +304,8 @@ const page: React.FC = () => {
                                                 <div className="mt-2">
                                                     <InputField
                                                         type="password"
-                                                        id="passwordConfirm" 
-                                                        name="password" 
+                                                        id="passwordConfirm"
+                                                        name="password"
                                                         value={formData.password}  
                                                         placeholder="Confirm your password"
                                                         required={true}
@@ -385,8 +373,7 @@ const page: React.FC = () => {
                 </div>
                 
                 <div className="relative hidden w-0 flex-1 lg:block py-16 px-3 md:flex items-center-justify-center">
-                    <div className={`overflow-hidden expand animate-roundedTransition ${isPaused ? 'animation-paused' : ''
-                        }`}
+                    <div className={`overflow-hidden expand animate-roundedTransition ${isPaused ? 'animation-paused' : ''}`}
                         onMouseEnter={() => setIsPaused(true)}  
                         onMouseLeave={() => setIsPaused(false)} 
                     >
