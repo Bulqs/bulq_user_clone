@@ -14,41 +14,32 @@ import { AuthResponse, Register } from '@/lib/user/actions';
 import { useRouter } from 'next/navigation';
 import { RegisterUser } from '@/types/user';
 
+// A simple map to convert the 2-letter code to the dial digits for your database
+const dialCodeMap: Record<string, string> = {
+    "NG": "+234",
+    "US": "+1",
+    "GB": "+44",
+    "CA": "+1",
+    // Add any others your dropdown supports here
+};
+
 const page: React.FC = () => {
     const [isPaused, setIsPaused] = useState(false);
 
-    // 1. ADDED: Isolated state strictly for the phone dropdown so it reflects on the UI
-    const [phoneDialCode, setPhoneDialCode] = useState(""); 
+    // FIX 1: Dedicated state for the phone dropdown. We initialize with "NG" so the UI shows +234 and the Nigerian flag immediately.
+    const [phoneIsoCode, setPhoneIsoCode] = useState("NG"); 
 
     const [formData, setFormData] = useState<RegisterUser>({
-        firstName: '',
-        lastName: '',
-        username: '',
-        email: '',
-        phoneNumber: '',
-        password: '',
-        country: '',
-        address: '',
-        city: '',
-        state: '',
-        termsAndConditions: ''
+        firstName: '', lastName: '', username: '', email: '', phoneNumber: '',
+        password: '', country: '', address: '', city: '', state: '', termsAndConditions: ''
     });
 
     const [error, setErrorMessage] = useState<String>("");
     const [submissionPending, setSubmissionPending] = useState<boolean>(false);
     const router = useRouter();
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
-    };
-
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
-
         setSubmissionPending(true);
         setErrorMessage("");
 
@@ -59,10 +50,25 @@ const page: React.FC = () => {
 
         (async function () {
             try {
-                // 2. MODIFIED: Merge the phone dial code with the phone number, leave country alone
+                // FIX 2: Convert the 2-letter country code to the Full Country Name for the DB (e.g., "NG" -> "Nigeria")
+                let fullCountryName = formData.country;
+                if (fullCountryName && fullCountryName.length === 2) {
+                    try {
+                        const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+                        fullCountryName = regionNames.of(fullCountryName.toUpperCase()) || fullCountryName;
+                    } catch (e) {
+                        console.warn("Could not convert country code to name", e);
+                    }
+                }
+
+                // FIX 3: Get the +234 dial code based on the phone dropdown selection
+                const actualDialCode = dialCodeMap[phoneIsoCode.toUpperCase()] || "";
+
+                // FIX 4: Create the final payload to send to the API
                 const apiPayload = {
                     ...formData,
-                    phoneNumber: `${phoneDialCode}${formData.phoneNumber}`
+                    country: fullCountryName, // Sends "Nigeria" instead of "NG"
+                    phoneNumber: `${actualDialCode}${formData.phoneNumber}` // Sends "+2348078789675"
                 };
 
                 const response: AuthResponse = await Register(apiPayload);
@@ -81,44 +87,28 @@ const page: React.FC = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value,
-        });
+        setFormData({ ...formData, [name]: value });
     };
 
-    // 3. MODIFIED: This now updates ONLY the phone dial code state, completely detaching it from formData.country
     const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setPhoneDialCode(e.target.value);
+        setPhoneIsoCode(e.target.value);
     };
 
     return (
         <div className='w-full min-h-screen md:min-h-screen bg-appBlue/20 overflow-hidden'
-            style={{
-                backgroundImage: `url(${shipping.src})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-            }}
-        >
+            style={{ backgroundImage: `url(${shipping.src})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+            
             <div className="flex min-h-screen md:min-h-screen flex-1 py-0 px-3 md:py-4 md:px-10 bg-black/70 overflow-hidden">
                 <div className="flex flex-1 flex-col justify-center  py-0 md:py-4 px-1 sm:px-3 md:px-6 lg:flex-none w-[330px] md:w-[550px] lg:px-16 xl:px-16 lg:w-[900px]">
                     <div className=" w-full max-w-sm lg:w-full lg:max-w-full bg-appTitleBgColor rounded-xl p-4 lg:p-6">
 
                         <div className='w-full'>
                             <div className="flex items-center justify-center">
-                                <Image
-                                    src={logo2}
-                                    alt="Description of the image"
-                                    width={300}
-                                    height={400}
-                                    className="w-36 md:w-72"
-                                />
+                                <Image src={logo2} alt="logo" width={300} height={400} className="w-36 md:w-72" />
                             </div>
-
                             <h2 className="flex mt-2 text-base md:text-2xl font-bold mx-auto w-10/12 md:w-96 leading-9 tracking-tight items-center justify-center text-white bg-appNav/55 px-2 md:py-1 rounded-md md:rounded-xl">
                                 Create Your Shipping Account
                             </h2>
-                            
                         </div>
 
                         <div className="mt-6 w-full">
@@ -126,85 +116,42 @@ const page: React.FC = () => {
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="flex flex-col bg-appNav/55 px-2  py-4 gap-y-2 lg:gap-y-2 rounded-2xl">
                                         
+                                        {/* First & Last Name */}
                                         <div className="flex items-center justify-center w-full gap-4">
                                             <div className='w-full'>
-                                                <label htmlFor="firstName" className="block text-sm font-medium leading-6 text-white">
-                                                    First Name
-                                                </label>
+                                                <label className="block text-sm font-medium leading-6 text-white">First Name</label>
                                                 <div className="mt-2">
-                                                    <InputField
-                                                        type="text"
-                                                        id="firstName"
-                                                        name="firstName"
-                                                        value={formData.firstName}  
-                                                        placeholder="Enter your first name"
-                                                        required={true}
-                                                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                                        className="bg-white"
-                                                    />
+                                                    <InputField type="text" id="firstName" name="firstName" value={formData.firstName} placeholder="Enter your first name" required={true} onChange={handleInputChange} className="bg-white" />
                                                 </div>
                                             </div>
-
                                             <div className=' w-full'>
-                                                <label htmlFor="lastName" className="block text-sm font-medium leading-6 text-white">
-                                                    Last Name
-                                                </label>
+                                                <label className="block text-sm font-medium leading-6 text-white">Last Name</label>
                                                 <div className="mt-2">
-                                                    <InputField
-                                                        type="text"
-                                                        id="lastName"
-                                                        name="lastName"
-                                                        value={formData.lastName}  
-                                                        placeholder="Enter your last name"
-                                                        required={true}
-                                                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                                    />
+                                                    <InputField type="text" id="lastName" name="lastName" value={formData.lastName} placeholder="Enter your last name" required={true} onChange={handleInputChange} />
                                                 </div>
                                             </div>
                                         </div>
 
+                                        {/* Username & Email */}
                                         <div className="flex items-center justify-center w-full gap-4">
                                             <div className='w-full'>
-                                                <label htmlFor="username" className="block text-sm font-medium leading-6 text-white">
-                                                    Username
-                                                </label>
+                                                <label className="block text-sm font-medium leading-6 text-white">Username</label>
                                                 <div className="mt-2">
-                                                    <InputField
-                                                        type="text"
-                                                        id="username"
-                                                        name="username"
-                                                        value={formData.username}  
-                                                        placeholder="choose a username"
-                                                        required={true}
-                                                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                                        className="bg-white"
-                                                    />
+                                                    <InputField type="text" id="username" name="username" value={formData.username} placeholder="choose a username" required={true} onChange={handleInputChange} className="bg-white" />
                                                 </div>
                                             </div>
-
                                             <div className='w-full'>
-                                                <label htmlFor="email" className="block text-sm font-medium leading-6 text-white">
-                                                    Email
-                                                </label>
+                                                <label className="block text-sm font-medium leading-6 text-white">Email</label>
                                                 <div className="mt-2">
-                                                    <InputField
-                                                        type="email"
-                                                        id="email"
-                                                        name="email"
-                                                        value={formData.email}  
-                                                        placeholder="Enter your email address"
-                                                        required={true}
-                                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                    />
+                                                    <InputField type="email" id="email" name="email" value={formData.email} placeholder="Enter your email address" required={true} onChange={handleInputChange} />
                                                 </div>
                                             </div>
                                         </div>
 
+                                        {/* Phone Number */}
                                         <div className="flex items-center justify-center w-full gap-4">
                                             <div className=' w-full'>
-                                                <label htmlFor="phoneNumber" className="block text-sm font-medium leading-6 text-white">
-                                                    Mobile Number
-                                                </label>
+                                                <label className="block text-sm font-medium leading-6 text-white">Mobile Number</label>
                                                 <div className="mt-2 bg-white">
                                                     <InputField
                                                         isPhone={true}
@@ -213,8 +160,7 @@ const page: React.FC = () => {
                                                         value={formData.phoneNumber}  
                                                         placeholder="Input your mobile number"
                                                         required={true}
-                                                        // 4. BINDING: Pass the isolated state back to the UI so the dropdown visibly changes
-                                                        countryCode={phoneDialCode} 
+                                                        countryCode={phoneIsoCode} // Ensures the UI flag matches
                                                         onChange={handleInputChange}
                                                         onCountryCodeChange={handleCountryCodeChange} 
                                                         className="bg-white"
@@ -223,112 +169,54 @@ const page: React.FC = () => {
                                             </div>
                                         </div>
 
+                                        {/* Password & Country */}
                                         <div className="flex items-center justify-center w-full gap-4">
                                             <div className=' w-full'>
-                                                <label htmlFor="password" className="block text-sm font-medium leading-6 text-white">
-                                                    Password
-                                                </label>
+                                                <label className="block text-sm font-medium leading-6 text-white">Password</label>
                                                 <div className="mt-2">
-                                                    <InputField
-                                                        type="password"
-                                                        id="password"
-                                                        name="password"
-                                                        value={formData.password}  
-                                                        placeholder="Enter your password"
-                                                        required={true}
-                                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                                    />
+                                                    <InputField type="password" id="password" name="password" value={formData.password} placeholder="Enter your password" required={true} onChange={handleInputChange} />
                                                 </div>
                                             </div>
-
                                             <div className=' w-full'>
-                                                <label htmlFor="country" className="block text-sm font-medium leading-6 text-white">
-                                                    Country
-                                                </label>
+                                                <label className="block text-sm font-medium leading-6 text-white">Country</label>
                                                 <div className="mt-2">
-                                                    <InputField
-                                                        type="country"
-                                                        id="country"
-                                                        name="country"
-                                                        value={formData.country}  
-                                                        placeholder="Enter your country"
-                                                        required={true}
-                                                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                                                    />
+                                                    <InputField type="country" id="country" name="country" value={formData.country} placeholder="Enter your country" required={true} onChange={handleInputChange} />
                                                 </div>
                                             </div>
                                         </div>
 
+                                        {/* Address */}
                                         <div className="flex items-center justify-center w-full gap-4">
                                             <div className=' w-full'>
-                                                <label htmlFor="address" className="block text-sm font-medium leading-6 text-white">
-                                                    Address
-                                                </label>
+                                                <label className="block text-sm font-medium leading-6 text-white">Address</label>
                                                 <div className="mt-2">
-                                                    <InputField
-                                                        type="address"
-                                                        id="address"
-                                                        name="address"
-                                                        value={formData.address}  
-                                                        placeholder="Enter your address"
-                                                        required={true}
-                                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                                    />
+                                                    <InputField type="address" id="address" name="address" value={formData.address} placeholder="Enter your address" required={true} onChange={handleInputChange} />
                                                 </div>
                                             </div>
                                         </div>
 
+                                        {/* State & Confirm Password */}
                                         <div className="flex items-center justify-center w-full gap-4">
                                             <div className=' w-full'>
-                                                <label htmlFor="state" className="block text-sm font-medium leading-6 text-white">
-                                                    State
-                                                </label>
+                                                <label className="block text-sm font-medium leading-6 text-white">State</label>
                                                 <div className="mt-2">
-                                                    <InputField
-                                                        type="state"
-                                                        id="state"
-                                                        name="state"
-                                                        value={formData.state}  
-                                                        placeholder="Enter your state"
-                                                        required={true}
-                                                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                                                    />
+                                                    <InputField type="state" id="state" name="state" value={formData.state} placeholder="Enter your state" required={true} onChange={handleInputChange} />
                                                 </div>
                                             </div>
-
                                             <div className='w-full'>
-                                                <label htmlFor="password" className="block text-sm font-medium leading-6 text-white">
-                                                    Confirm Password
-                                                </label>
+                                                <label className="block text-sm font-medium leading-6 text-white">Confirm Password</label>
                                                 <div className="mt-2">
-                                                    <InputField
-                                                        type="password"
-                                                        id="passwordConfirm" 
-                                                        name="password" 
-                                                        value={formData.password}  
-                                                        placeholder="Confirm your password"
-                                                        required={true}
-                                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                                    />
+                                                    <InputField type="password" id="passwordConfirm" name="password" value={formData.password} placeholder="Confirm your password" required={true} onChange={handleInputChange} />
                                                 </div>
                                             </div>
                                         </div>
 
+                                        {/* City */}
                                         <div className="flex items-center justify-center w-full gap-4">
                                             <div className=' w-full'>
-                                                <label htmlFor="city" className="block text-sm font-medium leading-6 text-white">
-                                                    City
-                                                </label>
+                                                <label className="block text-sm font-medium leading-6 text-white">City</label>
                                                 <div className="mt-2">
-                                                    <InputField
-                                                        type="city"
-                                                        id="city"
-                                                        name="city"
-                                                        value={formData.city}  
-                                                        placeholder="Enter your City"
-                                                        required={true}
-                                                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                                    />
+                                                    <InputField type="city" id="city" name="city" value={formData.city} placeholder="Enter your City" required={true} onChange={handleInputChange} />
                                                 </div>
                                             </div>
                                         </div>
@@ -343,6 +231,7 @@ const page: React.FC = () => {
                                 </form>
                             </div>
 
+                            {/* Footer Links */}
                             <div className="mt-4">
                                 <div className="relative">
                                     <div aria-hidden="true" className="absolute inset-0 flex items-center">
@@ -371,6 +260,7 @@ const page: React.FC = () => {
                     </div>
                 </div>
                 
+                {/* Branding Graphic */}
                 <div className="relative hidden w-0 flex-1 lg:block py-16 px-3 md:flex items-center-justify-center">
                     <div className={`overflow-hidden expand animate-roundedTransition ${isPaused ? 'animation-paused' : ''}`}
                         onMouseEnter={() => setIsPaused(true)}  
@@ -378,13 +268,7 @@ const page: React.FC = () => {
                     >
                         <div className="relative  w-full h-full bg-appTitleBgColor rounded-tr-[450px] rounded-bl-[450px] shadow-2xl shadow-appTitleBgColor">
                             <div className=" bg-white absolute w-full h-full rounded-tl-[450px] rounded-br-[450px] flex items-center kustify-center overflow-hidden shadow-2xl shadow-appTitleBgColor ">
-                                <Image
-                                    src={logo}
-                                    alt="Description of the image"
-                                    width={100}
-                                    height={100}
-                                    className="bg-appWhite h-full w-full -rotate-45"
-                                />
+                                <Image src={logo} alt="logo" width={100} height={100} className="bg-appWhite h-full w-full -rotate-45" />
                             </div>
                         </div>
                     </div>
