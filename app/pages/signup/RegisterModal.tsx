@@ -22,6 +22,10 @@ interface RegisterModalProps {
 
 const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitchToLogin }) => {
     const [phoneCode, setPhoneCode] = useState("+234");
+    
+    // We add confirmPassword to its own state so it doesn't get sent to the backend
+    const [confirmPassword, setConfirmPassword] = useState(""); 
+    
     const [formData, setFormData] = useState<RegisterUser>({
         firstName: '', lastName: '', username: '', email: '', phoneNumber: '',
         password: '', country: '', address: '', city: '', state: '', termsAndConditions: ''
@@ -101,13 +105,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             ...prev,
             [name]: value,
         }));
-        console.log("Current Country:", formData.country);
+        if (name === 'country') console.log("Current Country:", value);
     };
 
     const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newCode = e.target.value;
-
-        // Log the phone dial code change
         console.log("Dial Code Changed =>", newCode);
         setPhoneCode(newCode);
     };
@@ -121,6 +123,14 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
 
         if (!formData) {
             setErrorMessage("Incomplete credentials");
+            setSubmissionPending(false);
+            return;
+        }
+
+        // NEW: Password Match Validation
+        if (formData.password !== confirmPassword) {
+            setErrorMessage("Passwords do not match!");
+            setSubmissionPending(false);
             return;
         }
 
@@ -190,6 +200,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
 
                         <div className="flex flex-col bg-white/5 backdrop-blur-sm p-6 gap-y-5 rounded-2xl border border-white/10">
                             
+                            {/* Row 1: Name */}
                             <div className="flex flex-col md:flex-row gap-5">
                                 <div className='w-full'>
                                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">First Name</label>
@@ -201,6 +212,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                                 </div>
                             </div>
 
+                            {/* Row 2: Auth Info */}
                             <div className="flex flex-col md:flex-row gap-5">
                                 <div className='w-full'>
                                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Username</label>
@@ -212,27 +224,37 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                                 </div>
                             </div>
 
+                            {/* Row 3: Phone */}
                             <div className="w-full">
                                 <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Mobile Number</label>
                                 <InputField isPhone={true} name="phoneNumber" value={formData.phoneNumber} placeholder="Mobile number" required countryCode={phoneCode} onChange={handleChange} onCountryCodeChange={handleCountryCodeChange} />
                             </div>
 
+                            {/* Row 4: Passwords */}
                             <div className="flex flex-col md:flex-row gap-5">
                                 <div className=' w-full'>
                                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Password</label>
                                     <InputField type="password" name="password" value={formData.password} placeholder="Password" required onChange={handleChange} />
                                 </div>
                                 <div className=' w-full'>
-                                    <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Country</label>
-                                    <InputField name="country" value={formData.country} placeholder={loadingLocations ? "Loading..." : "Select country"} required dropdownOptions={countries} onChange={handleChange} disabled={loadingLocations} />
+                                    <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Confirm Password</label>
+                                    <InputField type="password" name="confirmPassword" value={confirmPassword} placeholder="Confirm password" required onChange={(e) => setConfirmPassword(e.target.value)} />
                                 </div>
                             </div>
 
-                            <div className="w-full">
-                                <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Address</label>
-                                <InputField type="text" name="address" value={formData.address} placeholder="Enter your full address" required onChange={handleChange} />
+                            {/* Row 5: Country & Address */}
+                            <div className="flex flex-col md:flex-row gap-5">
+                                <div className=' w-full'>
+                                    <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Country</label>
+                                    <InputField name="country" value={formData.country} placeholder={loadingLocations ? "Loading..." : "Select country"} required dropdownOptions={countries} onChange={handleChange} disabled={loadingLocations} />
+                                </div>
+                                <div className="w-full">
+                                    <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Address</label>
+                                    <InputField type="text" name="address" value={formData.address} placeholder="Enter your full address" required onChange={handleChange} />
+                                </div>
                             </div>
 
+                            {/* Row 6: State & City */}
                             <div className="flex flex-col md:flex-row gap-5">
                                 <div className=' w-full'>
                                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">State</label>
