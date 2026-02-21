@@ -34,6 +34,16 @@ const plans = [
         features: ['Up to 40 deliveries per month', 'Weekly delivery options', 'Full repacking/consolidation', 'Insurance up to $2,000 included'],
         buttonText: 'Get Premium',
         isPopular: false,
+    },
+    {
+        id: 4,
+        price: 'based on shipping cost',
+        period: '/of',
+        title: 'No Plan',
+        tag: null,
+        features: ['Ship as many packages as you want', 'Weekly delivery options', 'Full repacking/consolidation', 'Flexible Insurance calculated at point of payment'],
+        buttonText: 'Available now',
+        isPopular: true,
     }
 ];
 
