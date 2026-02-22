@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import TrackingModal from '../modals/TrackingModal';
 import Image from 'next/image';
 import { motion, Variants } from 'framer-motion';
+import LandingBanner from '../landingbanner/LandingBanner';
 
 // --- ENTRANCE ANIMATION VARIANTS ---
 const containerVariants: Variants = {
@@ -57,12 +58,13 @@ const BannerWithTracking = () => {
                         <span className='block'>No delay, No stress, just delivery.</span>
                     </motion.p>
                     <motion.div variants={itemVariants} className="flex gap-4 justify-center">
-                        <button className="px-8 py-3 bg-appNav rounded-md text-white hover:bg-opacity-90 transition hover:bg-appTitleBgColor hover:border-appNav hover:border-2 border-2 border-transparent">
+                        {/* <button className="px-8 py-3 bg-appNav rounded-md text-white hover:bg-opacity-90 transition hover:bg-appTitleBgColor hover:border-appNav hover:border-2 border-2 border-transparent">
                             Book Shipment
                         </button>
                         <button className="px-8 py-3 bg-transparent rounded-md text-white hover:bg-white hover:bg-opacity-10 transition">
                             <span className="border-b-2 border-white">Learn More</span>
-                        </button>
+                        </button> */}
+                        <LandingBanner />
                     </motion.div>
                 </motion.div>
             </div>

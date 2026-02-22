@@ -121,21 +121,22 @@ import SignUpWithBulq from '../components/newlandingpage/SignUpWithBulq'
 import Footer from '../components/newlandingpage/Footer'
 import Header from '../components/Header'
 import LandingBanner from '../components/landingbanner/LandingBanner'
+import HomeHeader from '../components/newlandingpage/HomeHeader'
 
 const LandingPage = () => {
   return (
     <div className="w-full flex flex-col">
       {/* <Header /> */}
-      <Header2 />
+      <HomeHeader />
 
       {/* <Banner />
           <TrackingSearch /> */}
       <BannerWithTracking />
       <LandingBanner />
-      <HowItWorks />
+      {/* <HowItWorks />
       <PlanSubscription />
       <TrustedByShopper />
-      <SignUpWithBulq />
+      <SignUpWithBulq /> */}
       <Footer />
     </div>
   )
