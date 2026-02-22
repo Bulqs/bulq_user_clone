@@ -53,18 +53,21 @@ const BannerWithTracking = () => {
                     <HomeHeader />
                 </div>
 
-                {/* Content Container */}
+               {/* Content Container */}
                 <motion.div 
                     variants={containerVariants}
                     initial="hidden"
                     animate="show"
-                    className='relative z-10 text-center text-white px-4 w-full max-w-7xl mx-auto flex flex-col items-center justify-center mt-[-80px]'
+                    // Changed mt-[-80px] to mt-12 to drop it into the middle
+                    className='relative z-10 text-center text-white px-4 w-full max-w-7xl mx-auto flex flex-col items-center justify-center mt-12'
                 >
-                    <motion.h2 variants={itemVariants} className='font-bold text-5xl md:text-6xl mb-8 tracking-tight'>
+                    {/* Changed mb-8 to mb-3 to tighten the text grouping */}
+                    <motion.h2 variants={itemVariants} className='font-bold text-5xl md:text-6xl mb-3 tracking-tight'>
                         Move Anything, Anywhere in your city
                     </motion.h2>
                     
-                    <motion.p variants={itemVariants} className="font-semibold text-xl md:text-2xl mb-16 text-gray-200">
+                    {/* Changed mb-16 to mb-6 so it sits almost exactly on top of the banner */}
+                    <motion.p variants={itemVariants} className="font-semibold text-xl md:text-2xl mb-6 text-gray-200">
                         <span className='block'>No delay, No stress, just delivery.</span>
                     </motion.p>
                     
