@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import TrackingModal from '../modals/TrackingModal';
 import Image from 'next/image';
-import { motion, Variants } from 'framer-motion'; // <--- Add Variants here
+import { motion, Variants } from 'framer-motion';
 
 // --- ENTRANCE ANIMATION VARIANTS ---
-const containerVariants: Variants = { // <--- ADD : Variants
+const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
         opacity: 1,
@@ -14,26 +14,17 @@ const containerVariants: Variants = { // <--- ADD : Variants
     }
 };
 
-const itemVariants: Variants = { // <--- ADD : Variants
+const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    show: { 
-        opacity: 1, 
-        y: 0, 
-        transition: { type: "spring", stiffness: 120, damping: 15 } // TS now accepts this!
-    }
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 120, damping: 15 } }
 };
 
 const BannerWithTracking = () => {
-    // State for the input field in the banner
     const [inputTracking, setInputTracking] = useState('');
-    // State to toggle the modal
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // Handle the search action
     const handleTrackClick = () => {
         setIsModalOpen(true);
-        // The modal will read 'inputTracking' via the 'initialTrackingNumber' prop 
-        // and trigger the search automatically.
     };
 
     return (
@@ -76,49 +67,53 @@ const BannerWithTracking = () => {
                 </motion.div>
             </div>
 
-            {/* Tracking Search Overlay */}
-            <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.5, type: "spring" }}
-                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-full max-w-6xl px-4 z-20"
-            >
-                {/* Background image container */}
-                <div className="absolute inset-0 rounded-xl overflow-hidden">
-                    <div
-                        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-90"
-                        style={{ backgroundImage: "url('/images/tracksearchbg.png')" }}
-                    ></div>
-                    <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-                </div>
-
-                {/* Content container */}
-                <div className="relative rounded-xl shadow-2xl p-8">
-                    <div className="text-center mb-6">
-                        <h1 className="text-4xl font-bold text-white mb-2">Track Your Package</h1>
-                        <p className="text-lg text-white">
-                            Enter Your Bulq Tracking Number to see the status of your shipment
-                        </p>
+            {/* Tracking Search Overlay - OUTER DIV IS UNTOUCHED */}
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-full max-w-6xl px-4 z-20">
+                
+                {/* MOTION WRAPPER: Handles animation without breaking Tailwind translates */}
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.4 }}
+                    className="relative"
+                >
+                    {/* Background image container */}
+                    <div className="absolute inset-0 rounded-xl overflow-hidden">
+                        <div
+                            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-90"
+                            style={{ backgroundImage: "url('/images/tracksearchbg.png')" }}
+                        ></div>
+                        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
                     </div>
 
-                    <div className="relative flex">
-                        <input
-                            type="text"
-                            value={inputTracking}
-                            onChange={(e) => setInputTracking(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleTrackClick()}
-                            placeholder="Enter tracking number (e.g. BQ123456789)"
-                            className="flex-grow py-4 px-6 rounded-l-full text-lg border border-gray-300 focus:ring-2 focus:ring-appNav focus:border-blue-500 focus:outline-none bg-white bg-opacity-90 text-gray-900"
-                        />
-                        <button
-                            onClick={handleTrackClick}
-                            className="bg-appNav hover:bg-appTitleBgColor text-white font-bold py-4 px-8 rounded-r-full transition duration-200 whitespace-nowrap"
-                        >
-                            Track Package
-                        </button>
+                    {/* Content container */}
+                    <div className="relative rounded-xl shadow-2xl p-8">
+                        <div className="text-center mb-6">
+                            <h1 className="text-4xl font-bold text-white mb-2">Track Your Package</h1>
+                            <p className="text-lg text-white">
+                                Enter Your Bulq Tracking Number to see the status of your shipment
+                            </p>
+                        </div>
+
+                        <div className="relative flex">
+                            <input
+                                type="text"
+                                value={inputTracking}
+                                onChange={(e) => setInputTracking(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleTrackClick()}
+                                placeholder="Enter tracking number (e.g. BQ123456789)"
+                                className="flex-grow py-4 px-6 rounded-l-full text-lg border border-gray-300 focus:ring-2 focus:ring-appNav focus:border-blue-500 focus:outline-none bg-white bg-opacity-90 text-gray-900"
+                            />
+                            <button
+                                onClick={handleTrackClick}
+                                className="bg-appNav hover:bg-appTitleBgColor text-white font-bold py-4 px-8 rounded-r-full transition duration-200 whitespace-nowrap"
+                            >
+                                Track Package
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </motion.div>
+                </motion.div>
+            </div>
 
             {/* Tracking Modal Integration */}
             <TrackingModal
