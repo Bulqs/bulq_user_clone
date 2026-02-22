@@ -30,10 +30,11 @@ const BannerWithTracking = () => {
     };
 
     return (
-        <div className="relative mb-32 md:mb-40">
+        // Increased mobile bottom margin to prevent the stacked tracking box from overlapping content below
+        <div className="relative mb-40 md:mb-48">
             
             {/* Banner Component */}
-            <div className='w-full relative min-h-[750px] lg:min-h-[850px] py-24 flex items-center justify-center'>
+            <div className='w-full relative min-h-[750px] lg:min-h-[850px] py-20 md:py-24 flex items-center justify-center'>
                 
                 <Image
                     className='absolute z-0 object-cover'
@@ -44,7 +45,7 @@ const BannerWithTracking = () => {
                 />
 
                 {/* Overlay to make text more readable */}
-                <div className='absolute inset-0 bg-appTitleBgColor bg-opacity-90 z-[1]'></div>
+                <div className='absolute inset-0 bg-appTitleBgColor bg-opacity-90 z-[1] backdrop-blur-[2px]'></div>
 
                 {/* --- HEADER PLACEMENT --- */}
                 <div className="absolute top-0 left-0 w-full z-50">
@@ -56,19 +57,19 @@ const BannerWithTracking = () => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="show"
-                    // 1. Changed mt-12 to mt-28 to push everything further down the screen
-                    className='relative z-10 text-center text-white px-4 w-full max-w-7xl mx-auto flex flex-col items-center justify-center mt-28'
+                    // Responsive margin-top to keep it balanced on all devices
+                    className='relative z-10 text-center text-white px-4 w-full max-w-7xl mx-auto flex flex-col items-center justify-center mt-16 md:mt-28'
                 >
-                    <motion.h2 variants={itemVariants} className='font-bold text-5xl md:text-6xl mb-3 tracking-tight'>
+                    {/* Fluid Typography: 4xl on mobile, 5xl on tablet, 6xl on desktop */}
+                    <motion.h2 variants={itemVariants} className='font-bold text-4xl sm:text-5xl md:text-6xl mb-4 tracking-tight drop-shadow-md'>
                         Move Anything, Anywhere in your city
                     </motion.h2>
                     
-                    {/* 2. Changed mb-6 to mb-12 to create more space before the LandingBanner cards */}
-                    <motion.p variants={itemVariants} className="font-semibold text-xl md:text-2xl mb-12 text-gray-200">
+                    <motion.p variants={itemVariants} className="font-semibold text-lg sm:text-xl md:text-2xl mb-10 md:mb-12 text-blue-50/90 drop-shadow">
                         <span className='block'>No delay, No stress, just delivery.</span>
                     </motion.p>
                     
-                    <motion.div variants={itemVariants} className="flex gap-4 justify-center w-full">
+                    <motion.div variants={itemVariants} className="flex justify-center w-full">
                         <LandingBanner />
                     </motion.div>
                 </motion.div>
@@ -84,36 +85,39 @@ const BannerWithTracking = () => {
                     transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.4 }}
                     className="relative"
                 >
-                    {/* Background image container */}
-                    <div className="absolute inset-0 rounded-xl overflow-hidden">
+                    {/* Premium Glassmorphism Background container */}
+                    <div className="absolute inset-0 rounded-2xl md:rounded-3xl overflow-hidden shadow-[0_20px_50px_-15px_rgba(0,0,0,0.6)]">
                         <div
                             className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-90"
                             style={{ backgroundImage: "url('/images/tracksearchbg.png')" }}
                         ></div>
-                        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
                     </div>
 
-                    {/* Content container */}
-                    <div className="relative rounded-xl shadow-2xl p-8">
-                        <div className="text-center mb-6">
-                            <h1 className="text-4xl font-bold text-white mb-2">Track Your Package</h1>
-                            <p className="text-lg text-white">
+                    {/* Content container - Responsive padding */}
+                    <div className="relative rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-10">
+                        <div className="text-center mb-6 md:mb-8">
+                            <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-2 md:mb-3 tracking-tight">Track Your Package</h1>
+                            <p className="text-base md:text-lg text-gray-200 font-medium">
                                 Enter Your Bulq Tracking Number to see the status of your shipment
                             </p>
                         </div>
 
-                        <div className="relative flex">
+                        {/* RESPONSIVE FIX: flex-col on mobile, flex-row on larger screens */}
+                        <div className="relative flex flex-col sm:flex-row gap-3 sm:gap-0 max-w-4xl mx-auto">
                             <input
                                 type="text"
                                 value={inputTracking}
                                 onChange={(e) => setInputTracking(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleTrackClick()}
-                                placeholder="Enter tracking number (e.g. BQ123456789)"
-                                className="flex-grow py-4 px-6 rounded-l-full text-lg border border-gray-300 focus:ring-2 focus:ring-appNav focus:border-blue-500 focus:outline-none bg-white bg-opacity-90 text-gray-900"
+                                placeholder="Tracking number (e.g. BQ123456789)"
+                                // Separate border radii for mobile vs desktop
+                                className="flex-grow py-4 px-6 rounded-xl sm:rounded-r-none sm:rounded-l-full text-base sm:text-lg border border-gray-300 focus:ring-2 focus:ring-appNav focus:border-blue-500 focus:outline-none bg-white/95 text-gray-900 shadow-inner w-full"
                             />
                             <button
                                 onClick={handleTrackClick}
-                                className="bg-appNav hover:bg-appTitleBgColor text-white font-bold py-4 px-8 rounded-r-full transition duration-200 whitespace-nowrap"
+                                // Full width on mobile, auto width on desktop
+                                className="bg-appNav hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-xl sm:rounded-l-none sm:rounded-r-full transition duration-300 whitespace-nowrap shadow-lg w-full sm:w-auto text-lg active:scale-[0.98]"
                             >
                                 Track Package
                             </button>
