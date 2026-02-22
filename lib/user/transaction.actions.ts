@@ -37,7 +37,7 @@ export async function getPaymentMethods(): Promise<PaymentMethodDTO[]> {
     const authHeader = await getAuthHeader();
 
     try {
-        const res = await fetch("${TRANSACTION_BASE_URL}payment-methods", {
+        const res = await fetch(`${TRANSACTION_BASE_URL}/payment-methods`, {
             method: 'GET',
             headers: { 
                 ...authHeader, 
