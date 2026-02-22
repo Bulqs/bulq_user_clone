@@ -179,7 +179,7 @@ export async function getAllHubs(): Promise<HubSummaryDTO[]> {
         const res = await fetch(`${HUBS_BASE_URL}/all`, {
             method: 'GET',
             headers: { 'accept': 'application/json' },
-            next: { revalidate: 3600 } // Cache for 1 hour
+            next: { revalidate: 3600 } // Cache for 1 hr
         });
 
         if (!res.ok) {
