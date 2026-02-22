@@ -58,7 +58,7 @@ const BannerWithTracking = () => {
                     initial="hidden"
                     animate="show"
                     // Responsive margin-top to keep it balanced on all devices
-                    className='relative z-10 text-center text-white px-4 w-full max-w-7xl mx-auto flex flex-col items-center justify-center mt-16 md:mt-28'
+                    className='relative z-[60] text-center text-white px-4 w-full max-w-7xl mx-auto flex flex-col items-center justify-center mt-16 md:mt-28'
                 >
                     {/* Fluid Typography: 4xl on mobile, 5xl on tablet, 6xl on desktop */}
                     <motion.h2 variants={itemVariants} className='font-bold text-4xl sm:text-5xl md:text-6xl mb-4 tracking-tight drop-shadow-md'>
