@@ -21,6 +21,7 @@ async function getAuthHeader(): Promise<Record<string, string>> {
         return {};
     }
 }
+const HUBS_BASE_URL = process.env.HUBS_BASE_URL
 
 /**
  * 
@@ -31,7 +32,7 @@ async function getAuthHeader(): Promise<Record<string, string>> {
 /**
  * Create a new physical Hub/Warehouse location.
  * ADMIN ONLY
- * Matches POST http://localhost:8098/api/v1/hubs/create-hub
+ * Matches POST ${HUBS_BASE_URL}/create-hub
  */
 export async function createHub(
     payload: CreateHubRequest
@@ -39,7 +40,7 @@ export async function createHub(
     const authHeader = await getAuthHeader();
 
     try {
-        const res = await fetch("http://localhost:8098/api/v1/hubs/create-hub", {
+        const res = await fetch(`${HUBS_BASE_URL}/create-hub`, {
             method: 'POST',
             headers: { 
                 ...authHeader, 
@@ -65,11 +66,11 @@ export async function createHub(
 
 /**
  * Fetch detailed information for a single hub including hours and phones.
- * Matches GET http://localhost:8098/api/v1/hubs/{id}
+ * Matches GET ${HUBS_BASE_URL}/{id}
  */
 export async function getHubDetail(id: string | number): Promise<HubFullDetailDTO> {
     const authHeader = await getAuthHeader();
-    const res = await fetch(`http://localhost:8098/api/v1/hubs/${id}`, {
+    const res = await fetch(`${HUBS_BASE_URL}/${id}`, {
         method: 'GET',
         headers: { ...authHeader, 'accept': 'application/json' },
     });
@@ -79,11 +80,11 @@ export async function getHubDetail(id: string | number): Promise<HubFullDetailDT
 
 /**
  * Delete a hub location.
- * Matches DELETE http://localhost:8098/api/v1/hubs/delete-hub
+ * Matches DELETE ${HUBS_BASE_URL}/delete-hub
  */
 export async function deleteHub(id: number): Promise<string> {
     const authHeader = await getAuthHeader();
-    const res = await fetch(`http://localhost:8098/api/v1/hubs/delete-hub`, {
+    const res = await fetch(`${HUBS_BASE_URL}/delete-hub`, {
         method: 'DELETE',
         headers: { 
             ...authHeader, 
@@ -98,13 +99,13 @@ export async function deleteHub(id: number): Promise<string> {
 
 /**
  * Add a new telephone contact to a hub.
- * Matches POST http://localhost:8098/api/v1/hubs/add-hub-telephone
+ * Matches POST ${HUBS_BASE_URL}/add-hub-telephone
  */
 export async function addHubTelephone(payload: AddHubTelephoneRequest): Promise<string> {
     const authHeader = await getAuthHeader();
 
     try {
-        const res = await fetch("http://localhost:8098/api/v1/hubs/add-hub-telephone", {
+        const res = await fetch(`${HUBS_BASE_URL}/add-hub-telephone`, {
             method: 'POST',
             headers: { 
                 ...authHeader, 
@@ -124,13 +125,13 @@ export async function addHubTelephone(payload: AddHubTelephoneRequest): Promise<
 
 /**
  * Add operational hours for a specific day.
- * Matches POST http://localhost:8098/api/v1/hubs/create-hub-workinghours
+ * Matches POST ${HUBS_BASE_URL}/create-hub-workinghours
  */
 export async function createHubWorkingHours(payload: AddHubWorkingHoursRequest): Promise<string> {
     const authHeader = await getAuthHeader();
 
     try {
-        const res = await fetch("http://localhost:8098/api/v1/hubs/create-hub-workinghours", {
+        const res = await fetch(`${HUBS_BASE_URL}/create-hub-workinghours`, {
             method: 'POST',
             headers: { 
                 ...authHeader, 
@@ -150,14 +151,14 @@ export async function createHubWorkingHours(payload: AddHubWorkingHoursRequest):
 
 /**
  * List hubs in paginated format with advanced filters.
- * Matches GET http://localhost:8098/api/v1/hubs/
+ * Matches GET ${HUBS_BASE_URL}/
  */
 export async function getPaginatedHubs(params: HubFilterParams): Promise<HubFullDetailDTO[]> {
     const authHeader = await getAuthHeader();
     const query = new URLSearchParams(params as any).toString();
 
     try {
-        const res = await fetch(`http://localhost:8098/api/v1/hubs/?${query}`, {
+        const res = await fetch(`${HUBS_BASE_URL}/?${query}`, {
             method: 'GET',
             headers: { ...authHeader, 'accept': '*/*' },
             cache: 'no-store'
@@ -171,11 +172,11 @@ export async function getPaginatedHubs(params: HubFilterParams): Promise<HubFull
 
 /**
  * View all hubs (Summary list).
- * Matches GET http://localhost:8098/api/v1/hubs/all
+ * Matches GET ${HUBS_BASE_URL}/all
  */
 export async function getAllHubs(): Promise<HubSummaryDTO[]> {
     try {
-        const res = await fetch("http://localhost:8098/api/v1/hubs/all", {
+        const res = await fetch(`${HUBS_BASE_URL}/all`, {
             method: 'GET',
             headers: { 'accept': 'application/json' },
             next: { revalidate: 3600 } // Cache for 1 hour
@@ -195,10 +196,10 @@ export async function getAllHubs(): Promise<HubSummaryDTO[]> {
 
 /**
  * View hubs filtered by country name/code.
- * Matches GET http://localhost:8098/api/v1/hubs/by-country/{country}
+ * Matches GET ${HUBS_BASE_URL}/by-country/{country}
  */
 export async function getHubsByCountry(countryCode: string): Promise<any> {
-    const res = await fetch(`http://localhost:8098/api/v1/hubs/by-country/${countryCode}?country=${countryCode}`, {
+    const res = await fetch(`${HUBS_BASE_URL}/by-country/${countryCode}?country=${countryCode}`, {
         method: 'GET',
         headers: { 'accept': 'application/json' }
     });

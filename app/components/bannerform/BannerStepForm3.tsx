@@ -9,6 +9,9 @@ import { BADOBookingPayload, BookingResponseDTO } from '@/types/booking';
 import { CountryDTO } from '@/types/user';
 import { getSupportedCities, getSupportedCountries } from '@/lib/user/actions';
 import { createDropOffBooking } from '@/lib/user/booking.actions';
+import { getAllHubs } from '@/lib/admin/warehouse.actions';
+// import { getAllHubs } from '@/lib/admin/warehouse.actions';
+// import { getAllHubs } from '@/lib/admin/warehouse.actions';
 
 // --- TYPES ---
 interface HubTelephone { hubId: number; telephone: string; }
@@ -68,14 +71,35 @@ const BannerStepForm3: React.FC = () => {
     // --- 2. EFFECTS ---
     useEffect(() => {
         const initData = async () => {
-            try { setCountries(await getSupportedCountries() || []); } catch(e) {}
+            // 1. Fetch Countries
+            try { 
+                const fetchedCountries = await getSupportedCountries();
+                setCountries(fetchedCountries || []); 
+            } catch (e) {
+                console.error("Error fetching countries:", e);
+            }
+
+            // 2. Fetch Hubs using your new API function
             try {
-                const res = await fetch(`${HUBS_BASE_URL}/hubs/all"`, { headers: { 'accept': 'application/json' }, cache: 'no-store' });
-                if (res.ok) setHubs(await res.json());
-            } catch (e) { console.error(e); }
+                const fetchedHubs = await getAllHubs();
+                setHubs(fetchedHubs || []); 
+            } catch (e) { 
+                console.error("Error fetching hubs:", e); 
+            }
         };
+
         initData();
     }, []);
+    // useEffect(() => {
+    //     const initData = async () => {
+    //         try { setCountries(await getSupportedCountries() || []); } catch(e) {}
+    //         try {
+    //             const res = await fetch(`${HUBS_BASE_URL}/hubs/all"`, { headers: { 'accept': 'application/json' }, cache: 'no-store' });
+    //             if (res.ok) setHubs(await res.json());
+    //         } catch (e) { console.error(e); }
+    //     };
+    //     initData();
+    // }, []);
     
     // Load Cities: We look up Country Name using the stored Code to fetch cities
     useEffect(() => { 
