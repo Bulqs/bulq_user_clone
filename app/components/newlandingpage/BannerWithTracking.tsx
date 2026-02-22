@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { motion, Variants } from 'framer-motion';
 import LandingBanner from '../landingbanner/LandingBanner';
 import HomeHeader from './HomeHeader';
-// import HomeHeader from '../header/HomeHeader'; // <-- Adjust this import path to match your folder structure!
 
 // --- ENTRANCE ANIMATION VARIANTS ---
 const containerVariants: Variants = {
@@ -48,7 +47,6 @@ const BannerWithTracking = () => {
                 <div className='absolute inset-0 bg-appTitleBgColor bg-opacity-90 z-[1]'></div>
 
                 {/* --- HEADER PLACEMENT --- */}
-                {/* Pinned to the absolute top of the banner, sitting above the dark overlay */}
                 <div className="absolute top-0 left-0 w-full z-50">
                     <HomeHeader />
                 </div>
@@ -58,16 +56,15 @@ const BannerWithTracking = () => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="show"
-                    // Changed mt-[-80px] to mt-12 to drop it into the middle
-                    className='relative z-10 text-center text-white px-4 w-full max-w-7xl mx-auto flex flex-col items-center justify-center mt-12'
+                    // 1. Changed mt-12 to mt-28 to push everything further down the screen
+                    className='relative z-10 text-center text-white px-4 w-full max-w-7xl mx-auto flex flex-col items-center justify-center mt-28'
                 >
-                    {/* Changed mb-8 to mb-3 to tighten the text grouping */}
                     <motion.h2 variants={itemVariants} className='font-bold text-5xl md:text-6xl mb-3 tracking-tight'>
                         Move Anything, Anywhere in your city
                     </motion.h2>
                     
-                    {/* Changed mb-16 to mb-6 so it sits almost exactly on top of the banner */}
-                    <motion.p variants={itemVariants} className="font-semibold text-xl md:text-2xl mb-6 text-gray-200">
+                    {/* 2. Changed mb-6 to mb-12 to create more space before the LandingBanner cards */}
+                    <motion.p variants={itemVariants} className="font-semibold text-xl md:text-2xl mb-12 text-gray-200">
                         <span className='block'>No delay, No stress, just delivery.</span>
                     </motion.p>
                     
