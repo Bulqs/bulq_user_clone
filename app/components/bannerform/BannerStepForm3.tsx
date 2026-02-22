@@ -24,6 +24,8 @@ const stepImages = {
     3: "/videos/backgroundvideo.mp4"
 };
 
+const HUBS_BASE_URL = process.env.HUBS_BASE_URL;
+
 const BannerStepForm3: React.FC = () => {
     
     // --- 1. STATE ---
@@ -68,7 +70,7 @@ const BannerStepForm3: React.FC = () => {
         const initData = async () => {
             try { setCountries(await getSupportedCountries() || []); } catch(e) {}
             try {
-                const res = await fetch("http://localhost:8098/api/v1/hubs/all", { headers: { 'accept': 'application/json' }, cache: 'no-store' });
+                const res = await fetch(`${HUBS_BASE_URL}/hubs/all"`, { headers: { 'accept': 'application/json' }, cache: 'no-store' });
                 if (res.ok) setHubs(await res.json());
             } catch (e) { console.error(e); }
         };
