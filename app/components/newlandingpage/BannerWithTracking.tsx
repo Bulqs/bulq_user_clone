@@ -5,6 +5,8 @@ import TrackingModal from '../modals/TrackingModal';
 import Image from 'next/image';
 import { motion, Variants } from 'framer-motion';
 import LandingBanner from '../landingbanner/LandingBanner';
+import HomeHeader from './HomeHeader';
+// import HomeHeader from '../header/HomeHeader'; // <-- Adjust this import path to match your folder structure!
 
 // --- ENTRANCE ANIMATION VARIANTS ---
 const containerVariants: Variants = {
@@ -29,9 +31,10 @@ const BannerWithTracking = () => {
     };
 
     return (
-        <div className="relative">
+        <div className="relative mb-32 md:mb-40">
+            
             {/* Banner Component */}
-            <div className='w-full relative h-[584px] flex items-center justify-center'>
+            <div className='w-full relative min-h-[750px] lg:min-h-[850px] py-24 flex items-center justify-center'>
                 
                 <Image
                     className='absolute z-0 object-cover'
@@ -42,28 +45,30 @@ const BannerWithTracking = () => {
                 />
 
                 {/* Overlay to make text more readable */}
-                <div className='absolute inset-0 bg-appTitleBgColor bg-opacity-90 z-1'></div>
+                <div className='absolute inset-0 bg-appTitleBgColor bg-opacity-90 z-[1]'></div>
+
+                {/* --- HEADER PLACEMENT --- */}
+                {/* Pinned to the absolute top of the banner, sitting above the dark overlay */}
+                <div className="absolute top-0 left-0 w-full z-50">
+                    <HomeHeader />
+                </div>
 
                 {/* Content Container */}
                 <motion.div 
                     variants={containerVariants}
                     initial="hidden"
                     animate="show"
-                    className='relative z-10 text-center text-white px-4'
+                    className='relative z-10 text-center text-white px-4 w-full max-w-7xl mx-auto flex flex-col items-center justify-center mt-[-80px]'
                 >
-                    <motion.h2 variants={itemVariants} className='font-bold text-5xl mb-6'>
+                    <motion.h2 variants={itemVariants} className='font-bold text-5xl md:text-6xl mb-8 tracking-tight'>
                         Move Anything, Anywhere in your city
                     </motion.h2>
-                    <motion.p variants={itemVariants} className="font-semibold text-xl mb-8">
+                    
+                    <motion.p variants={itemVariants} className="font-semibold text-xl md:text-2xl mb-16 text-gray-200">
                         <span className='block'>No delay, No stress, just delivery.</span>
                     </motion.p>
-                    <motion.div variants={itemVariants} className="flex gap-4 justify-center">
-                        {/* <button className="px-8 py-3 bg-appNav rounded-md text-white hover:bg-opacity-90 transition hover:bg-appTitleBgColor hover:border-appNav hover:border-2 border-2 border-transparent">
-                            Book Shipment
-                        </button>
-                        <button className="px-8 py-3 bg-transparent rounded-md text-white hover:bg-white hover:bg-opacity-10 transition">
-                            <span className="border-b-2 border-white">Learn More</span>
-                        </button> */}
+                    
+                    <motion.div variants={itemVariants} className="flex gap-4 justify-center w-full">
                         <LandingBanner />
                     </motion.div>
                 </motion.div>
@@ -72,7 +77,7 @@ const BannerWithTracking = () => {
             {/* Tracking Search Overlay - OUTER DIV IS UNTOUCHED */}
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-full max-w-6xl px-4 z-20">
                 
-                {/* MOTION WRAPPER: Handles animation without breaking Tailwind translates */}
+                {/* MOTION WRAPPER */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}

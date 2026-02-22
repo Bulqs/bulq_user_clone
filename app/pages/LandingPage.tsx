@@ -127,12 +127,12 @@ const LandingPage = () => {
   return (
     <div className="w-full flex flex-col">
       {/* <Header /> */}
-      <HomeHeader />
+      {/* <HomeHeader /> */}
 
       {/* <Banner />
           <TrackingSearch /> */}
       <BannerWithTracking />
-      <LandingBanner />
+      {/* <LandingBanner /> */}
       {/* <HowItWorks />
       <PlanSubscription />
       <TrustedByShopper />
