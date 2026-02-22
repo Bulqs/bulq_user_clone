@@ -121,7 +121,7 @@ export async function initiateShippingPayment(
 
     try {
         const res = await fetch(
-            `${TRANSACTION_BASE_URL}shipping/${bookingId}/payment/${providerPath}`, 
+            `${TRANSACTION_BASE_URL}/shipping/${bookingId}/payment/${providerPath}`, 
             {
                 method: 'POST',
                 headers: { 
@@ -164,7 +164,7 @@ export async function verifyPaymentStatus(
     const authHeader = await getAuthHeader();
 
     try {
-        const res = await fetch(`${TRANSACTION_BASE_URL}shipping/${bookingId}/verify`, {
+        const res = await fetch(`${TRANSACTION_BASE_URL}/shipping/${bookingId}/verify`, {
             method: 'GET',
             headers: { 
                 ...authHeader, 
