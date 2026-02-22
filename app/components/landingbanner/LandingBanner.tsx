@@ -1,11 +1,34 @@
 "use client"
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import LandingBannerCard from './LandingBannerCard';
 import { IoMdCloseCircle } from "react-icons/io";
 import LandingBannerCard2 from './LandingBannerCard2';
 import BannerStepForm from '../bannerform/BannerStepForm';
 import BannerStepForm2 from '../bannerform/BannerStepForm2';
 import BannerStepForm3 from '../bannerform/BannerStepForm3';
+import { motion, Variants } from 'framer-motion';
+
+// --- ANIMATION VARIANTS ---
+const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { 
+            staggerChildren: 0.15, // Delay between each card popping in
+            delayChildren: 0.3    // Waits for the main text in BannerWithTracking to load first
+        }
+    }
+};
+
+const cardVariants: Variants = {
+    hidden: { opacity: 0, y: 30, scale: 0.9 },
+    show: { 
+        opacity: 1, 
+        y: 0, 
+        scale: 1, 
+        transition: { type: "spring", stiffness: 150, damping: 20 } 
+    }
+};
 
 const LandingBanner: React.FC = () => {
 
@@ -19,26 +42,14 @@ const LandingBanner: React.FC = () => {
   const [selectedCard, setSelectedCard] = useState<{ title: string; description: string } | null>(null);
   const [selectedCard2, setSelectedCard2] = useState<{ title: string; description: string } | null>(null);
   const [selectedCard3, setSelectedCard3] = useState<{ title: string; description: string } | null>(null);
-
-  const [firstText, setFirstText] = useState('');
-  const [secondText, setSecondText] = useState('');
-  const firstString = 'Ship To Any Part Of The World';
-  const secondString = 'With Peace Of Mind';
   
   // PATH TO VIDEO
   const BG_VIDEO = "/videos/backgroundvideo.mp4"; 
 
-  useEffect(() => {
-    let isMounted = true;
-    let t1: NodeJS.Timeout, t2: NodeJS.Timeout;
-    const type1 = (i=0) => { if(isMounted && i<firstString.length) { setFirstText(p=>p+firstString[i]); t1=setTimeout(()=>type1(i+1),100); } else if(isMounted) type2(); };
-    const type2 = (i=0) => { if(isMounted && i<secondString.length) { setSecondText(p=>p+secondString[i]); t2=setTimeout(()=>type2(i+1),100); } else if(isMounted) setTimeout(()=>{setFirstText('');setSecondText('');type1()},2000); };
-    type1(); return ()=>{isMounted=false;clearTimeout(t1);clearTimeout(t2);};
-  }, []);
-
   const openModal = (t:string,d:string) => { setSelectedCard({title:t,description:d}); setIsModalOpen(true); };
   const openModal2 = (t:string,d:string) => { setSelectedCard2({title:t,description:d}); setIsModalOpen2(true); };
   const openModal3 = (t:string,d:string) => { setSelectedCard3({title:t,description:d}); setIsModalOpen3(true); };
+  
   const closeModal = () => { setIsModalOpen(false); setActiveForm(null); };
   const closeModal2 = () => { setIsModalOpen2(false); setActiveForm(null); };
   const closeModal3 = () => setIsModalOpen3(false);
@@ -49,23 +60,27 @@ const LandingBanner: React.FC = () => {
   const handlePickupOnly = () => { setActiveForm('FORM_2'); };
 
   return (
-    <div className='relative min-h-[60vh] flex flex-col items-center justify-center mt-0 pt-48 md:pt-60 pb-20 overflow-hidden'>
+    <div className='relative w-full z-20 pb-10'>
       
-      
-
-      {/* Content */}
-      <div className="relative z-10 w-full flex flex-col items-center">
-          <div className="text-center mb-12 h-24 px-4 mt-4">
-            <h1 className="text-3xl md:text-5xl font-bold text-appBlack mb-2 tracking-tight">{firstText}<span className="animate-pulse text-appBanner">|</span></h1>
-            <p className="text-xl md:text-2xl text-gray-500 font-medium h-8">{secondText}</p>
-          </div>
-
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-8 w-11/12 max-w-6xl mx-auto'>
+      {/* 4D ANIMATED GRID CONTAINER */}
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className='grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 w-11/12 max-w-5xl mx-auto'
+      >
+        <motion.div variants={cardVariants} whileHover={{ y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
             <LandingBannerCard title="Pick up Package" description="Request Pick off and Drop off" imageSrc="/images/package_pickup.png" onClick={openModal} />
+        </motion.div>
+
+        <motion.div variants={cardVariants} whileHover={{ y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
             <LandingBannerCard title="Delivery Package" description="Request delivery to doorstep" imageSrc="/images/package_delivery.png" onClick={openModal2} />
+        </motion.div>
+
+        <motion.div variants={cardVariants} whileHover={{ y: -5 }} transition={{ type: "spring", stiffness: 300 }}>
             <LandingBannerCard title="Book a Drop Off" description="Drop off items at hub" imageSrc="/images/drop_off.png" onClick={openModal3} />
-          </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* --- MODAL 1: PICK UP --- */}
       {isModalOpen && selectedCard && (
@@ -115,7 +130,7 @@ const LandingBanner: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4 animate-in fade-in duration-300">
           <div className="relative bg-white w-full h-full md:h-[85vh] md:w-11/12 md:max-w-5xl md:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             
-            {/* FIXED: Added Background Video Here */}
+            {/* BACKGROUND VIDEO */}
             <div className="absolute inset-0 z-0">
                 <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-20">
                     <source src={BG_VIDEO} type="video/mp4" />
@@ -158,7 +173,11 @@ const LandingBanner: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4 animate-in fade-in duration-300">
            <div className="relative bg-white w-full h-full md:h-[85vh] md:w-11/12 md:max-w-5xl md:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
               
-              <div className="absolute top-3 right-3 z-50"><button onClick={closeModal3} className="text-gray-400 hover:text-red-500 bg-white rounded-full p-1 shadow-md transition-colors"><IoMdCloseCircle size={28}/></button></div>
+              <div className="absolute top-3 right-3 z-50">
+                  <button onClick={closeModal3} className="text-gray-400 hover:text-red-500 bg-white rounded-full p-1 shadow-md transition-colors">
+                      <IoMdCloseCircle size={28}/>
+                  </button>
+              </div>
               
               {/* BannerStepForm3 handles its own background internally now */}
               <div className="flex-1 overflow-hidden relative z-10">
@@ -171,6 +190,180 @@ const LandingBanner: React.FC = () => {
   )
 }
 export default LandingBanner;
+
+// "use client"
+// import React, { useEffect, useState } from 'react'
+// import LandingBannerCard from './LandingBannerCard';
+// import { IoMdCloseCircle } from "react-icons/io";
+// import LandingBannerCard2 from './LandingBannerCard2';
+// import BannerStepForm from '../bannerform/BannerStepForm';
+// import BannerStepForm2 from '../bannerform/BannerStepForm2';
+// import BannerStepForm3 from '../bannerform/BannerStepForm3';
+
+// const LandingBanner: React.FC = () => {
+
+//   const [isModalOpen, setIsModalOpen] = useState(false);
+//   const [isModalOpen2, setIsModalOpen2] = useState(false);
+//   const [isModalOpen3, setIsModalOpen3] = useState(false);
+  
+//   const [activeForm, setActiveForm] = useState<'FORM_1' | 'FORM_2' | null>(null);
+//   const [isSpecificAddress, setIsSpecificAddress] = useState(false);
+
+//   const [selectedCard, setSelectedCard] = useState<{ title: string; description: string } | null>(null);
+//   const [selectedCard2, setSelectedCard2] = useState<{ title: string; description: string } | null>(null);
+//   const [selectedCard3, setSelectedCard3] = useState<{ title: string; description: string } | null>(null);
+
+//   const [firstText, setFirstText] = useState('');
+//   const [secondText, setSecondText] = useState('');
+//   const firstString = 'Ship To Any Part Of The World';
+//   const secondString = 'With Peace Of Mind';
+  
+//   // PATH TO VIDEO
+//   const BG_VIDEO = "/videos/backgroundvideo.mp4"; 
+
+//   useEffect(() => {
+//     let isMounted = true;
+//     let t1: NodeJS.Timeout, t2: NodeJS.Timeout;
+//     const type1 = (i=0) => { if(isMounted && i<firstString.length) { setFirstText(p=>p+firstString[i]); t1=setTimeout(()=>type1(i+1),100); } else if(isMounted) type2(); };
+//     const type2 = (i=0) => { if(isMounted && i<secondString.length) { setSecondText(p=>p+secondString[i]); t2=setTimeout(()=>type2(i+1),100); } else if(isMounted) setTimeout(()=>{setFirstText('');setSecondText('');type1()},2000); };
+//     type1(); return ()=>{isMounted=false;clearTimeout(t1);clearTimeout(t2);};
+//   }, []);
+
+//   const openModal = (t:string,d:string) => { setSelectedCard({title:t,description:d}); setIsModalOpen(true); };
+//   const openModal2 = (t:string,d:string) => { setSelectedCard2({title:t,description:d}); setIsModalOpen2(true); };
+//   const openModal3 = (t:string,d:string) => { setSelectedCard3({title:t,description:d}); setIsModalOpen3(true); };
+//   const closeModal = () => { setIsModalOpen(false); setActiveForm(null); };
+//   const closeModal2 = () => { setIsModalOpen2(false); setActiveForm(null); };
+//   const closeModal3 = () => setIsModalOpen3(false);
+
+//   const handleMeToAnother = () => { setIsSpecificAddress(false); setActiveForm('FORM_1'); };
+//   const handleSpecificAddress = () => { setIsSpecificAddress(true); setActiveForm('FORM_1'); };
+//   const handleAnotherToMe = () => { setActiveForm('FORM_2'); };
+//   const handlePickupOnly = () => { setActiveForm('FORM_2'); };
+
+//   return (
+//     <div className='relative min-h-[60vh] flex flex-col items-center justify-center mt-0 pt-48 md:pt-60 pb-20 overflow-hidden'>
+      
+      
+
+//       {/* Content */}
+//       <div className="relative z-10 w-full flex flex-col items-center">
+//           <div className="text-center mb-12 h-24 px-4 mt-4">
+//             <h1 className="text-3xl md:text-5xl font-bold text-appBlack mb-2 tracking-tight">{firstText}<span className="animate-pulse text-appBanner">|</span></h1>
+//             <p className="text-xl md:text-2xl text-gray-500 font-medium h-8">{secondText}</p>
+//           </div>
+
+//           <div className='grid grid-cols-1 md:grid-cols-3 gap-8 w-11/12 max-w-6xl mx-auto'>
+//             <LandingBannerCard title="Pick up Package" description="Request Pick off and Drop off" imageSrc="/images/package_pickup.png" onClick={openModal} />
+//             <LandingBannerCard title="Delivery Package" description="Request delivery to doorstep" imageSrc="/images/package_delivery.png" onClick={openModal2} />
+//             <LandingBannerCard title="Book a Drop Off" description="Drop off items at hub" imageSrc="/images/drop_off.png" onClick={openModal3} />
+//           </div>
+//       </div>
+
+//       {/* --- MODAL 1: PICK UP --- */}
+//       {isModalOpen && selectedCard && (
+//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4 animate-in fade-in duration-300">
+//           <div className="relative bg-white w-full h-full md:h-[85vh] md:w-11/12 md:max-w-5xl md:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            
+//             {/* BACKGROUND VIDEO */}
+//             <div className="absolute inset-0 z-0">
+//                 <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-20">
+//                     <source src={BG_VIDEO} type="video/mp4" />
+//                 </video>
+//                 <div className="absolute inset-0 bg-white/80 backdrop-blur-sm" />
+//             </div>
+
+//             <div className="relative z-10 w-full bg-white/90 border-b border-gray-100 p-4 md:p-5 flex justify-between items-center shrink-0">
+//                 <h3 className="text-lg md:text-xl font-bold text-appBanner">Pick Up Package</h3>
+//                 <button onClick={closeModal} className="text-gray-400 hover:text-red-500 transition-colors"><IoMdCloseCircle size={28}/></button>
+//             </div>
+            
+//             <div className="relative z-10 flex-1 overflow-y-auto p-4 md:p-10 flex items-center justify-center">
+//                 <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+//                     <LandingBannerCard2 title="From Me to Another" description="Request Service" onClick={handleMeToAnother} />
+//                     <LandingBannerCard2 title="From Another to Me" description="Request Service" onClick={handleAnotherToMe} />
+//                     <LandingBannerCard2 title="Specific Address" description="To Specific Address" onClick={handleSpecificAddress} />
+//                     <LandingBannerCard2 title="Pick up only" description="Request Service" onClick={handlePickupOnly} />
+//                 </div>
+//             </div>
+
+//             {/* INNER FORM */}
+//             {activeForm && (
+//               <div className="absolute inset-0 z-50 bg-gray-50 flex flex-col animate-in slide-in-from-bottom-10">
+//                  <div className="flex justify-between items-center p-3 bg-white border-b border-gray-200 shrink-0 z-20">
+//                       <span className="font-bold text-gray-600 text-sm">Booking Form</span>
+//                       <button onClick={()=>setActiveForm(null)} className="flex items-center gap-1 text-red-500 font-bold text-sm hover:bg-red-50 px-3 py-1 rounded-md transition-colors"><IoMdCloseCircle size={20}/> Close</button>
+//                  </div>
+//                  <div className="flex-1 overflow-hidden relative z-10">
+//                     {activeForm==='FORM_1'?<BannerStepForm isSenderEditable={isSpecificAddress}/>:<BannerStepForm2/>}
+//                  </div>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//       )}
+
+//       {/* --- MODAL 2: DELIVERY --- */}
+//       {isModalOpen2 && selectedCard2 && (
+//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4 animate-in fade-in duration-300">
+//           <div className="relative bg-white w-full h-full md:h-[85vh] md:w-11/12 md:max-w-5xl md:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            
+//             {/* FIXED: Added Background Video Here */}
+//             <div className="absolute inset-0 z-0">
+//                 <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-20">
+//                     <source src={BG_VIDEO} type="video/mp4" />
+//                 </video>
+//                 <div className="absolute inset-0 bg-white/80 backdrop-blur-sm" />
+//             </div>
+
+//             <div className="relative z-10 w-full bg-white/90 border-b border-gray-100 p-4 md:p-5 flex justify-between items-center shrink-0">
+//                 <h3 className="text-lg md:text-xl font-bold text-appBanner">Delivery Package</h3>
+//                 <button onClick={closeModal2} className="text-gray-400 hover:text-red-500 transition-colors"><IoMdCloseCircle size={28}/></button>
+//             </div>
+            
+//             <div className="relative z-10 flex-1 overflow-y-auto p-4 md:p-10 flex items-center justify-center">
+//                 <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+//                     <LandingBannerCard2 title="From Me to Another" description="Request Service" onClick={handleMeToAnother} />
+//                     <LandingBannerCard2 title="From Another to Me" description="Request Service" onClick={handleAnotherToMe} />
+//                     <LandingBannerCard2 title="Specific Address" description="To Specific Address" onClick={handleSpecificAddress} />
+//                     <LandingBannerCard2 title="Pick up only" description="Request Service" onClick={handlePickupOnly} />
+//                 </div>
+//             </div>
+
+//             {/* INNER FORM */}
+//             {activeForm && (
+//               <div className="absolute inset-0 z-50 bg-gray-50 flex flex-col animate-in slide-in-from-bottom-10">
+//                  <div className="flex justify-between items-center p-3 bg-white border-b border-gray-200 shrink-0 z-20">
+//                       <span className="font-bold text-gray-600 text-sm">Booking Form</span>
+//                       <button onClick={()=>setActiveForm(null)} className="flex items-center gap-1 text-red-500 font-bold text-sm hover:bg-red-50 px-3 py-1 rounded-md transition-colors"><IoMdCloseCircle size={20}/> Close</button>
+//                  </div>
+//                  <div className="flex-1 overflow-hidden relative z-10">
+//                     {activeForm==='FORM_1'?<BannerStepForm isSenderEditable={isSpecificAddress}/>:<BannerStepForm2/>}
+//                  </div>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//       )}
+
+//       {/* --- MODAL 3: DROP OFF --- */}
+//       {isModalOpen3 && selectedCard3 && (
+//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4 animate-in fade-in duration-300">
+//            <div className="relative bg-white w-full h-full md:h-[85vh] md:w-11/12 md:max-w-5xl md:rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+              
+//               <div className="absolute top-3 right-3 z-50"><button onClick={closeModal3} className="text-gray-400 hover:text-red-500 bg-white rounded-full p-1 shadow-md transition-colors"><IoMdCloseCircle size={28}/></button></div>
+              
+//               {/* BannerStepForm3 handles its own background internally now */}
+//               <div className="flex-1 overflow-hidden relative z-10">
+//                  <BannerStepForm3 />
+//               </div>
+//            </div>
+//         </div>
+//       )}
+//     </div>
+//   )
+// }
+// export default LandingBanner;
 
 // "use client"
 // import React, { useEffect, useState } from 'react'
