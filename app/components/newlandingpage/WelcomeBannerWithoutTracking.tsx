@@ -1,195 +1,245 @@
-"use client";
-import React from 'react';
+"use client"; // Required for hooks
+
+import React, { useState } from 'react';
+import TrackingModal from '../modals/TrackingModal';
 import Image from 'next/image';
-import { motion, Variants } from 'framer-motion';
-import { IoRocketOutline } from "react-icons/io5";
+import { motion, Variants } from 'framer-motion'; // <--- Add Variants here
 
-interface WelcomeBannerProps {
-    onGetStartedClick?: () => void;
-}
-
-// --- CINEMATIC ENTRANCE VARIANTS ---
-const containerVariants: Variants = {
+// --- ENTRANCE ANIMATION VARIANTS ---
+const containerVariants: Variants = { // <--- ADD : Variants
     hidden: { opacity: 0 },
     show: {
         opacity: 1,
-        transition: {
-            staggerChildren: 0.2, // Delay between each element appearing
-            delayChildren: 0.1,   // Initial delay before the sequence starts
-        }
+        transition: { staggerChildren: 0.2, delayChildren: 0.1 }
     }
 };
 
-const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 40, scale: 0.95 },
+const itemVariants: Variants = { // <--- ADD : Variants
+    hidden: { opacity: 0, y: 20 },
     show: { 
         opacity: 1, 
         y: 0, 
-        scale: 1,
-        transition: { type: "spring", stiffness: 120, damping: 15 } 
+        transition: { type: "spring", stiffness: 120, damping: 15 } // TS now accepts this!
     }
 };
 
-const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ onGetStartedClick }) => {
-    return (
-        <div className="relative w-full h-[650px] md:h-[700px] flex items-center justify-center overflow-hidden">
-            
-            {/* Background Animation - Fixed with 'fill' and 'unoptimized' */}
-            <Image
-                src="/videos/bulq_anime.gif"
-                alt="Background Animation"
-                fill
-                priority
-                unoptimized
-                className="z-0 object-cover scale-105" // slight scale to hide any edge clipping
-            />
+const BannerWithTracking = () => {
+    // State for the input field in the banner
+    const [inputTracking, setInputTracking] = useState('');
+    // State to toggle the modal
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-            {/* Premium Glassmorphism Overlay */}
-            <div className='absolute inset-0 bg-appTitleBgColor/80 z-[1] backdrop-blur-sm'>
-                {/* Subtle animated gradient mesh inside the overlay to make it feel alive */}
-                <motion.div 
-                    animate={{ opacity: [0.1, 0.2, 0.1], scale: [1, 1.1, 1] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-0 left-1/4 w-full h-full bg-gradient-to-br from-appNav/20 to-transparent mix-blend-overlay pointer-events-none"
+    // Handle the search action
+    const handleTrackClick = () => {
+        setIsModalOpen(true);
+        // The modal will read 'inputTracking' via the 'initialTrackingNumber' prop 
+        // and trigger the search automatically.
+    };
+
+    return (
+        <div className="relative">
+            {/* Banner Component */}
+            <div className='w-full relative h-[584px] flex items-center justify-center'>
+                
+                <Image
+                    className='absolute z-0 object-cover'
+                    src="/videos/bulq_anime.gif"
+                    alt="Background Animation"
+                    fill
+                    unoptimized
                 />
+
+                {/* Overlay to make text more readable */}
+                <div className='absolute inset-0 bg-appTitleBgColor bg-opacity-90 z-1'></div>
+
+                {/* Content Container */}
+                <motion.div 
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="show"
+                    className='relative z-10 text-center text-white px-4'
+                >
+                    <motion.h2 variants={itemVariants} className='font-bold text-5xl mb-6'>
+                        Move Anything, Anywhere in your city
+                    </motion.h2>
+                    <motion.p variants={itemVariants} className="font-semibold text-xl mb-8">
+                        <span className='block'>No delay, No stress, just delivery.</span>
+                    </motion.p>
+                    <motion.div variants={itemVariants} className="flex gap-4 justify-center">
+                        <button className="px-8 py-3 bg-appNav rounded-md text-white hover:bg-opacity-90 transition hover:bg-appTitleBgColor hover:border-appNav hover:border-2 border-2 border-transparent">
+                            Book Shipment
+                        </button>
+                        <button className="px-8 py-3 bg-transparent rounded-md text-white hover:bg-white hover:bg-opacity-10 transition">
+                            <span className="border-b-2 border-white">Learn More</span>
+                        </button>
+                    </motion.div>
+                </motion.div>
             </div>
 
-            {/* Content Container - Linked to Framer Motion Variants */}
+            {/* Tracking Search Overlay */}
             <motion.div 
-                variants={containerVariants}
-                initial="hidden"
-                animate="show"
-                className='relative z-10 text-center text-white px-4 max-w-4xl mt-10'
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.5, type: "spring" }}
+                className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-full max-w-6xl px-4 z-20"
             >
-                {/* Hero Title */}
-                <motion.h1 variants={itemVariants} className='font-extrabold text-5xl md:text-7xl mb-6 tracking-tight leading-tight drop-shadow-xl'>
-                    Shop Globally, <br className="md:hidden" />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-appNav to-blue-200">
-                        Ship Smartly
-                    </span>
-                </motion.h1>
-                
-                {/* Subtitle */}
-                <motion.p variants={itemVariants} className="font-medium text-lg md:text-2xl mb-12 text-blue-50/80 drop-shadow-md max-w-3xl mx-auto">
-                    Your centralized logistics solution for international shopping. 
-                    We consolidate and deliver your purchases worldwide with ease and speed.
-                </motion.p>
+                {/* Background image container */}
+                <div className="absolute inset-0 rounded-xl overflow-hidden">
+                    <div
+                        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-90"
+                        style={{ backgroundImage: "url('/images/tracksearchbg.png')" }}
+                    ></div>
+                    <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+                </div>
 
-                {/* Call to Action Buttons */}
-                <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-5 justify-center items-center">
-                    
-                    {/* Primary Shimmering Button */}
-                    <motion.button 
-                        onClick={onGetStartedClick}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        animate={{ y: [0, -5, 0] }} // Gentle continuous floating
-                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                        className="group relative w-full sm:w-auto px-10 py-4 bg-appNav rounded-full text-white font-bold text-lg shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:shadow-[0_0_40px_rgba(59,130,246,0.6)] border border-blue-400/30 overflow-hidden"
-                    >
-                        {/* Shimmer Effect */}
-                        <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                        <span className="relative z-10 flex items-center justify-center gap-2">
-                            Get Started Now <IoRocketOutline className="text-2xl group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                        </span>
-                    </motion.button>
-                    
-                    {/* Secondary Ghost Button */}
-                    <motion.button 
-                        whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)" }}
-                        whileTap={{ scale: 0.95 }}
-                        className="w-full sm:w-auto px-10 py-4 bg-transparent border-2 border-white/50 rounded-full text-white font-bold text-lg backdrop-blur-md transition-colors"
-                    >
-                        Learn How It Works
-                    </motion.button>
-                </motion.div>
+                {/* Content container */}
+                <div className="relative rounded-xl shadow-2xl p-8">
+                    <div className="text-center mb-6">
+                        <h1 className="text-4xl font-bold text-white mb-2">Track Your Package</h1>
+                        <p className="text-lg text-white">
+                            Enter Your Bulq Tracking Number to see the status of your shipment
+                        </p>
+                    </div>
 
-                {/* Social Proof / Trust Badges */}
-                <motion.div variants={itemVariants} className="mt-16 pt-8 border-t border-white/20 flex flex-wrap justify-center gap-10 md:gap-16">
-                    <div className="flex flex-col items-center group cursor-default">
-                        <span className="font-extrabold text-3xl md:text-4xl text-white group-hover:text-appNav transition-colors duration-300">50k+</span>
-                        <span className="text-sm font-medium text-gray-300 tracking-wider uppercase mt-1">Active Users</span>
+                    <div className="relative flex">
+                        <input
+                            type="text"
+                            value={inputTracking}
+                            onChange={(e) => setInputTracking(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleTrackClick()}
+                            placeholder="Enter tracking number (e.g. BQ123456789)"
+                            className="flex-grow py-4 px-6 rounded-l-full text-lg border border-gray-300 focus:ring-2 focus:ring-appNav focus:border-blue-500 focus:outline-none bg-white bg-opacity-90 text-gray-900"
+                        />
+                        <button
+                            onClick={handleTrackClick}
+                            className="bg-appNav hover:bg-appTitleBgColor text-white font-bold py-4 px-8 rounded-r-full transition duration-200 whitespace-nowrap"
+                        >
+                            Track Package
+                        </button>
                     </div>
-                    <div className="flex flex-col items-center group cursor-default">
-                        <span className="font-extrabold text-3xl md:text-4xl text-white group-hover:text-appNav transition-colors duration-300">120+</span>
-                        <span className="text-sm font-medium text-gray-300 tracking-wider uppercase mt-1">Countries Served</span>
-                    </div>
-                    <div className="flex flex-col items-center group cursor-default">
-                        <span className="font-extrabold text-3xl md:text-4xl text-white group-hover:text-appNav transition-colors duration-300">99.9%</span>
-                        <span className="text-sm font-medium text-gray-300 tracking-wider uppercase mt-1">Delivery Rate</span>
-                    </div>
-                </motion.div>
+                </div>
             </motion.div>
 
+            {/* Tracking Modal Integration */}
+            <TrackingModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                initialTrackingNumber={inputTracking}
+            />
         </div>
     );
 };
 
-export default WelcomeBanner;
+export default BannerWithTracking;
 
-// "use client";
+// "use client"; // Required for hooks
 
-// import React from 'react';
+// import React, { useState } from 'react';
+// import TrackingModal from '../modals/TrackingModal';
 // import Image from 'next/image';
 
-// interface WelcomeBannerProps {
-//     onGetStartedClick?: () => void;
-// }
+// const BannerWithTracking = () => {
+//     // State for the input field in the banner
+//     const [inputTracking, setInputTracking] = useState('');
+//     // State to toggle the modal
+//     const [isModalOpen, setIsModalOpen] = useState(false);
 
-// const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ onGetStartedClick }) => {
+//     // Handle the search action
+//     const handleTrackClick = () => {
+//         setIsModalOpen(true);
+//         // The modal will read 'inputTracking' via the 'initialTrackingNumber' prop 
+//         // and trigger the search automatically.
+//     };
+
 //     return (
-//         <div className="relative w-full h-[600px] flex items-center justify-center overflow-hidden">
-//             {/* Background Animation - Fixed with 'fill' and 'unoptimized' */}
-//             <Image
-//                 src="/videos/bulq_anime.gif"
-//                 alt="Background Animation"
-//                 fill
-//                 priority
-//                 unoptimized
-//                 className="z-0 object-cover"
-//             />
+//         <div className="relative">
+//             {/* Banner Component */}
+//             <div className='w-full relative h-[584px] flex items-center justify-center'>
+//                 {/* <video
+//                     className='absolute z-0 w-auto min-w-full min-h-full max-w-none object-cover'
+//                     autoPlay
+//                     loop
+//                     muted
+//                     playsInline
+//                     preload="auto"
+//                 >
+//                     <source src="/videos/bulq_anime.gif" type="video/mp4" />
+//                     Your browser does not support the video tag.
+//                 </video> */}
+//                 <Image
+//                     className='absolute z-0 w-full h-full object-cover'
+//                     src="/videos/bulq_anime.gif"
+//                     alt="Background Animation"
+//                 />
 
-//             {/* Overlay to make text readable */}
-//             <div className='absolute inset-0 bg-appTitleBgColor bg-opacity-80 z-[1] backdrop-blur-[2px]'></div>
+//                 {/* Overlay to make text more readable */}
+//                 <div className='absolute inset-0 bg-appTitleBgColor bg-opacity-90 z-1'></div>
 
-//             {/* Content Container */}
-//             <div className='relative z-10 text-center text-white px-4 max-w-4xl'>
-//                 <h1 className='font-extrabold text-4xl md:text-6xl mb-6 tracking-tight leading-tight'>
-//                     Shop Globally, <span className="text-appNav">Ship Smartly</span>
-//                 </h1>
-                
-//                 <p className="font-medium text-lg md:text-2xl mb-10 text-gray-200">
-//                     Your centralized logistics solution for international shopping. 
-//                     We consolidate and deliver your purchases worldwide with ease and speed.
-//                 </p>
-
-//                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-//                     <button 
-//                         onClick={onGetStartedClick}
-//                         className="w-full sm:w-auto px-10 py-4 bg-appNav rounded-full text-white font-bold text-lg hover:bg-white hover:text-appNav transition-all duration-300 shadow-lg border-2 border-appNav"
-//                     >
-//                         Get Started Now
-//                     </button>
-                    
-//                     <button className="w-full sm:w-auto px-10 py-4 bg-transparent border-2 border-white rounded-full text-white font-bold text-lg hover:bg-white hover:text-appTitleBgColor transition-all duration-300">
-//                         Learn How It Works
-//                     </button>
-//                 </div>
-
-//                 {/* Optional Social Proof / Trust Badges */}
-//                 <div className="mt-12 pt-8 border-t border-white/10 flex flex-wrap justify-center gap-8 opacity-60">
-//                     <div className="flex items-center gap-2">
-//                         <span className="font-bold">50k+</span>
-//                         <span className="text-sm">Active Users</span>
-//                     </div>
-//                     <div className="flex items-center gap-2">
-//                         <span className="font-bold">120+</span>
-//                         <span className="text-sm">Countries Served</span>
+//                 {/* Content Container */}
+//                 <div className='relative z-10 text-center text-white px-4'>
+//                     <h2 className='font-bold text-5xl mb-6'>Shop Globally, Ship Smartly</h2>
+//                     <p className="font-semibold text-xl mb-8">
+//                         <span className='block'>Your centralized logistics solution for international shopping.</span>
+//                         <span className='block'>We consolidate and deliver your purchases worldwide</span>
+//                     </p>
+//                     <div className="flex gap-4 justify-center">
+//                         <button className="px-8 py-3 bg-appNav rounded-md text-white hover:bg-opacity-90 transition hover:bg-appTitleBgColor hover:border-appNav hover:border-2 border-2 border-transparent">
+//                             Get Started
+//                         </button>
+//                         <button className="px-8 py-3 bg-transparent rounded-md text-white hover:bg-white hover:bg-opacity-10 transition">
+//                             <span className="border-b-2 border-white">Learn More</span>
+//                         </button>
 //                     </div>
 //                 </div>
 //             </div>
+
+//             {/* Tracking Search Overlay */}
+//             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-full max-w-6xl px-4 z-20">
+//                 {/* Background image container */}
+//                 <div className="absolute inset-0 rounded-xl overflow-hidden">
+//                     <div
+//                         className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-90"
+//                         style={{ backgroundImage: "url('/images/tracksearchbg.png')" }}
+//                     ></div>
+//                     <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+//                 </div>
+
+//                 {/* Content container */}
+//                 <div className="relative rounded-xl shadow-2xl p-8">
+//                     <div className="text-center mb-6">
+//                         <h1 className="text-4xl font-bold text-white mb-2">Track Your Package</h1>
+//                         <p className="text-lg text-white">
+//                             Enter Your Bulq Tracking Number to see the status of your shipment
+//                         </p>
+//                     </div>
+
+//                     <div className="relative flex">
+//                         <input
+//                             type="text"
+//                             value={inputTracking}
+//                             onChange={(e) => setInputTracking(e.target.value)}
+//                             onKeyDown={(e) => e.key === 'Enter' && handleTrackClick()}
+//                             placeholder="Enter tracking number (e.g. BQ123456789)"
+//                             className="flex-grow py-4 px-6 rounded-l-full text-lg border border-gray-300 focus:ring-2 focus:ring-appNav focus:border-blue-500 focus:outline-none bg-white bg-opacity-90 text-gray-900"
+//                         />
+//                         <button
+//                             onClick={handleTrackClick}
+//                             className="bg-appNav hover:bg-appTitleBgColor text-white font-bold py-4 px-8 rounded-r-full transition duration-200 whitespace-nowrap"
+//                         >
+//                             Track Package
+//                         </button>
+//                     </div>
+//                 </div>
+//             </div>
+
+//             {/* Tracking Modal Integration */}
+//             <TrackingModal
+//                 isOpen={isModalOpen}
+//                 onClose={() => setIsModalOpen(false)}
+//                 initialTrackingNumber={inputTracking}
+//             />
 //         </div>
 //     );
 // };
 
-// export default WelcomeBanner;
+// export default BannerWithTracking;
