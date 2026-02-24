@@ -198,7 +198,10 @@ const BookingPaymentModal: React.FC<BookingPaymentModalProps> = ({
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 bg-white rounded-lg p-1 border border-gray-100 flex items-center justify-center">
                                                     {method.iconUrl ? (
-                                                        <Image src={method.iconUrl} alt={method.displayName} className="w-full h-full object-contain" />
+                                                        <Image src={method.iconUrl} alt={method.displayName} 
+                                                        width={48}   // <-- Add this
+                                                        height={48}  // <-- Add this
+                                                        className="w-full h-full object-contain" />
                                                     ) : <IoCard className="text-gray-400" size={24} />}
                                                 </div>
                                                 <div>
