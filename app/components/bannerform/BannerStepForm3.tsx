@@ -10,8 +10,7 @@ import { CountryDTO } from '@/types/user';
 import { getSupportedCities, getSupportedCountries } from '@/lib/user/actions';
 import { createDropOffBooking } from '@/lib/user/booking.actions';
 import { getAllHubs } from '@/lib/admin/warehouse.actions';
-// import { getAllHubs } from '@/lib/admin/warehouse.actions';
-// import { getAllHubs } from '@/lib/admin/warehouse.actions';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 
 // --- TYPES ---
 interface HubTelephone { hubId: number; telephone: string; }
@@ -27,21 +26,42 @@ const stepImages = {
     3: "/videos/backgroundvideo.mp4"
 };
 
-const HUBS_BASE_URL = process.env.HUBS_BASE_URL;
+// --- FRAMER MOTION VARIANTS ---
+const stepVariants: Variants = {
+    hidden: { opacity: 0, x: 30, scale: 0.98 },
+    show: { 
+        opacity: 1, 
+        x: 0, 
+        scale: 1, 
+        transition: { type: "spring", stiffness: 250, damping: 25, staggerChildren: 0.05 } 
+    },
+    exit: { 
+        opacity: 0, 
+        x: -30, 
+        scale: 0.98, 
+        transition: { duration: 0.2, ease: "easeInOut" } 
+    }
+};
+
+const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 15 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 200, damping: 20 } }
+};
 
 const BannerStepForm3: React.FC = () => {
     
     // --- 1. STATE ---
+    // Removed ALL hardcoded defaults (N/A, 0000, Self) to ensure user enters everything
     const [formData, setFormData] = useState<BADOBookingPayload>({
         // Sender
         senderFirstName: '', senderLastName: '', senderPhoneNumber: '', senderEmail: '',
         senderAddress: '', senderCity: '', senderCountry: '', senderState: '', 
-        senderLga: 'N/A', senderPostCode: '000000',
+        senderLga: '', senderPostCode: '',
         
         // Receiver
         receiverFirstname: '', receiverLastname: '', receiverPhoneNumber: '', receiverEmail: '',
         receiverAddress: '', receiverCity: '', receiverCountry: '', receiverState: '', 
-        receiverLga: 'N/A', receiverPostCode: '000000',
+        receiverLga: '', receiverPostCode: '',
 
         // Hub Details
         hubId: '', email: 'support@bulq.com', phoneNumber: '', 
@@ -53,8 +73,8 @@ const BannerStepForm3: React.FC = () => {
         weight: 0, length: 0, width: 0, height: 0,
         
         // Config
-        shipmentType: 'EXPRESS', pickupType: 'BADO', shippingAmount: 0, vendor: 'Self', declaredValue: 0, 
-        productCategory: 'GENERAL', hsCode: '0000', itemDescription: '', includeInsurance: false, promoCode: '', calculateShipping: true
+        shipmentType: 'EXPRESS', pickupType: 'BADO', shippingAmount: 0, vendor: '', declaredValue: 0, 
+        productCategory: 'GENERAL', hsCode: '', itemDescription: '', includeInsurance: false, promoCode: '', calculateShipping: true
     });
 
     const [currentStep, setCurrentStep] = useState(1);
@@ -71,7 +91,6 @@ const BannerStepForm3: React.FC = () => {
     // --- 2. EFFECTS ---
     useEffect(() => {
         const initData = async () => {
-            // 1. Fetch Countries
             try { 
                 const fetchedCountries = await getSupportedCountries();
                 setCountries(fetchedCountries || []); 
@@ -79,7 +98,6 @@ const BannerStepForm3: React.FC = () => {
                 console.error("Error fetching countries:", e);
             }
 
-            // 2. Fetch Hubs using your new API function
             try {
                 const fetchedHubs = await getAllHubs();
                 setHubs(fetchedHubs || []); 
@@ -90,18 +108,7 @@ const BannerStepForm3: React.FC = () => {
 
         initData();
     }, []);
-    // useEffect(() => {
-    //     const initData = async () => {
-    //         try { setCountries(await getSupportedCountries() || []); } catch(e) {}
-    //         try {
-    //             const res = await fetch(`${HUBS_BASE_URL}/hubs/all"`, { headers: { 'accept': 'application/json' }, cache: 'no-store' });
-    //             if (res.ok) setHubs(await res.json());
-    //         } catch (e) { console.error(e); }
-    //     };
-    //     initData();
-    // }, []);
     
-    // Load Cities: We look up Country Name using the stored Code to fetch cities
     useEffect(() => { 
         if(formData.senderCountry) { 
             const c = countries.find(x => x.countryCode === formData.senderCountry); 
@@ -145,11 +152,6 @@ const BannerStepForm3: React.FC = () => {
                 pickUpTime: isoDate.split('T')[1].substring(0, 5)
             };
 
-            console.log("🚀 Payload (Country Codes check):", { 
-                sender: finalPayload.senderCountry, 
-                receiver: finalPayload.receiverCountry 
-            });
-
             const response = await createDropOffBooking(finalPayload);
             setBookingResponse(response);
             setShowPaymentModal(true);
@@ -161,137 +163,135 @@ const BannerStepForm3: React.FC = () => {
     const handlePrevious = () => { if (currentStep > 1) setCurrentStep(prev => prev - 1); };
     const filteredHubs = hubs.filter(h => h.hubName.toLowerCase().includes(searchQuery.toLowerCase()) || h.city.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    const customInputClasses = "w-full px-4 py-3 rounded-lg bg-white/80 backdrop-blur-sm border border-gray-300 outline-none text-black font-semibold text-sm focus:bg-white transition-all";
-    const labelClasses = "block text-[10px] font-bold text-gray-700 uppercase tracking-wide mb-1 ml-1 shadow-sm";
+    const customInputClasses = "w-full px-4 py-3 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm outline-none text-black font-semibold text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all";
+    const labelClasses = "block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1";
 
     return (
         <div className="w-full h-full bg-gray-50 flex flex-col relative overflow-hidden">
-            {/* BACKGROUND */}
+            {/* BACKGROUND ANIMATION */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 {Object.keys(stepImages).map((step) => (
                     <div key={step} className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${currentStep === Number(step) ? 'opacity-100' : 'opacity-0'}`} style={{ backgroundImage: `url(${stepImages[Number(step) as keyof typeof stepImages]})` }} />
                 ))}
-                <div className="absolute inset-0 bg-white/90 backdrop-blur-[2px]"></div>
+                <div className="absolute inset-0 bg-white/90 backdrop-blur-[3px]"></div>
             </div>
 
-            <div className="bg-white/95 pt-3 pb-2 px-4 border-b border-gray-200 shrink-0 shadow-sm z-10 relative">
-                <h2 className="text-lg font-extrabold text-appBlack">Drop Off Appointment</h2>
-                <div className="flex gap-2 text-xs font-bold text-gray-400 mt-1">Step {currentStep} of 3</div>
+            {/* HEADER & ANIMATED PROGRESS BAR */}
+            <div className="bg-white/95 pt-4 pb-0 border-b border-gray-200 shrink-0 shadow-sm z-10 relative">
+                <div className="px-4 flex justify-between items-end pb-2">
+                    <h2 className="text-xl font-extrabold text-appBlack tracking-tight">Drop Off Appointment</h2>
+                    <div className="flex gap-2 text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">Step {currentStep} of 3</div>
+                </div>
+                {/* Progress Bar Track */}
+                <div className="w-full h-1 bg-gray-200">
+                    <motion.div 
+                        initial={{ width: "33%" }}
+                        animate={{ width: `${(currentStep / 3) * 100}%` }}
+                        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                        className="h-full bg-appNav"
+                    />
+                </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 z-10 relative">
+            <div className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8 z-10 relative custom-scrollbar">
                 <div className="max-w-4xl mx-auto">
-                    {/* STEP 1 */}
-                    {currentStep === 1 && (
-                        <div className="animate-in fade-in slide-in-from-right-8 duration-500 space-y-8">
-                            <div>
-                                <h3 className="mb-4 font-bold text-gray-800 border-b border-gray-300 pb-2">Sender Details (You)</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
-                                    <div className="col-span-1"><label className={labelClasses}>First Name</label><InputField className={customInputClasses} name="senderFirstName" value={formData.senderFirstName} onChange={(e) => setFormData({...formData, senderFirstName: e.target.value})} /></div>
-                                    <div className="col-span-1"><label className={labelClasses}>Last Name</label><InputField className={customInputClasses} name="senderLastName" value={formData.senderLastName} onChange={(e) => setFormData({...formData, senderLastName: e.target.value})} /></div>
-                                    <div className="col-span-1 md:col-span-2"><label className={labelClasses}>Email</label><InputField className={customInputClasses} name="senderEmail" value={formData.senderEmail} onChange={(e) => setFormData({...formData, senderEmail: e.target.value})} /></div>
-                                    <div className="col-span-1 md:col-span-2"><label className={labelClasses}>Address</label><InputField className={customInputClasses} name="senderAddress" value={formData.senderAddress} onChange={(e) => setFormData({...formData, senderAddress: e.target.value})} /></div>
-                                    
-                                    {/* ✅ FIX: Capture Code, Show Name */}
-                                    <div className="col-span-1">
-                                        <label className={labelClasses}>Country</label>
-                                        <InputField 
-                                            className={customInputClasses} 
-                                            name="senderCountry" 
-                                            value={formData.senderCountry} 
-                                            dropdownOptions={countries.map(c => ({ label: c.countryName, value: c.countryCode }))} 
-                                            onChange={(e) => setFormData({...formData, senderCountry: e.target.value})} 
-                                        />
+                    <AnimatePresence mode="wait">
+                        
+                        {/* STEP 1: SENDER & RECEIVER DETAILS */}
+                        {currentStep === 1 && (
+                            <motion.div key="step1" variants={stepVariants} initial="hidden" animate="show" exit="exit" className="space-y-10 pb-8">
+                                <div>
+                                    <motion.h3 variants={itemVariants} className="mb-6 font-extrabold text-2xl text-gray-800 border-b border-gray-300 pb-2">Sender Details (You)</motion.h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                                        <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>First Name</label><InputField className={customInputClasses} name="senderFirstName" value={formData.senderFirstName} placeholder="First name" onChange={(e) => setFormData({...formData, senderFirstName: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>Last Name</label><InputField className={customInputClasses} name="senderLastName" value={formData.senderLastName} placeholder="Last name" onChange={(e) => setFormData({...formData, senderLastName: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1 md:col-span-2"><label className={labelClasses}>Email</label><InputField className={customInputClasses} name="senderEmail" value={formData.senderEmail} placeholder="Email address" onChange={(e) => setFormData({...formData, senderEmail: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1 md:col-span-2"><label className={labelClasses}>Address</label><InputField className={customInputClasses} name="senderAddress" value={formData.senderAddress} placeholder="Street Address" onChange={(e) => setFormData({...formData, senderAddress: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1">
+                                            <label className={labelClasses}>Country</label>
+                                            <InputField className={customInputClasses} name="senderCountry" value={formData.senderCountry} dropdownOptions={countries.map(c => ({ label: c.countryName, value: c.countryCode }))} onChange={(e) => setFormData({...formData, senderCountry: e.target.value, senderCity: ''})} />
+                                        </motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>City</label><InputField className={customInputClasses} name="senderCity" value={formData.senderCity} dropdownOptions={senderCities} onChange={(e) => setFormData({...formData, senderCity: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>State/Province</label><InputField className={customInputClasses} name="senderState" value={formData.senderState} placeholder="State" onChange={(e) => setFormData({...formData, senderState: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>Phone</label><InputField className={customInputClasses} name="senderPhoneNumber" value={formData.senderPhoneNumber} placeholder="Phone number" onChange={(e) => setFormData({...formData, senderPhoneNumber: e.target.value})} /></motion.div>
                                     </div>
-                                    
-                                    <div className="col-span-1"><label className={labelClasses}>City</label><InputField className={customInputClasses} name="senderCity" value={formData.senderCity} dropdownOptions={senderCities} onChange={(e) => setFormData({...formData, senderCity: e.target.value})} /></div>
-                                    <div className="col-span-1"><label className={labelClasses}>State/Province</label><InputField className={customInputClasses} name="senderState" value={formData.senderState} onChange={(e) => setFormData({...formData, senderState: e.target.value})} /></div>
-                                    <div className="col-span-1"><label className={labelClasses}>Phone</label><InputField className={customInputClasses} name="senderPhoneNumber" value={formData.senderPhoneNumber} onChange={(e) => setFormData({...formData, senderPhoneNumber: e.target.value})} /></div>
-                                </div>
-                            </div>
-                            <div>
-                                <h3 className="mb-4 font-bold text-gray-800 border-b border-gray-300 pb-2">Receiver Details (Destination)</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
-                                    <div className="col-span-1"><label className={labelClasses}>First Name</label><InputField className={customInputClasses} name="receiverFirstname" value={formData.receiverFirstname} onChange={(e) => setFormData({...formData, receiverFirstname: e.target.value})} /></div>
-                                    <div className="col-span-1"><label className={labelClasses}>Last Name</label><InputField className={customInputClasses} name="receiverLastname" value={formData.receiverLastname} onChange={(e) => setFormData({...formData, receiverLastname: e.target.value})} /></div>
-                                    <div className="col-span-1 md:col-span-2"><label className={labelClasses}>Email</label><InputField className={customInputClasses} name="receiverEmail" value={formData.receiverEmail} onChange={(e) => setFormData({...formData, receiverEmail: e.target.value})} /></div>
-                                    <div className="col-span-1 md:col-span-2"><label className={labelClasses}>Address</label><InputField className={customInputClasses} name="receiverAddress" value={formData.receiverAddress} onChange={(e) => setFormData({...formData, receiverAddress: e.target.value})} /></div>
-                                    
-                                    {/* ✅ FIX: Capture Code, Show Name */}
-                                    <div className="col-span-1">
-                                        <label className={labelClasses}>Country</label>
-                                        <InputField 
-                                            className={customInputClasses} 
-                                            name="receiverCountry" 
-                                            value={formData.receiverCountry} 
-                                            dropdownOptions={countries.map(c => ({ label: c.countryName, value: c.countryCode }))} 
-                                            onChange={(e) => setFormData({...formData, receiverCountry: e.target.value})} 
-                                        />
-                                    </div>
-
-                                    <div className="col-span-1"><label className={labelClasses}>City</label><InputField className={customInputClasses} name="receiverCity" value={formData.receiverCity} dropdownOptions={receiverCities} onChange={(e) => setFormData({...formData, receiverCity: e.target.value})} /></div>
-                                    <div className="col-span-1"><label className={labelClasses}>State/Province</label><InputField className={customInputClasses} name="receiverState" value={formData.receiverState} onChange={(e) => setFormData({...formData, receiverState: e.target.value})} /></div>
-                                    <div className="col-span-1"><label className={labelClasses}>Phone</label><InputField className={customInputClasses} name="receiverPhoneNumber" value={formData.receiverPhoneNumber} onChange={(e) => setFormData({...formData, receiverPhoneNumber: e.target.value})} /></div>
-                                    <div className="col-span-1"><label className={labelClasses}>LGA / County</label><InputField className={customInputClasses} name="receiverLga" value={formData.receiverLga} placeholder="Required" onChange={(e) => setFormData({...formData, receiverLga: e.target.value})} /></div>
-                                    <div className="col-span-1"><label className={labelClasses}>Post Code</label><InputField className={customInputClasses} name="receiverPostCode" value={formData.receiverPostCode} placeholder="Required" onChange={(e) => setFormData({...formData, receiverPostCode: e.target.value})} /></div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* STEP 2: SELECT HUB */}
-                    {currentStep === 2 && (
-                        <div className="animate-in fade-in slide-in-from-right-8 duration-500 flex flex-col items-center">
-                            <h3 className="w-full text-left mb-4 font-bold text-gray-800 border-b border-gray-300 pb-2">Select Drop-off Location</h3>
-                            <input className="w-full pl-4 py-3 bg-white/90 border border-gray-300 rounded-xl mb-6 text-sm backdrop-blur-sm focus:ring-2 focus:ring-appBanner transition-all" placeholder="Search hubs by name, city or state..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-                            <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {filteredHubs.map((hub, index) => (
-                                    <div key={hub.id} onClick={() => handleHubSelect(index)} className={`cursor-pointer rounded-xl border-2 p-1 transition-all ${selectedHubIndex === index ? 'border-appNav bg-blue-50/60 scale-[1.02] shadow-md' : 'border-gray-100 bg-white/80 hover:border-gray-300'}`}>
-                                        <LocationCard title={hub.hubName} location={hub.city} address={hub.address} workingHours={hub.workHours.map(wh => ({ day: wh.day, hours: wh.time }))} phoneNumbers={hub.telephones.map(t => t.telephone)} />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* STEP 3: PACKAGE & APPOINTMENT */}
-                    {currentStep === 3 && (
-                        <div className="animate-in fade-in slide-in-from-right-8 duration-500">
-                            <h3 className="mb-4 font-bold text-gray-800 border-b border-gray-300 pb-2">Package & Appointment</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
-                                <div className="col-span-1"><label className={labelClasses}>Package Name</label><InputField className={customInputClasses} name="package_name" value={formData.package_name} required onChange={(e) => setFormData({...formData, package_name: e.target.value})} /></div>
-                                <div className="col-span-1"><label className={labelClasses}>Category</label><InputField className={customInputClasses} name="productCategory" value={formData.productCategory} dropdownOptions={["GENERAL", "ELECTRONICS", "FASHION", "DOCUMENTS", "HEALTHCARE"]} onChange={(e) => setFormData({...formData, productCategory: e.target.value})} /></div>
-                                <div className="col-span-1"><label className={labelClasses}>Vendor</label><InputField className={customInputClasses} name="vendor" value={formData.vendor} placeholder="Self" onChange={(e) => setFormData({...formData, vendor: e.target.value})} /></div>
-                                <div className="col-span-1"><label className={labelClasses}>Shipment Type</label><InputField className={customInputClasses} name="shipmentType" value={formData.shipmentType} dropdownOptions={["EXPRESS", "STANDARD"]} onChange={(e) => setFormData({...formData, shipmentType: e.target.value})} /></div>
-                                
-                                <div className="col-span-1 md:col-span-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-                                    <label className="block text-xs font-bold text-appNav uppercase mb-2">Drop-off Appointment</label>
-                                    <InputField type="datetime-local" className={customInputClasses} name="appointmentDate" value={formData.appointmentDate} required onChange={(e) => setFormData({...formData, appointmentDate: e.target.value})} />
                                 </div>
                                 
-                                <div className="col-span-1"><label className={labelClasses}>Weight (kg)</label><InputField type="number" className={customInputClasses} name="weight" value={formData.weight} required onChange={(e) => setFormData({...formData, weight: parseFloat(e.target.value)})} /></div>
-                                <div className="col-span-1 grid grid-cols-3 gap-2">
-                                    <div><label className={labelClasses}>L (cm)</label><InputField type="number" className={customInputClasses} name="length" value={formData.length} onChange={(e) => setFormData({...formData, length: parseFloat(e.target.value)})} /></div>
-                                    <div><label className={labelClasses}>W (cm)</label><InputField type="number" className={customInputClasses} name="width" value={formData.width} onChange={(e) => setFormData({...formData, width: parseFloat(e.target.value)})} /></div>
-                                    <div><label className={labelClasses}>H (cm)</label><InputField type="number" className={customInputClasses} name="height" value={formData.height} onChange={(e) => setFormData({...formData, height: parseFloat(e.target.value)})} /></div>
+                                <div>
+                                    <motion.h3 variants={itemVariants} className="mb-6 font-extrabold text-2xl text-gray-800 border-b border-gray-300 pb-2">Receiver Details (Destination)</motion.h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                                        <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>First Name</label><InputField className={customInputClasses} name="receiverFirstname" value={formData.receiverFirstname} placeholder="First name" onChange={(e) => setFormData({...formData, receiverFirstname: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>Last Name</label><InputField className={customInputClasses} name="receiverLastname" value={formData.receiverLastname} placeholder="Last name" onChange={(e) => setFormData({...formData, receiverLastname: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1 md:col-span-2"><label className={labelClasses}>Email</label><InputField className={customInputClasses} name="receiverEmail" value={formData.receiverEmail} placeholder="Email address" onChange={(e) => setFormData({...formData, receiverEmail: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1 md:col-span-2"><label className={labelClasses}>Address</label><InputField className={customInputClasses} name="receiverAddress" value={formData.receiverAddress} placeholder="Street Address" onChange={(e) => setFormData({...formData, receiverAddress: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1">
+                                            <label className={labelClasses}>Country</label>
+                                            <InputField className={customInputClasses} name="receiverCountry" value={formData.receiverCountry} dropdownOptions={countries.map(c => ({ label: c.countryName, value: c.countryCode }))} onChange={(e) => setFormData({...formData, receiverCountry: e.target.value, receiverCity: ''})} />
+                                        </motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>City</label><InputField className={customInputClasses} name="receiverCity" value={formData.receiverCity} dropdownOptions={receiverCities} onChange={(e) => setFormData({...formData, receiverCity: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>State/Province</label><InputField className={customInputClasses} name="receiverState" value={formData.receiverState} placeholder="State" onChange={(e) => setFormData({...formData, receiverState: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>Phone</label><InputField className={customInputClasses} name="receiverPhoneNumber" value={formData.receiverPhoneNumber} placeholder="Phone number" onChange={(e) => setFormData({...formData, receiverPhoneNumber: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>LGA / County</label><InputField className={customInputClasses} name="receiverLga" value={formData.receiverLga} placeholder="Local Govt Area" onChange={(e) => setFormData({...formData, receiverLga: e.target.value})} /></motion.div>
+                                        <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>Post Code</label><InputField className={customInputClasses} name="receiverPostCode" value={formData.receiverPostCode} placeholder="Post Code" onChange={(e) => setFormData({...formData, receiverPostCode: e.target.value})} /></motion.div>
+                                    </div>
                                 </div>
-                                <div className="col-span-1"><label className={labelClasses}>Declared Value</label><InputField type="number" className={customInputClasses} name="declaredValue" value={formData.declaredValue} required onChange={(e) => setFormData({...formData, declaredValue: parseFloat(e.target.value)})} /></div>
-                                <div className="col-span-1"><label className={labelClasses}>HS Code</label><InputField className={customInputClasses} name="hsCode" value={formData.hsCode} placeholder="Optional" onChange={(e) => setFormData({...formData, hsCode: e.target.value})} /></div>
-                                <div className="col-span-1"><label className={labelClasses}>Promo Code</label><InputField className={customInputClasses} name="promoCode" value={formData.promoCode} placeholder="Optional" onChange={(e) => setFormData({...formData, promoCode: e.target.value})} /></div>
-                                <div className="col-span-1 flex items-center pt-6"><input type="checkbox" id="ins3" className="w-5 h-5 text-appBanner rounded" checked={formData.includeInsurance} onChange={(e) => setFormData({...formData, includeInsurance: e.target.checked})} /><label htmlFor="ins3" className="ml-2 text-sm font-bold text-gray-600">Insurance?</label></div>
-                                <div className="col-span-1 md:col-span-2"><label className={labelClasses}>Description</label><ReusableTextarea name="package_description" rows={3} className="w-full px-4 py-3 rounded-lg bg-white/80 border border-gray-300" value={formData.package_description} onChange={(e: any) => setFormData({...formData, package_description: e.target.value})} /></div>
-                            </div>
-                            <div className="mt-8 pt-6 border-t border-gray-200">
-                                <Button onClick={handleBookingSubmit} disabled={isSubmitting} className="w-full py-4 bg-appNav text-white rounded-xl shadow-lg hover:shadow-xl transition-all">{isSubmitting ? "Processing..." : "PAY & BOOK"}</Button>
-                            </div>
-                        </div>
-                    )}
+                            </motion.div>
+                        )}
+
+                        {/* STEP 2: SELECT HUB */}
+                        {currentStep === 2 && (
+                            <motion.div key="step2" variants={stepVariants} initial="hidden" animate="show" exit="exit" className="pb-8 flex flex-col items-center">
+                                <motion.h3 variants={itemVariants} className="w-full text-left mb-6 font-extrabold text-2xl text-gray-800 border-b border-gray-300 pb-2">Select Drop-off Location</motion.h3>
+                                <motion.input variants={itemVariants} className="w-full pl-4 py-4 bg-white/90 border border-gray-300 rounded-xl mb-6 text-base font-medium shadow-sm backdrop-blur-sm focus:ring-2 focus:ring-appNav transition-all outline-none" placeholder="Search hubs by name, city or state..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {filteredHubs.map((hub, index) => (
+                                        <motion.div variants={itemVariants} key={hub.id} onClick={() => handleHubSelect(index)} className={`cursor-pointer rounded-xl border-2 p-1 transition-all ${selectedHubIndex === index ? 'border-appNav bg-blue-50/60 scale-[1.02] shadow-md' : 'border-transparent bg-white/80 hover:border-gray-300'}`}>
+                                            <LocationCard title={hub.hubName} location={hub.city} address={hub.address} workingHours={hub.workHours.map(wh => ({ day: wh.day, hours: wh.time }))} phoneNumbers={hub.telephones.map(t => t.telephone)} />
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* STEP 3: PACKAGE DETAILS */}
+                        {currentStep === 3 && (
+                            <motion.div key="step3" variants={stepVariants} initial="hidden" animate="show" exit="exit" className="pb-8">
+                                <motion.h3 variants={itemVariants} className="mb-6 font-extrabold text-2xl text-gray-800 border-b border-gray-300 pb-2">Package & Appointment</motion.h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+                                    <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>Package Name</label><InputField className={customInputClasses} name="package_name" value={formData.package_name} placeholder="e.g. MacBook Pro" required onChange={(e) => setFormData({...formData, package_name: e.target.value})} /></motion.div>
+                                    <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>Category</label><InputField className={customInputClasses} name="productCategory" value={formData.productCategory} dropdownOptions={["GENERAL", "ELECTRONICS", "FASHION", "DOCUMENTS", "HEALTHCARE"]} onChange={(e) => setFormData({...formData, productCategory: e.target.value})} /></motion.div>
+                                    <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>Vendor</label><InputField className={customInputClasses} name="vendor" value={formData.vendor} placeholder="Enter vendor name (optional)" onChange={(e) => setFormData({...formData, vendor: e.target.value})} /></motion.div>
+                                    <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>Shipment Type</label><InputField className={customInputClasses} name="shipmentType" value={formData.shipmentType} dropdownOptions={["EXPRESS", "STANDARD"]} onChange={(e) => setFormData({...formData, shipmentType: e.target.value})} /></motion.div>
+                                    
+                                    <motion.div variants={itemVariants} className="col-span-1 md:col-span-2 bg-blue-50/50 p-5 rounded-xl border border-blue-100 shadow-sm">
+                                        <label className="block text-xs font-bold text-appNav uppercase mb-2 tracking-wider">Drop-off Appointment</label>
+                                        <InputField type="datetime-local" className={customInputClasses} name="appointmentDate" value={formData.appointmentDate} required onChange={(e) => setFormData({...formData, appointmentDate: e.target.value})} />
+                                    </motion.div>
+                                    
+                                    <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>Weight (kg)</label><InputField type="number" className={customInputClasses} name="weight" value={formData.weight} required onChange={(e) => setFormData({...formData, weight: parseFloat(e.target.value)})} /></motion.div>
+                                    <motion.div variants={itemVariants} className="col-span-1 grid grid-cols-3 gap-2">
+                                        <div><label className={labelClasses}>L (cm)</label><InputField type="number" className={customInputClasses} name="length" value={formData.length} onChange={(e) => setFormData({...formData, length: parseFloat(e.target.value)})} /></div>
+                                        <div><label className={labelClasses}>W (cm)</label><InputField type="number" className={customInputClasses} name="width" value={formData.width} onChange={(e) => setFormData({...formData, width: parseFloat(e.target.value)})} /></div>
+                                        <div><label className={labelClasses}>H (cm)</label><InputField type="number" className={customInputClasses} name="height" value={formData.height} onChange={(e) => setFormData({...formData, height: parseFloat(e.target.value)})} /></div>
+                                    </motion.div>
+                                    <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>Declared Value</label><InputField type="number" className={customInputClasses} name="declaredValue" value={formData.declaredValue} required onChange={(e) => setFormData({...formData, declaredValue: parseFloat(e.target.value)})} /></motion.div>
+                                    <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>HS Code</label><InputField className={customInputClasses} name="hsCode" value={formData.hsCode} placeholder="Optional" onChange={(e) => setFormData({...formData, hsCode: e.target.value})} /></motion.div>
+                                    <motion.div variants={itemVariants} className="col-span-1"><label className={labelClasses}>Promo Code</label><InputField className={customInputClasses} name="promoCode" value={formData.promoCode} placeholder="Optional" onChange={(e) => setFormData({...formData, promoCode: e.target.value})} /></motion.div>
+                                    <motion.div variants={itemVariants} className="col-span-1 flex items-center pt-6"><input type="checkbox" id="ins3" className="w-5 h-5 text-appBanner rounded focus:ring-blue-500" checked={formData.includeInsurance} onChange={(e) => setFormData({...formData, includeInsurance: e.target.checked})} /><label htmlFor="ins3" className="ml-2 text-sm font-bold text-gray-700">Add Insurance?</label></motion.div>
+                                    <motion.div variants={itemVariants} className="col-span-1 md:col-span-2"><label className={labelClasses}>Description</label><ReusableTextarea name="package_description" rows={3} className="w-full px-4 py-3 rounded-xl bg-white/80 border border-gray-200 shadow-sm outline-none focus:ring-2 focus:ring-blue-500/50" value={formData.package_description} onChange={(e: any) => setFormData({...formData, package_description: e.target.value})} /></motion.div>
+                                </div>
+                                <motion.div variants={itemVariants} className="mt-8 pt-6 border-t border-gray-200">
+                                    <Button onClick={handleBookingSubmit} disabled={isSubmitting} className="w-full py-4 bg-appNav text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-[0.98]">{isSubmitting ? "Processing..." : "PAY & BOOK"}</Button>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
             <div className="bg-white/95 p-4 border-t border-gray-200 flex justify-between z-10 relative">
-                <div className="w-32">{currentStep > 1 && <Button onClick={handlePrevious} className="w-full bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200 transition-colors">Back</Button>}</div>
-                <div className="w-32">{currentStep < 3 && <Button onClick={handleNext} className="w-full bg-appNav text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">Next</Button>}</div>
+                <div className="w-32">{currentStep > 1 && <Button onClick={handlePrevious} className="w-full bg-gray-100 font-bold text-gray-700 py-3 rounded-xl hover:bg-gray-200 transition-colors active:scale-95">Back</Button>}</div>
+                <div className="w-32">{currentStep < 3 && <Button onClick={handleNext} className="w-full bg-appNav font-bold text-white py-3 rounded-xl hover:bg-blue-600 transition-colors shadow-md active:scale-95">Next</Button>}</div>
             </div>
 
             {showPaymentModal && bookingResponse && <BookingPaymentModal bookingData={bookingResponse} customerEmail={formData.senderEmail} customerName={`${formData.senderFirstName} ${formData.senderLastName}`} onClose={() => setShowPaymentModal(false)} />}
