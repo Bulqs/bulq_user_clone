@@ -107,6 +107,8 @@ const BOOKING_API = "http://localhost:8087/api/v1/booking";
 const CUSTOMER_BASE_URL = process.env.CUSTOMER_BASE_URL
 
 export async function Register(payload: RegisterUser): Promise<AuthResponse> {
+
+    console.log(payload)
     if (payload.email == null || payload.password == null) {
         return Promise.reject({
             status: 400,

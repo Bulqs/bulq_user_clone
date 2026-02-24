@@ -29,7 +29,7 @@ const RegisterPage: React.FC = () => {
     const [submissionPending, setSubmissionPending] = useState<boolean>(false);
     const router = useRouter();
 
-    const [countries, setCountries] = useState<{ label: string; value: string }[]>([]);
+    const [countries, setCountries] = useState<{ label: string; value: string; code: string }[]>([]);
     const [cities, setCities] = useState<{ label: string; value: string }[]>([]);
     const [loadingLocations, setLoadingLocations] = useState(true);
 
@@ -48,7 +48,8 @@ const RegisterPage: React.FC = () => {
                 if (data && Array.isArray(data)) {
                     const formattedCountries = data.map((c) => ({
                         label: c.countryName,
-                        value: c.countryName
+                        value: c.countryName,
+                        code: c.countryCode // <--- JUST ADD THIS LINE
                     }));
                     setCountries(formattedCountries);
                     console.log("Fetched Countries:", formattedCountries); // Restored log
@@ -108,6 +109,50 @@ const RegisterPage: React.FC = () => {
     };
     // =========================================================================
 
+    // function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    //     event.preventDefault();
+
+    //     setSubmissionPending(true);
+    //     setErrorMessage("");
+
+    //     if (!formData) {
+    //         setErrorMessage("Incomplete credentials");
+    //         setSubmissionPending(false);
+    //         return;
+    //     }
+
+    //     // NEW: Password Match Validation
+    //     if (formData.password !== confirmPassword) {
+    //         setErrorMessage("Passwords do not match!");
+    //         setSubmissionPending(false);
+    //         return;
+    //     }
+
+    //     (async function () {
+    //         try {
+    //             const apiPayload = {
+    //                 ...formData,
+    //                 phoneNumber: `${phoneCode}${formData.phoneNumber}`
+    //             };
+
+    //             // RESTORED: Logs the final merged payload sent to your backend
+    //             console.log("FINAL API PAYLOAD:", apiPayload);
+            
+
+    //             const response: AuthResponse = await Register(apiPayload);
+
+    //             if (!response) {
+    //                 throw new Error("Failed to register");
+    //             }
+                
+    //             router.push("/pages/signin");
+
+    //         } catch (error) {
+    //             setErrorMessage("Error validating credentials!");
+    //             setSubmissionPending(false);
+    //         }
+    //     })();
+    // }
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
@@ -129,14 +174,21 @@ const RegisterPage: React.FC = () => {
 
         (async function () {
             try {
+                // 1. Find the selected country object in your state
+                const selectedCountryObj = countries.find(c => c.value === formData.country);
+                
+                // 2. Extract the code (fallback to the name just in case)
+                const finalCountryCode = selectedCountryObj?.code || formData.country;
+
                 const apiPayload = {
                     ...formData,
-                    phoneNumber: `${phoneCode}${formData.phoneNumber}`
+                    phoneNumber: `${phoneCode}${formData.phoneNumber}`,
+                    country: finalCountryCode // <--- SWAPS THE NAME FOR THE CODE
                 };
 
                 // RESTORED: Logs the final merged payload sent to your backend
                 console.log("FINAL API PAYLOAD:", apiPayload);
-
+            
                 const response: AuthResponse = await Register(apiPayload);
 
                 if (!response) {
@@ -257,6 +309,32 @@ const RegisterPage: React.FC = () => {
                                 </div>
                             </div>
                         </div>
+                        {/* Row 7: Terms and Conditions */}
+                            <div className="flex items-start gap-3 mt-2">
+                                <div className="flex items-center h-5">
+                                    <input
+                                        id="termsAndConditions"
+                                        name="termsAndConditions"
+                                        type="checkbox"
+                                        required
+                                        checked={formData.termsAndConditions === "accepted"}
+                                        onChange={(e) => setFormData(prev => ({ 
+                                            ...prev, 
+                                            termsAndConditions: e.target.checked ? "accepted" : "" 
+                                        }))}
+                                        className="w-4 h-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900 transition-colors"
+                                    />
+                                </div>
+                                <div className="text-xs">
+                                    <label htmlFor="termsAndConditions" className="font-medium text-gray-300">
+                                        I agree to the{' '}
+                                        <Link href="#" className="text-blue-400 hover:text-blue-300 hover:underline transition-colors">
+                                            Terms and Conditions
+                                        </Link>
+                                        {' '}and Privacy Policy.
+                                    </label>
+                                </div>
+                            </div>
 
                         <Button type="submit" className='group relative w-full overflow-hidden bg-appNav py-4 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-300 active:scale-[0.98]'>
                             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>

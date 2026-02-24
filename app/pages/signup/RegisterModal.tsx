@@ -267,6 +267,33 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                             </div>
                         </div>
 
+                        {/* Row 7: Terms and Conditions */}
+                            <div className="flex items-start gap-3 mt-2">
+                                <div className="flex items-center h-5">
+                                    <input
+                                        id="termsAndConditions"
+                                        name="termsAndConditions"
+                                        type="checkbox"
+                                        required
+                                        checked={formData.termsAndConditions === "accepted"}
+                                        onChange={(e) => setFormData(prev => ({ 
+                                            ...prev, 
+                                            termsAndConditions: e.target.checked ? "accepted" : "" 
+                                        }))}
+                                        className="w-4 h-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900 transition-colors"
+                                    />
+                                </div>
+                                <div className="text-xs">
+                                    <label htmlFor="termsAndConditions" className="font-medium text-gray-300">
+                                        I agree to the{' '}
+                                        <Link href="#" className="text-blue-400 hover:text-blue-300 hover:underline transition-colors">
+                                            Terms and Conditions
+                                        </Link>
+                                        {' '}and Privacy Policy.
+                                    </label>
+                                </div>
+                            </div>
+
                         <Button type="submit" className='group relative w-full overflow-hidden bg-appNav py-4 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-300 active:scale-[0.98]'>
                             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
                             <div className="relative flex justify-center items-center gap-3 text-white font-bold text-lg">
