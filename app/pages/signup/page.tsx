@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image';
 import Link from 'next/link';
-import { IoHome } from "react-icons/io5";
+import { IoHome, IoMail } from "react-icons/io5"; // Added IoMail for the new modal
 import { FaUserPlus } from "react-icons/fa";
 import { RiLoginCircleFill } from "react-icons/ri";
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Logic & Component Imports
 import { AuthResponse, getSupportedCities, getSupportedCountries, Register } from '@/lib/user/actions';
@@ -27,20 +27,20 @@ const RegisterPage: React.FC = () => {
 
     const [error, setErrorMessage] = useState<String>("");
     const [submissionPending, setSubmissionPending] = useState<boolean>(false);
+    
+    // NEW STATE: Controls the visibility of the success verification modal
+    const [showVerificationModal, setShowVerificationModal] = useState<boolean>(false);
+
     const router = useRouter();
 
     const [countries, setCountries] = useState<{ label: string; value: string; code: string }[]>([]);
     const [cities, setCities] = useState<{ label: string; value: string }[]>([]);
     const [loadingLocations, setLoadingLocations] = useState(true);
 
-    // =========================================================================
-    // RESTORED: Logs the entire object state whenever it finishes updating
-    // =========================================================================
     useEffect(() => {
         console.log("Current Form Data Object:", formData);
     }, [formData]);
 
-    // RESTORED: API Fetch for Countries
     useEffect(() => {
         const fetchCountries = async () => {
             try {
@@ -49,10 +49,10 @@ const RegisterPage: React.FC = () => {
                     const formattedCountries = data.map((c) => ({
                         label: c.countryName,
                         value: c.countryName,
-                        code: c.countryCode // <--- JUST ADD THIS LINE
+                        code: c.countryCode
                     }));
                     setCountries(formattedCountries);
-                    console.log("Fetched Countries:", formattedCountries); // Restored log
+                    console.log("Fetched Countries:", formattedCountries);
                 }
             } catch (err) {
                 console.error("Failed to fetch countries", err);
@@ -63,7 +63,6 @@ const RegisterPage: React.FC = () => {
         fetchCountries();
     }, []);
 
-    // RESTORED: API Fetch for Cities
     useEffect(() => {
         const fetchCities = async () => {
             if (!formData.country) {
@@ -86,15 +85,9 @@ const RegisterPage: React.FC = () => {
         fetchCities();
     }, [formData.country]);
 
-    // =========================================================================
-    // RESTORED: Console logs immediately as each specific field changes
-    // =========================================================================
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-
-        // Log exactly which field changed and its new value
         console.log(`Field Changed => [${name}]:`, value);
-
         setFormData((prev) => ({
             ...prev,
             [name]: value,
@@ -107,52 +100,7 @@ const RegisterPage: React.FC = () => {
         console.log("Dial Code Changed =>", newCode);
         setPhoneCode(newCode);
     };
-    // =========================================================================
 
-    // function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    //     event.preventDefault();
-
-    //     setSubmissionPending(true);
-    //     setErrorMessage("");
-
-    //     if (!formData) {
-    //         setErrorMessage("Incomplete credentials");
-    //         setSubmissionPending(false);
-    //         return;
-    //     }
-
-    //     // NEW: Password Match Validation
-    //     if (formData.password !== confirmPassword) {
-    //         setErrorMessage("Passwords do not match!");
-    //         setSubmissionPending(false);
-    //         return;
-    //     }
-
-    //     (async function () {
-    //         try {
-    //             const apiPayload = {
-    //                 ...formData,
-    //                 phoneNumber: `${phoneCode}${formData.phoneNumber}`
-    //             };
-
-    //             // RESTORED: Logs the final merged payload sent to your backend
-    //             console.log("FINAL API PAYLOAD:", apiPayload);
-            
-
-    //             const response: AuthResponse = await Register(apiPayload);
-
-    //             if (!response) {
-    //                 throw new Error("Failed to register");
-    //             }
-                
-    //             router.push("/pages/signin");
-
-    //         } catch (error) {
-    //             setErrorMessage("Error validating credentials!");
-    //             setSubmissionPending(false);
-    //         }
-    //     })();
-    // }
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
@@ -165,7 +113,6 @@ const RegisterPage: React.FC = () => {
             return;
         }
 
-        // NEW: Password Match Validation
         if (formData.password !== confirmPassword) {
             setErrorMessage("Passwords do not match!");
             setSubmissionPending(false);
@@ -174,19 +121,15 @@ const RegisterPage: React.FC = () => {
 
         (async function () {
             try {
-                // 1. Find the selected country object in your state
                 const selectedCountryObj = countries.find(c => c.value === formData.country);
-                
-                // 2. Extract the code (fallback to the name just in case)
                 const finalCountryCode = selectedCountryObj?.code || formData.country;
 
                 const apiPayload = {
                     ...formData,
                     phoneNumber: `${phoneCode}${formData.phoneNumber}`,
-                    country: finalCountryCode // <--- SWAPS THE NAME FOR THE CODE
+                    country: finalCountryCode 
                 };
 
-                // RESTORED: Logs the final merged payload sent to your backend
                 console.log("FINAL API PAYLOAD:", apiPayload);
             
                 const response: AuthResponse = await Register(apiPayload);
@@ -195,7 +138,9 @@ const RegisterPage: React.FC = () => {
                     throw new Error("Failed to register");
                 }
                 
-                router.push("/pages/signin");
+                // SUCCESS! Instead of routing immediately, we show the beautiful verification modal.
+                setSubmissionPending(false);
+                setShowVerificationModal(true);
 
             } catch (error) {
                 setErrorMessage("Error validating credentials!");
@@ -205,7 +150,6 @@ const RegisterPage: React.FC = () => {
     }
 
     return (
-        // The background wraps the entire page instead of being a fixed overlay
         <div 
             className="min-h-screen w-full flex items-center justify-center bg-black/80 bg-blend-overlay p-4 sm:p-6 lg:p-8"
             style={{ backgroundImage: "url('/images/shipping.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}
@@ -216,7 +160,6 @@ const RegisterPage: React.FC = () => {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="relative flex w-full max-w-6xl h-[95vh] lg:h-[90vh] bg-appTitleBgColor rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden border border-gray-800"
             >
-                {/* Replaced onClose with router.push */}
                 <button
                     onClick={() => router.push('/pages/home')}
                     className="absolute top-6 right-6 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white hover:bg-red-500 hover:text-white transition-all duration-300 backdrop-blur-md"
@@ -309,34 +252,35 @@ const RegisterPage: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                        {/* Row 7: Terms and Conditions */}
-                            <div className="flex items-start gap-3 mt-2">
-                                <div className="flex items-center h-5">
-                                    <input
-                                        id="termsAndConditions"
-                                        name="termsAndConditions"
-                                        type="checkbox"
-                                        required
-                                        checked={formData.termsAndConditions === "accepted"}
-                                        onChange={(e) => setFormData(prev => ({ 
-                                            ...prev, 
-                                            termsAndConditions: e.target.checked ? "accepted" : "" 
-                                        }))}
-                                        className="w-4 h-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900 transition-colors"
-                                    />
-                                </div>
-                                <div className="text-xs">
-                                    <label htmlFor="termsAndConditions" className="font-medium text-gray-300">
-                                        I agree to the{' '}
-                                        <Link href="#" className="text-blue-400 hover:text-blue-300 hover:underline transition-colors">
-                                            Terms and Conditions
-                                        </Link>
-                                        {' '}and Privacy Policy.
-                                    </label>
-                                </div>
-                            </div>
 
-                        <Button type="submit" className='group relative w-full overflow-hidden bg-appNav py-4 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-300 active:scale-[0.98]'>
+                        {/* Row 7: Terms and Conditions */}
+                        <div className="flex items-start gap-3 mt-2">
+                            <div className="flex items-center h-5">
+                                <input
+                                    id="termsAndConditions"
+                                    name="termsAndConditions"
+                                    type="checkbox"
+                                    required
+                                    checked={formData.termsAndConditions === "accepted"}
+                                    onChange={(e) => setFormData(prev => ({ 
+                                        ...prev, 
+                                        termsAndConditions: e.target.checked ? "accepted" : "" 
+                                    }))}
+                                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900 transition-colors"
+                                />
+                            </div>
+                            <div className="text-xs">
+                                <label htmlFor="termsAndConditions" className="font-medium text-gray-300">
+                                    I agree to the{' '}
+                                    <Link href="#" className="text-blue-400 hover:text-blue-300 hover:underline transition-colors">
+                                        Terms and Conditions
+                                    </Link>
+                                    {' '}and Privacy Policy.
+                                </label>
+                            </div>
+                        </div>
+
+                        <Button type="submit" disabled={submissionPending} className='group relative w-full overflow-hidden bg-appNav py-4 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-300 active:scale-[0.98] disabled:opacity-70'>
                             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
                             <div className="relative flex justify-center items-center gap-3 text-white font-bold text-lg">
                                 {submissionPending ? (
@@ -357,14 +301,12 @@ const RegisterPage: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            {/* Replaced onSwitchToLogin with router.push */}
                             <Button type="button" onClick={() => router.push('/pages/signin')} className='bg-white/10 hover:bg-white/20 text-white w-full flex justify-center items-center py-3 rounded-xl backdrop-blur-sm transition-colors'>
                                 <div className="flex items-center gap-2 font-medium">
                                     <RiLoginCircleFill className="text-xl text-blue-400" /> <span> Login </span>
                                 </div>
                             </Button>
 
-                            {/* Replaced onClose with router.push */}
                             <Button type="button" onClick={() => router.push('/pages/home')} className='bg-black/40 hover:bg-black/60 text-white w-full flex justify-center items-center py-3 rounded-xl transition-colors border border-gray-800'>
                                 <div className="flex items-center gap-2 font-medium">
                                     <IoHome className="text-xl text-gray-400" /> <span> Cancel </span>
@@ -374,6 +316,7 @@ const RegisterPage: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Right Side Video/Image Graphic */}
                 <div className="hidden lg:flex w-5/12 relative items-center justify-center overflow-hidden bg-black">
                     <div 
                         className="absolute inset-0 opacity-40 bg-cover bg-center"
@@ -396,6 +339,82 @@ const RegisterPage: React.FC = () => {
                     </div>
                 </div>
             </motion.div>
+
+            {/* ======================================================= */}
+            {/* NEW: STUNNING VERIFICATION SUCCESS MODAL                */}
+            {/* ======================================================= */}
+            <AnimatePresence>
+                {showVerificationModal && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 sm:p-6"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                            className="relative w-full max-w-lg bg-[#0F172A] border border-white/10 rounded-3xl shadow-[0_0_80px_rgba(59,130,246,0.2)] p-8 md:p-10 text-center overflow-hidden"
+                        >
+                            {/* Animated Background Glow */}
+                            <motion.div 
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-40 bg-blue-500/20 blur-[60px] rounded-full pointer-events-none"
+                            />
+
+                           {/* Bouncing Mail Icon */}
+                            <motion.div 
+                                initial={{ scale: 0, rotate: -20 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                // FIXED: We removed the array from rotate so the spring physics can handle it perfectly!
+                                transition={{ type: "spring", stiffness: 200, damping: 10, delay: 0.2 }}
+                                className="relative z-10 mx-auto w-24 h-24 mb-6 bg-blue-500/20 rounded-full flex items-center justify-center border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.3)]"
+                            >
+                                <IoMail className="text-5xl text-blue-400" />
+                            </motion.div>
+
+                            <motion.h3 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="relative z-10 text-3xl font-extrabold text-white mb-4 tracking-tight"
+                            >
+                                Check Your Inbox!
+                            </motion.h3>
+
+                            <motion.p 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4 }}
+                                className="relative z-10 text-gray-300 text-lg mb-8 leading-relaxed font-medium"
+                            >
+                                We've sent a secure verification link to <br/>
+                                <span className="text-blue-400 font-bold block mt-2 text-xl bg-white/5 py-2 px-4 rounded-xl border border-white/5 inline-block">{formData.email}</span>
+                                <br/><span className="mt-4 block text-base text-gray-400">Please verify your email address to activate your account before logging in.</span>
+                            </motion.p>
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5 }}
+                                className="relative z-10"
+                            >
+                                <Button
+                                    type="button"
+                                    onClick={() => router.push('/pages/signin')}
+                                    className="group w-full bg-appNav hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-blue-500/40 active:scale-[0.98] flex justify-center items-center gap-2 text-lg"
+                                >
+                                    <span>Proceed to Login</span>
+                                    <RiLoginCircleFill className="text-2xl transition-transform group-hover:translate-x-1" />
+                                </Button>
+                            </motion.div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image';
 import Link from 'next/link';
-import { IoHome } from "react-icons/io5";
+import { IoHome, IoMail } from "react-icons/io5"; // Added IoMail for the new modal
 import { FaUserPlus } from "react-icons/fa";
 import { RiLoginCircleFill } from "react-icons/ri";
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Logic & Component Imports
 import { AuthResponse, getSupportedCities, getSupportedCountries, Register } from '@/lib/user/actions';
@@ -33,9 +33,13 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
 
     const [error, setErrorMessage] = useState<String>("");
     const [submissionPending, setSubmissionPending] = useState<boolean>(false);
+    
+    // NEW STATE: Controls the visibility of the success verification modal
+    const [showVerificationModal, setShowVerificationModal] = useState<boolean>(false);
+    
     const router = useRouter();
 
-    const [countries, setCountries] = useState<{ label: string; value: string }[]>([]);
+    const [countries, setCountries] = useState<{ label: string; value: string; code: string }[]>([]);
     const [cities, setCities] = useState<{ label: string; value: string }[]>([]);
     const [loadingLocations, setLoadingLocations] = useState(true);
 
@@ -46,7 +50,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
         console.log("Current Form Data Object:", formData);
     }, [formData]);
 
-    // RESTORED: API Fetch for Countries
+    // RESTORED: API Fetch for Countries (Added countryCode)
     useEffect(() => {
         if (!isOpen) return; // Only fetch when modal is open
         const fetchCountries = async () => {
@@ -55,10 +59,11 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                 if (data && Array.isArray(data)) {
                     const formattedCountries = data.map((c) => ({
                         label: c.countryName,
-                        value: c.countryName
+                        value: c.countryName,
+                        code: c.countryCode // <--- SAVES THE CODE FOR THE API
                     }));
                     setCountries(formattedCountries);
-                    console.log("Fetched Countries:", formattedCountries); // Restored log
+                    console.log("Fetched Countries:", formattedCountries); 
                 }
             } catch (err) {
                 console.error("Failed to fetch countries", err);
@@ -98,7 +103,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
 
-        // Log exactly which field changed and its new value
         console.log(`Field Changed => [${name}]:`, value);
 
         setFormData((prev) => ({
@@ -127,7 +131,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             return;
         }
 
-        // NEW: Password Match Validation
         if (formData.password !== confirmPassword) {
             setErrorMessage("Passwords do not match!");
             setSubmissionPending(false);
@@ -136,12 +139,18 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
 
         (async function () {
             try {
+                // 1. Find the selected country object in your state
+                const selectedCountryObj = countries.find(c => c.value === formData.country);
+                
+                // 2. Extract the code (fallback to the name just in case)
+                const finalCountryCode = selectedCountryObj?.code || formData.country;
+
                 const apiPayload = {
                     ...formData,
-                    phoneNumber: `${phoneCode}${formData.phoneNumber}`
+                    phoneNumber: `${phoneCode}${formData.phoneNumber}`,
+                    country: finalCountryCode // <--- SWAPS THE NAME FOR THE CODE
                 };
 
-                // RESTORED: Logs the final merged payload sent to your backend
                 console.log("FINAL API PAYLOAD:", apiPayload);
 
                 const response: AuthResponse = await Register(apiPayload);
@@ -150,8 +159,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                     throw new Error("Failed to register");
                 }
                 
-                onClose();
-                router.push("/login");
+                // SUCCESS! Show the beautiful verification modal instead of closing immediately.
+                setSubmissionPending(false);
+                setShowVerificationModal(true);
 
             } catch (error) {
                 setErrorMessage("Error validating credentials!");
@@ -294,7 +304,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                                 </div>
                             </div>
 
-                        <Button type="submit" className='group relative w-full overflow-hidden bg-appNav py-4 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-300 active:scale-[0.98]'>
+                        <Button type="submit" disabled={submissionPending} className='group relative w-full overflow-hidden bg-appNav py-4 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-300 active:scale-[0.98] disabled:opacity-70'>
                             <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
                             <div className="relative flex justify-center items-center gap-3 text-white font-bold text-lg">
                                 {submissionPending ? (
@@ -352,6 +362,82 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                     </div>
                 </div>
             </motion.div>
+
+            {/* ======================================================= */}
+            {/* STUNNING VERIFICATION SUCCESS MODAL                     */}
+            {/* ======================================================= */}
+            <AnimatePresence>
+                {showVerificationModal && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 sm:p-6"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.8, opacity: 0, y: 50 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                            className="relative w-full max-w-lg bg-[#0F172A] border border-white/10 rounded-3xl shadow-[0_0_80px_rgba(59,130,246,0.2)] p-8 md:p-10 text-center overflow-hidden"
+                        >
+                            {/* Animated Background Glow */}
+                            <motion.div 
+                                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-40 bg-blue-500/20 blur-[60px] rounded-full pointer-events-none"
+                            />
+
+                            {/* Bouncing Mail Icon (Array Animation Fixed!) */}
+                            <motion.div 
+                                initial={{ scale: 0, rotate: -20 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={{ type: "spring", stiffness: 200, damping: 10, delay: 0.2 }}
+                                className="relative z-10 mx-auto w-24 h-24 mb-6 bg-blue-500/20 rounded-full flex items-center justify-center border border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.3)]"
+                            >
+                                <IoMail className="text-5xl text-blue-400" />
+                            </motion.div>
+
+                            <motion.h3 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="relative z-10 text-3xl font-extrabold text-white mb-4 tracking-tight"
+                            >
+                                Check Your Inbox!
+                            </motion.h3>
+
+                            <motion.p 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4 }}
+                                className="relative z-10 text-gray-300 text-lg mb-8 leading-relaxed font-medium"
+                            >
+                                We've sent a secure verification link to <br/>
+                                <span className="text-blue-400 font-bold block mt-2 text-xl bg-white/5 py-2 px-4 rounded-xl border border-white/5 inline-block">{formData.email}</span>
+                                <br/><span className="mt-4 block text-base text-gray-400">Please verify your email address to activate your account before logging in.</span>
+                            </motion.p>
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5 }}
+                                className="relative z-10"
+                            >
+                                <Button
+                                    type="button"
+                                    onClick={onSwitchToLogin} // Uses your existing prop to swap straight to the Login modal!
+                                    className="group w-full bg-appNav hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-blue-500/40 active:scale-[0.98] flex justify-center items-center gap-2 text-lg"
+                                >
+                                    <span>Proceed to Login</span>
+                                    <RiLoginCircleFill className="text-2xl transition-transform group-hover:translate-x-1" />
+                                </Button>
+                            </motion.div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
         </motion.div>
     );
 }
