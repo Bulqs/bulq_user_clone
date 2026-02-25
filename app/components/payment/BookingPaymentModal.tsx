@@ -54,12 +54,27 @@ const BookingPaymentModal: React.FC<BookingPaymentModalProps> = ({
             // UPDATED: Points to your new Stripe specific verify page
             // We pass the trackingNumber as 'id' so the verify page can pick it up
             const targetUrl = `${window.location.origin}/pages/paymentstatus/stripe/verify?id=${bookingData.trackingNumber}`;
+            // 2. Paystack's target URL (removed 'stripe/')
+            const paystackTargetUrl = `${window.location.origin}/pages/paymentstatus/verify?id=${bookingData.trackingNumber}`;
+
+            // 3. Check if the selected method is Paystack
+            const isPaystack = method.provider.toLowerCase().includes('paystack');
             
+            // const payload = {
+            //     customerEmail,
+            //     customerName,
+            //     amount: bookingData.totalCost || 0,
+            //     callbackUrl: targetUrl, 
+            //     currency: bookingData.currency,
+            //     reference: `${bookingData.trackingNumber}` 
+            // };
+
             const payload = {
                 customerEmail,
                 customerName,
                 amount: bookingData.totalCost || 0,
-                callbackUrl: targetUrl, 
+                // Assign the correct URL dynamically
+                callbackUrl: isPaystack ? paystackTargetUrl : targetUrl, 
                 currency: bookingData.currency,
                 reference: `${bookingData.trackingNumber}` 
             };
