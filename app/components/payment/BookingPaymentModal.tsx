@@ -76,7 +76,8 @@ const BookingPaymentModal: React.FC<BookingPaymentModalProps> = ({
                 // Assign the correct URL dynamically
                 callbackUrl: isPaystack ? paystackTargetUrl : targetUrl, 
                 currency: bookingData.currency,
-                reference: `${bookingData.trackingNumber}_${Date.now()}`
+                reference: `${bookingData.trackingNumber}` 
+                // reference: `${bookingData.trackingNumber}_${Date.now()}`
             };
 
             const response = await initiateShippingPayment(
