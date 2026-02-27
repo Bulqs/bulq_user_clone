@@ -35,8 +35,8 @@ const Footer = () => {
     const socialLinks = [
         { icon: <FaFacebookF />, href: '#' },
         { icon: <FaTwitter />, href: '#' },
-        { icon: <FaInstagram />, href: '#' },
-        { icon: <FaLinkedinIn />, href: '#' },
+        { icon: <FaInstagram />, href: 'https://www.instagram.com/bulq.ca?igsh=dG5iN2UwaDNuZnRn' },
+        { icon: <FaLinkedinIn />, href: 'https://www.linkedin.com/company/bulq-hq/' },
     ];
 
     // Navigation Sections Data

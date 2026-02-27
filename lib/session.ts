@@ -2,12 +2,12 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { FetchError } from "./FetchError";
-import {  Session, User } from "../types/user"
+import { Session, User } from "../types/user"
 import { AuthResponse } from "./actions";
 import { JWTExpired } from "jose/errors";
 
 
-const exp = 300 * 1000000;
+const exp = 24 * 60 * 60 * 1000;
 
 // Custom error for expired or invalid session
 class SessionExpiredError extends Error {
@@ -15,7 +15,7 @@ class SessionExpiredError extends Error {
         super(message);
         this.name = 'SessionExpiredError';
     }
-}   
+}
 
 // const secretKey = process.env.SESSION_SECRET;
 const secretKey = "8e04db4e442d390931fd8d5397cc669ecd3961de0d0a825e4cf580d05a4cb989";
@@ -61,8 +61,17 @@ export async function decrypt(input: string): Promise<any> {
 export async function createSession(payload: AuthResponse) {
     try {
         // // Set expiration time to 1 hour from now
-        const expires = new Date(Date.now() + Math.floor(exp / 1000));
-        const session = await encrypt({ ...payload, SESSION_EXPIRY: Math.floor(expires.getTime() / 1000) });
+        // const expires = new Date(Date.now() + Math.floor(exp / 1000));
+        // const session = await encrypt({ ...payload, SESSION_EXPIRY: Math.floor(expires.getTime() / 1000) });
+
+        // Simply add the milliseconds directly to Date.now()
+        const expires = new Date(Date.now() + exp);
+
+        // Convert the final future date back into seconds for the payload
+        const session = await encrypt({
+            ...payload,
+            SESSION_EXPIRY: Math.floor(expires.getTime() / 1000)
+        });
 
         // Save the session in a cookie
         (await cookies()).set("session", session, { expires, httpOnly: true });
