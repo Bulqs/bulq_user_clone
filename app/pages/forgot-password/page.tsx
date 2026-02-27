@@ -7,6 +7,7 @@ import { IoMail, IoShieldCheckmark, IoArrowBack, IoLockClosed } from "react-icon
 import { CgSpinnerTwo } from "react-icons/cg";
 import InputField from '@/app/components/inputs/InputField';
 import Button from '@/app/components/inputs/Button';
+import { requestPasswordReset } from '@/lib/user/actions';
 
 // --- FRAMER MOTION VARIANTS ---
 const cardVariants: Variants = {
@@ -43,20 +44,15 @@ export default function ForgotPasswordPage() {
         setStatus('loading');
 
         try {
-            // =========================================================================
-            // TODO: Plug your actual API call here!
-            // const res = await fetch('http://35.188.106.61/api/v1/auth/forgot-password', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ email })
-            // });
-            // if (!res.ok) throw new Error("Failed to send reset link.");
-            // =========================================================================
-
-            // Simulating a network request for the premium loading animation
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Call your actual API endpoint
+            const responseMessage = await requestPasswordReset({ email });
             
+            // Optional: You can log the backend's string response just to verify it
+            console.log("Backend response:", responseMessage);
+            
+            // Trigger the beautiful success animation
             setStatus('success');
+            
         } catch (err: any) {
             setStatus('idle');
             setError(err.message || "An error occurred. Please try again.");

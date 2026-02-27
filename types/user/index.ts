@@ -636,3 +636,9 @@ export interface AccountVerifiedViewDTO {
     phoneNumber: string;
     verfified: string; // Kept exact spelling from your backend DTO
 }
+
+// @/types/user.ts
+
+export interface PasswordResetPayloadDTO {
+    email: string;
+}
