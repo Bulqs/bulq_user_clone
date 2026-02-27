@@ -307,6 +307,7 @@ export enum NAVIGATION {
 
   VERIFY= `/pages/verify`,
   FORGOT_PASSWORD = `/pages/forgot-password`,
+  RESET_PASSWORD = `/pages/reset-password`,
 
   DRIVERREGISTRATION = `/pages/driver/driverregistration`,
   DRIVERLOGIN = `/pages/driver/driverlogin`,
