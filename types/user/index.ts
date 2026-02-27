@@ -622,3 +622,14 @@ export interface RecentTrackingDTO {
   destinationCity: string;
   addressType: 'HOME' | 'OFFICE' | 'OTHER'
 }
+
+// @/types/user.ts (or wherever your types live)
+
+export interface AccountVerifiedViewDTO {
+    id: number;
+    email: string;
+    authorities: string;
+    createdAt: string; // LocalDateTime serializes to an ISO string in JSON
+    phoneNumber: string;
+    verfified: string; // Kept exact spelling from your backend DTO
+}

@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import {
+    AccountVerifiedViewDTO,
     AddressCountResponseDTO,
     AddressDeleteResponseDTO,
     AddressRequest,
@@ -558,3 +559,40 @@ export async function searchCities(countryName: string, query: string): Promise<
         return [];
     }
 }
+
+/**
+ * Verifies a user's account using the token sent to their email.
+ */
+export const verifyUserAccount = async (verificationToken: string): Promise<AccountVerifiedViewDTO> => {
+    // We use encodeURIComponent to ensure special characters in the token don't break the URL
+    const url = `${CUSTOMER_BASE_URL}/user/verification-link?verificationToken=${encodeURIComponent(verificationToken)}`;
+
+    try {
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'accept': '*/*'
+            },
+            cache: 'no-store' // We don't want Next.js caching a one-time verification!
+        });
+
+        if (!res.ok) {
+            // If the backend sends a specific error message (like "Token expired"), try to catch it
+            let errorMessage = "Invalid or expired token";
+            try {
+                const errorData = await res.json();
+                errorMessage = errorData.message || errorMessage;
+            } catch (e) {
+                // Fallback if backend doesn't send JSON on error
+            }
+            throw new Error(errorMessage);
+        }
+
+        const data: AccountVerifiedViewDTO = await res.json();
+        return data;
+
+    } catch (error: any) {
+        console.error("Verification API Error:", error);
+        throw new Error(error.message || "An error occurred during verification.");
+    }
+};
