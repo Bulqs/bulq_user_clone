@@ -15,6 +15,7 @@ export default async function middleware(req: NextRequest) {
     NAVIGATION.SIGNUP?.toString(), 
     NAVIGATION.CHANGE_PASSWORD?.toString(), 
     NAVIGATION.CALLBACK?.toString(),
+    NAVIGATION.VERIFY?.toString(),
     
     // Fallback static strings just in case the ENUMs fail
     "/pages/signin",

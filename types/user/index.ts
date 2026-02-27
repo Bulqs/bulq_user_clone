@@ -305,6 +305,8 @@ export enum NAVIGATION {
   DRIVERSWEB = `/pages/driver`,
   DRIVERBUSINESS = `/pages/driver/driverbusiness`,
 
+  VERIFY= `/pages/verify`,
+
   DRIVERREGISTRATION = `/pages/driver/driverregistration`,
   DRIVERLOGIN = `/pages/driver/driverlogin`,
   DRIVERDASHBOARDHOME = `/pages/driver/driverdashboard/dashboard`,
