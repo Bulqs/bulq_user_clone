@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { IoCheckmarkCircle, IoCloseCircle, IoShieldCheckmark } from "react-icons/io5";
 import { CgSpinnerTwo } from "react-icons/cg";
@@ -29,9 +29,10 @@ const VerificationContent = () => {
 
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [errorMessage, setErrorMessage] = useState('');
-
-    // Save the user's email to personalize the success message
     const [verifiedEmail, setVerifiedEmail] = useState<string>(''); 
+
+    // NEW: Ref to prevent React Strict Mode from double-firing the API
+    const hasAttemptedVerification = useRef(false);
 
     useEffect(() => {
         if (!token) {
@@ -40,17 +41,18 @@ const VerificationContent = () => {
             return;
         }
 
+        // NEW: If we already fired the request, don't fire it again!
+        if (hasAttemptedVerification.current) return;
+        hasAttemptedVerification.current = true;
+
         const verifyAccount = async () => {
             try {
-                // 1. Call your API function
                 const response: AccountVerifiedViewDTO = await verifyUserAccount(token);
                 
-                // 2. Capture the email from the response to personalize the UI
                 if (response && response.email) {
                     setVerifiedEmail(response.email);
                 }
 
-                // 3. Trigger the success animations
                 setStatus('success');
             } catch (error: any) {
                 setStatus('error');
