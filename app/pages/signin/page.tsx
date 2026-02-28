@@ -143,7 +143,7 @@ const UserLogin: React.FC = () => {
                                 required
                             />
                             <div className="mt-2 text-right">
-                                <Link href="#" className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+                                <Link href="/pages/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors">
                                     Forgot Password?
                                 </Link>
                             </div>

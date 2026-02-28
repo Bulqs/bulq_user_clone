@@ -136,7 +136,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
                             <div>
                                 <div className="flex justify-between items-center mb-2">
                                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide">Password</label>
-                                    <Link href="#" className="text-sm font-bold text-blue-600 hover:text-blue-500 transition-colors">Forgot Password?</Link>
+                                    <Link href="/pages/forgot-password" className="text-sm font-bold text-blue-600 hover:text-blue-500 transition-colors">Forgot Password?</Link>
                                 </div>
                                 <input
                                     type="password"
