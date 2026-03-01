@@ -50,7 +50,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
         console.log("Current Form Data Object:", formData);
     }, [formData]);
 
-    // RESTORED: API Fetch for Countries (Added countryCode)
+    // RESTORED: API Fetch for Countries
     useEffect(() => {
         if (!isOpen) return; // Only fetch when modal is open
         const fetchCountries = async () => {
@@ -60,7 +60,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                     const formattedCountries = data.map((c) => ({
                         label: c.countryName,
                         value: c.countryName,
-                        code: c.countryCode // <--- SAVES THE CODE FOR THE API
+                        code: c.countryCode // Keep this for reference if needed elsewhere
                     }));
                     setCountries(formattedCountries);
                     console.log("Fetched Countries:", formattedCountries); 
@@ -82,6 +82,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                 return;
             }
             try {
+                // formData.country is the full country name, which works perfectly here
                 const data = await getSupportedCities(formData.country);
                 if (data && Array.isArray(data)) {
                     const formattedCities = data.map((cityName) => ({
@@ -139,16 +140,10 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
 
         (async function () {
             try {
-                // 1. Find the selected country object in your state
-                const selectedCountryObj = countries.find(c => c.value === formData.country);
-                
-                // 2. Extract the code (fallback to the name just in case)
-                const finalCountryCode = selectedCountryObj?.code || formData.country;
-
+                // REVERTED: Just send the raw formData (which contains the countryName) + combined phone number
                 const apiPayload = {
                     ...formData,
-                    phoneNumber: `${phoneCode}${formData.phoneNumber}`,
-                    country: finalCountryCode // <--- SWAPS THE NAME FOR THE CODE
+                    phoneNumber: `${phoneCode}${formData.phoneNumber}`
                 };
 
                 console.log("FINAL API PAYLOAD:", apiPayload);
