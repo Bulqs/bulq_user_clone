@@ -138,12 +138,19 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             return;
         }
 
+         // Add this quick helper function right inside handleSubmit (or outside the component)
+        const toTitleCase = (str: string) => {
+            if (!str) return "";
+            return str.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+        };
+
         (async function () {
             try {
                 // REVERTED: Just send the raw formData (which contains the countryName) + combined phone number
                 const apiPayload = {
                     ...formData,
-                    phoneNumber: `${phoneCode}${formData.phoneNumber}`
+                    phoneNumber: `${phoneCode}${formData.phoneNumber}`,
+                    country: toTitleCase(formData.country)
                 };
 
                 console.log("FINAL API PAYLOAD:", apiPayload);
