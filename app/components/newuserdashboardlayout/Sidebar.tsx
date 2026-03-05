@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     FiHome,
@@ -17,8 +17,10 @@ import {
     FiMenu,
     FiX
 } from 'react-icons/fi';
-// Import your profile action
+// Import your profile action, store, and logout action
 import { getMyProfile } from '@/lib/user/actions';
+import { useUserStore } from "@/lib/utils/store";
+import { LogoutUser } from '@/lib/actions';
 
 // --- NAVIGATION CONFIG ---
 const navItems = [
@@ -32,6 +34,9 @@ const navItems = [
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter(); 
+    const { user, destroyUserInfo } = useUserStore(); 
+
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -66,6 +71,18 @@ export default function Sidebar() {
         else document.body.style.overflow = 'unset';
         return () => { document.body.style.overflow = 'unset'; };
     }, [isMobileOpen]);
+
+    // --- LOGOUT LOGIC ---
+    const handleLogout = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        try {
+            await LogoutUser();
+            destroyUserInfo(user);
+            router.push("/pages/signin");
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
+    };
 
     // --- HELPER FUNCTIONS FOR DYNAMIC DATA ---
     const fullName = userProfile 
@@ -148,7 +165,9 @@ export default function Sidebar() {
                     )}
                 </div>
 
+                {/* THE LOGOUT BUTTON WITH onClick HANDLER */}
                 <motion.button 
+                    onClick={handleLogout}
                     whileHover={{ scale: isCollapsed ? 1.05 : 1.02 }} 
                     whileTap={{ scale: 0.98 }}
                     className={`w-full flex items-center p-3 rounded-xl text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors group ${isCollapsed ? 'justify-center' : 'justify-start'}`}
@@ -216,6 +235,7 @@ export default function Sidebar() {
         </>
     );
 }
+
 // // src/components/user/Sidebar.tsx
 // "use client"
 // import Link from 'next/link'
