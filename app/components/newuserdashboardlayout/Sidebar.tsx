@@ -17,10 +17,10 @@ import {
     FiMenu,
     FiX
 } from 'react-icons/fi';
-import Image from 'next/image';
+// Import your profile action
+import { getMyProfile } from '@/lib/user/actions';
 
 // --- NAVIGATION CONFIG ---
-// Update these paths to match your actual routing!
 const navItems = [
     { name: 'Dashboard', path: '/user', icon: FiHome },
     { name: 'Packages', path: '/user/packages', icon: FiPackage },
@@ -35,9 +35,25 @@ export default function Sidebar() {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    
+    // --- USER STATE ---
+    const [userProfile, setUserProfile] = useState<{ firstName?: string, lastName?: string } | null>(null);
 
-    // Prevent hydration mismatch on active routes
+    // Prevent hydration mismatch
     useEffect(() => setMounted(true), []);
+
+    // Fetch User Profile on Mount
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const data = await getMyProfile();
+                setUserProfile(data as any); 
+            } catch (error) {
+                console.error("Failed to fetch user profile for sidebar:", error);
+            }
+        };
+        fetchProfile();
+    }, []);
 
     // Close mobile menu when route changes
     useEffect(() => {
@@ -51,6 +67,15 @@ export default function Sidebar() {
         return () => { document.body.style.overflow = 'unset'; };
     }, [isMobileOpen]);
 
+    // --- HELPER FUNCTIONS FOR DYNAMIC DATA ---
+    const fullName = userProfile 
+        ? `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim() 
+        : 'Loading...';
+        
+    const initials = userProfile 
+        ? `${userProfile.firstName?.charAt(0) || ''}${userProfile.lastName?.charAt(0) || ''}`.toUpperCase() 
+        : '...';
+
     const SidebarContent = () => (
         <div className="flex flex-col h-full bg-appTitleBgColor text-white border-r border-white/10 relative overflow-hidden">
             {/* Background Glow */}
@@ -60,7 +85,6 @@ export default function Sidebar() {
             <div className={`flex items-center h-20 px-6 border-b border-white/5 transition-all duration-300 ${isCollapsed ? 'justify-center px-0' : 'justify-between'}`}>
                 <Link href="/user" className="flex items-center gap-3 relative z-10">
                     <div className="w-10 h-10 bg-gradient-to-br from-appBanner to-appNav rounded-xl flex items-center justify-center shadow-lg border border-white/10">
-                        {/* Replace with your actual logo if you prefer */}
                         <span className="font-black text-xl tracking-tighter">B</span>
                     </div>
                     {!isCollapsed && (
@@ -112,12 +136,13 @@ export default function Sidebar() {
             <div className="p-4 border-t border-white/5 relative z-10 bg-black/10">
                 <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} mb-4`}>
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 border-2 border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                         {/* Fallback avatar if no image */}
-                         <span className="font-bold text-xs text-white">JD</span>
+                         {/* Dynamic Initials */}
+                         <span className="font-bold text-xs text-white tracking-widest">{initials}</span>
                     </div>
                     {!isCollapsed && (
                         <div className="flex flex-col overflow-hidden">
-                            <span className="text-sm font-bold text-white truncate">John Doe</span>
+                            {/* Dynamic Name */}
+                            <span className="text-sm font-bold text-white truncate">{fullName}</span>
                             <span className="text-[10px] font-bold text-appBanner uppercase tracking-widest truncate">Standard Tier</span>
                         </div>
                     )}
@@ -138,9 +163,7 @@ export default function Sidebar() {
 
     return (
         <>
-            {/* ========================================== */}
-            {/* MOBILE FLOATING HEADER & HAMBURGER         */}
-            {/* ========================================== */}
+            {/* MOBILE FLOATING HEADER */}
             <div className="lg:hidden fixed top-0 left-0 w-full h-16 bg-appTitleBgColor/90 backdrop-blur-md border-b border-white/10 z-[40] flex items-center justify-between px-4">
                 <div className="w-8 h-8 bg-gradient-to-br from-appBanner to-appNav rounded-lg flex items-center justify-center shadow-lg">
                     <span className="font-black text-white">B</span>
@@ -150,26 +173,21 @@ export default function Sidebar() {
                 </button>
             </div>
 
-            {/* ========================================== */}
-            {/* MOBILE SLIDE-OUT MENU                      */}
-            {/* ========================================== */}
+            {/* MOBILE SLIDE-OUT MENU */}
             <AnimatePresence>
                 {isMobileOpen && (
                     <>
-                        {/* Mobile Backdrop */}
                         <motion.div
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             onClick={() => setIsMobileOpen(false)}
                             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[50] lg:hidden"
                         />
-                        {/* Mobile Sidebar Panel */}
                         <motion.div
                             initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                             className="fixed top-0 left-0 h-full w-[280px] z-[60] lg:hidden shadow-2xl"
                         >
                             <SidebarContent />
-                            {/* Close button inside mobile menu */}
                             <button onClick={() => setIsMobileOpen(false)} className="absolute top-5 right-4 p-2 bg-white/10 rounded-full text-white/70 hover:text-white border border-white/10">
                                 <FiX size={20} />
                             </button>
@@ -178,9 +196,7 @@ export default function Sidebar() {
                 )}
             </AnimatePresence>
 
-            {/* ========================================== */}
-            {/* DESKTOP SIDEBAR                            */}
-            {/* ========================================== */}
+            {/* DESKTOP SIDEBAR */}
             <motion.aside
                 initial={false}
                 animate={{ width: isCollapsed ? 80 : 280 }}
@@ -189,7 +205,6 @@ export default function Sidebar() {
             >
                 <SidebarContent />
                 
-                {/* Desktop Collapse Toggle Button */}
                 <motion.button
                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                     onClick={() => setIsCollapsed(!isCollapsed)}
