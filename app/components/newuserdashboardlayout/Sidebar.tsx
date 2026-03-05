@@ -22,12 +22,12 @@ import { getMyProfile } from '@/lib/user/actions';
 
 // --- NAVIGATION CONFIG ---
 const navItems = [
-    { name: 'Dashboard', path: '/user', icon: FiHome },
-    { name: 'Packages', path: '/user/packages', icon: FiPackage },
-    { name: 'Tracking', path: '/user/tracking', icon: FiMapPin },
-    { name: 'History', path: '/user/history', icon: FiClock },
-    { name: 'Addresses', path: '/user/address', icon: FiMap },
-    { name: 'Settings', path: '/user/settings', icon: FiSettings },
+    { name: 'Dashboard', path: '/pages/newuser', icon: FiHome },
+    { name: 'Packages', path: '/pages/newuser/packages', icon: FiPackage },
+    { name: 'Tracking', path: '/pages/newuser/tracking', icon: FiMapPin },
+    { name: 'History', path: '/pages/newuser/history', icon: FiClock },
+    { name: 'Addresses', path: '/pages/newuser/address', icon: FiMap },
+    { name: 'Settings', path: '/pages/newuser/settings', icon: FiSettings },
 ];
 
 export default function Sidebar() {
