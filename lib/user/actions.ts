@@ -258,7 +258,7 @@ export async function getAddressCount(): Promise<AddressCountResponseDTO> {
 export async function getAllUserAddresses(): Promise<UserAddressListResponseDTO> {
   const authHeader = await getAuthHeader();
 
-  const res = await fetch('${CUSTOMER_BASE_URL}/users/addresses/all', {
+  const res = await fetch(`${CUSTOMER_BASE_URL}/users/addresses/all`, {
     method: 'GET',
     headers: {
       ...authHeader,
