@@ -18,32 +18,29 @@ const UserLayout = ({
     children: React.ReactNode
 }) => {
     return (
-        <html lang="en" className="h-full">
-            <body className={`${inter.className} bg-gray-50 h-full`}>
-                <div className="flex h-screen bg-gray-50">
-                    {/* Sidebar */}
-                    <Sidebar />
+        // ✅ Changed <html> and <body> into a standard <div>
+        <div className={`${inter.className} flex h-screen bg-gray-50`}>
+            {/* Sidebar */}
+            <Sidebar />
 
-                    {/* Main Content */}
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                        {/* TopBar */}
-                        <TopBar />
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+                {/* TopBar */}
+                <TopBar />
 
-                        {/* Main Content Area */}
-                        <main className="flex-1 overflow-auto bg-gradient-to-br from-appWhite to-appBanner/10">
-                            <div className="p-4 lg:p-6 max-h-full h-full">
-                                <div className="max-w-7xl mx-auto w-full h-full">
-                                    {children}
-                                </div>
-                            </div>
-                        </main>
-
-                        {/* Footer */}
-                        <Footer />
+                {/* Main Content Area */}
+                <main className="flex-1 overflow-auto bg-gradient-to-br from-appWhite to-appBanner/10">
+                    <div className="p-4 lg:p-6 max-h-full h-full">
+                        <div className="max-w-7xl mx-auto w-full h-full">
+                            {children}
+                        </div>
                     </div>
-                </div>
-            </body>
-        </html>
+                </main>
+
+                {/* Footer */}
+                <Footer />
+            </div>
+        </div>
     )
 }
 

@@ -52,15 +52,17 @@ const PackagesPage = () => {
     const [perPage, setPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
 
+    // RESTORED EXACT FETCH LOGIC
     useEffect(() => {
         const fetchFilteredPackages = async () => {
             try {
                 setLoading(true);
                 const params: BookingFilterParams = {
-                    page: currentPage - 1, 
+                    createdAt: 'createdAt',
                     per_page: perPage,
-                    status: statusMapping[statusFilter],
+                    page: currentPage - 1,
                     deliveryId: searchQuery.trim() || undefined,
+                    status: statusMapping[statusFilter],
                 };
 
                 const response = await getAllBookings(params);
@@ -79,12 +81,17 @@ const PackagesPage = () => {
 
     const shouldShowTableView = statusFilter === 'Unclaimed Item' || statusFilter === 'Consolidated Packages';
 
+    // RESTORED EXACT FILTER LOGIC
+    // RESTORED EXACT FILTER LOGIC
     const filteredPackages = realPackages.filter((pkg) => {
-        const statusMatch = statusFilter === 'All' || pkg.deliveryStatus === statusFilter;
-
+        // Remove the frontend status match entirely. The backend already filtered this for us!
+        
         const now = new Date();
         now.setHours(0, 0, 0, 0);
-        const pkgDate = new Date(pkg.pick_up_date.split(' ')[0]);
+        
+        // Safety check in case a package doesn't have a date
+        const pkgDateString = pkg.pick_up_date ? pkg.pick_up_date.split(' ')[0] : new Date().toISOString().split('T')[0];
+        const pkgDate = new Date(pkgDateString);
         pkgDate.setHours(0, 0, 0, 0);
 
         let dateMatch = true;
@@ -102,13 +109,14 @@ const PackagesPage = () => {
                 break;
         }
 
-        const searchMatch =
-            pkg.delivery_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            pkg.package_description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            pkg.trackingNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            pkg.package_name?.toLowerCase().includes(searchQuery.toLowerCase());
+        const searchString = searchQuery.toLowerCase();
+        const searchMatch = !searchString || // If search is empty, don't filter
+            (pkg.delivery_id && pkg.delivery_id.toLowerCase().includes(searchString)) ||
+            (pkg.package_description && pkg.package_description.toLowerCase().includes(searchString)) ||
+            (pkg.trackingNumber && pkg.trackingNumber.toLowerCase().includes(searchString)) ||
+            (pkg.package_name && pkg.package_name.toLowerCase().includes(searchString));
 
-        return statusMatch && dateMatch && searchMatch;
+        return dateMatch && searchMatch;
     });
 
     const togglePackageExpand = (packageId: string) => {
@@ -122,6 +130,7 @@ const PackagesPage = () => {
         });
     };
 
+    // RESTORED EXACT API ACTIONS
     const handleShipNow = async (trackingNumber: string) => {
         try {
             const result = await updateBookingStatus(trackingNumber, 'SHIP_NOW');
@@ -190,6 +199,7 @@ const PackagesPage = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto">
+                        
                         {/* Search Bar */}
                         <div className="relative flex-1 xl:flex-none xl:w-64 group">
                             <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 group-focus-within:text-appBanner transition-colors" />
@@ -200,6 +210,20 @@ const PackagesPage = () => {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-11 pr-4 py-3 bg-black/20 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-appBanner/50 focus:border-appBanner text-white placeholder-gray-500 font-medium transition-all shadow-inner"
                             />
+                        </div>
+
+                        {/* RESTORED: Time Filter Dropdown */}
+                        <div className="relative">
+                            <select
+                                value={timeFilter}
+                                onChange={(e) => setTimeFilter(e.target.value as TimeFilter)}
+                                className="appearance-none bg-black/20 border border-white/10 rounded-xl px-5 py-3 pr-10 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-appBanner/50 cursor-pointer shadow-inner"
+                            >
+                                {(['12 Months', '30 Days', '7 Days', 'Today'] as const).map((time) => (
+                                    <option key={time} value={time} className="bg-gray-900">{time}</option>
+                                ))}
+                            </select>
+                            <FiCalendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                         </div>
 
                         {/* Pagination Dropdown */}
@@ -287,7 +311,7 @@ const PackagesPage = () => {
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-white">{pkg.package_name}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-300">{pkg.receiver_address}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${getStatusStyle(pkg?.deliveryStatus!)}`}>
+                                                    <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${getStatusStyle(pkg.deliveryStatus!)}`}>
                                                         {pkg.deliveryStatus!.replace(/_/g, ' ')}
                                                     </span>
                                                 </td>
@@ -303,7 +327,7 @@ const PackagesPage = () => {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right">
                                                     <div className="flex items-center justify-end space-x-2">
-                                                        {pkg.deliveryStatus === 'UNCLAIMED_ITEMS' ? (
+                                                        {pkg.deliveryStatus! === 'UNCLAIMED_ITEMS' ? (
                                                             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleClaimItem(pkg.trackingNumber)} className="bg-gradient-to-r from-emerald-500 to-green-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg shadow-emerald-500/20">Claim Item</motion.button>
                                                         ) : (
                                                             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleShipNow(pkg.trackingNumber)} className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-lg shadow-blue-500/20">Ship Now</motion.button>
@@ -665,7 +689,7 @@ export default PackagesPage;
 
 //     // Filter packages based on selected filters
 //     const filteredPackages = realPackages.filter((pkg) => {
-//         const statusMatch = statusFilter === 'All' || pkg.deliveryStatus === statusFilter;
+//         const statusMatch = statusFilter === 'All' || pkg.deliveryStatus! === statusFilter;
 
 //         // --- DATE LOGIC ---
 //         const now = new Date();
@@ -987,12 +1011,12 @@ export default PackagesPage;
 //                                                 </td>
 //                                                 <td className="px-6 py-4 whitespace-nowrap">
 //                                                     <span
-//                                                         className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${pkg.deliveryStatus === 'UNCLAIMED_ITEMS'
+//                                                         className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${pkg.deliveryStatus! === 'UNCLAIMED_ITEMS'
 //                                                             ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
 //                                                             : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
 //                                                             }`}
 //                                                     >
-//                                                         {pkg.deliveryStatus} {/**status */}
+//                                                         {pkg.deliveryStatus!} {/**status */}
 //                                                     </span>
 //                                                 </td>
 //                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-white/80">
@@ -1018,7 +1042,7 @@ export default PackagesPage;
 //                                                 </td>
 //                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
 //                                                     <div className="flex items-center space-x-2">
-//                                                         {pkg.deliveryStatus === 'UNCLAIMED_ITEMS' ? (
+//                                                         {pkg.deliveryStatus! === 'UNCLAIMED_ITEMS' ? (
 //                                                             <button
 //                                                                 onClick={() => handleClaimItem(pkg.trackingNumber)}
 //                                                                 className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
@@ -1087,18 +1111,18 @@ export default PackagesPage;
 //                                                     </td>
 //                                                     <td className="px-6 py-5 whitespace-nowrap">
 //                                                         <span
-//                                                             className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${pkg.deliveryStatus === 'RECEIVED'
+//                                                             className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${pkg.deliveryStatus! === 'RECEIVED'
 //                                                                 ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-//                                                                 : pkg.deliveryStatus === 'IN_TRANSIT'
+//                                                                 : pkg.deliveryStatus! === 'IN_TRANSIT'
 //                                                                     ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-//                                                                     : pkg.deliveryStatus === 'AWAITING_SHIPMENT'
+//                                                                     : pkg.deliveryStatus! === 'AWAITING_SHIPMENT'
 //                                                                         ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-//                                                                         : pkg.deliveryStatus === 'UNCLAIMED_ITEMS'
+//                                                                         : pkg.deliveryStatus! === 'UNCLAIMED_ITEMS'
 //                                                                             ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
 //                                                                             : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
 //                                                                 }`}
 //                                                         >
-//                                                             {pkg.deliveryStatus}
+//                                                             {pkg.deliveryStatus!}
 //                                                         </span>
 //                                                     </td>
 //                                                     <td className="px-6 py-5 whitespace-nowrap text-sm text-white/80">
@@ -1166,15 +1190,15 @@ export default PackagesPage;
 //                                                                                     </div>
 //                                                                                     <div className="flex items-center text-sm">
 //                                                                                         <span className="text-white/60 font-medium w-24">Status:</span>
-//                                                                                         <span className={`px-2 py-1 text-xs rounded-full font-bold ${pkg.deliveryStatus === 'RECEIVED'
+//                                                                                         <span className={`px-2 py-1 text-xs rounded-full font-bold ${pkg.deliveryStatus! === 'RECEIVED'
 //                                                                                             ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-//                                                                                             : pkg.deliveryStatus === 'IN_TRANSIT'
+//                                                                                             : pkg.deliveryStatus! === 'IN_TRANSIT'
 //                                                                                                 ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-//                                                                                                 : pkg.deliveryStatus === 'AWAITING_SHIPMENT'
+//                                                                                                 : pkg.deliveryStatus! === 'AWAITING_SHIPMENT'
 //                                                                                                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
 //                                                                                                     : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
 //                                                                                             }`}>
-//                                                                                             {pkg.deliveryStatus}
+//                                                                                             {pkg.deliveryStatus!}
 //                                                                                         </span>
 //                                                                                     </div>
 //                                                                                 </div>
