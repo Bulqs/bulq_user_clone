@@ -142,7 +142,7 @@ export async function getAllBookings(params: BookingFilterParams): Promise<Paged
         }
     });
 
-    const finalUrl = `http://localhost:8087/api/v1/booking/all?${queryParams.toString()}`;
+    const finalUrl = `${BOOKING_BASE_URL}/all?${queryParams.toString()}`;
     console.log("FETCHING FROM BACKEND:", finalUrl); // CHECK THIS IN YOUR NEXT.JS TERMINAL
 
     const res = await fetch(finalUrl, {
@@ -181,7 +181,7 @@ export async function getAllBookingsForShippingPage(params: BookingFilterParams)
         }
     });
 
-    const finalUrl = `http://localhost:8087/api/v1/booking/all?${queryParams.toString()}`;
+    const finalUrl = `${BOOKING_BASE_URL}/all?${queryParams.toString()}`;
     console.log("FETCHING FROM BACKEND:", finalUrl); // CHECK THIS IN YOUR NEXT.JS TERMINAL
 
     const res = await fetch(finalUrl, {
@@ -263,31 +263,7 @@ export async function getBookingSummaryStats(payload: BookingAnalyticsRequest): 
     }
 }
 
-/**
- * Calculate shipping rates for a potential booking
- * Matches POST /api/v1/booking/calculate?currency=...
- */
-// export async function calculateShippingRate(
-//     payload: ShippingRateRequest, 
-//     currency: string = "USD",
-//     signal?: AbortSignal // Add this
-// ): Promise<ShippingRateResponse> {
-//     const authHeader = await getAuthHeader();
 
-//     const res = await fetch(`http://localhost:8087/api/v1/booking/calculate?currency=${currency}`, {
-//         method: 'POST',
-//         headers: { 
-//             ...authHeader, 
-//             'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify(payload),
-//         signal, // Attach the signal here
-//         cache: 'no-store'
-//     });
-
-//     if (!res.ok) throw new Error("Rate calculation failed");
-//     return await res.json();
-// }
 export async function calculateShippingRate(
     payload: ShippingRateRequest, 
     currency: string = "USD"
