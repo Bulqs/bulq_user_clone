@@ -151,7 +151,7 @@ const Footer = () => {
                     className="pt-8 border-t border-gray-800/80 flex flex-col md:flex-row items-center justify-between gap-4"
                 >
                     <p className="text-gray-500 text-sm text-center md:text-left font-medium">
-                        © {new Date().getFullYear()} BulQ Logistics. All rights reserved.
+                        © {new Date().getFullYear()} BulQ. All rights reserved.
                     </p>
                     
                     <div className="flex gap-6 text-sm text-gray-500 font-medium">

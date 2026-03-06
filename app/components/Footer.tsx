@@ -52,7 +52,7 @@ const Footer = () => {
                             alt="Description of the image"
                             className='h-8 md:h-10 w-8 md:w-10'
                         />
-                        <p className=' font-semibold text-sm  md:text-base md:font-bold text-white'>&copy; {new Date().getFullYear()} BULQ LOGISTICS </p>
+                        <p className=' font-semibold text-sm  md:text-base md:font-bold text-white'>&copy; {new Date().getFullYear()} BulQ </p>
                     </div>
 
                     <div className="flex space-x-6 md:order-2 xl:mt-12 items-center justify-center">

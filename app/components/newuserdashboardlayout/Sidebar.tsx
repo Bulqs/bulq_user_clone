@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image'; // Restored Image import
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,19 +18,18 @@ import {
     FiMenu,
     FiX
 } from 'react-icons/fi';
-// Import your profile action, store, and logout action
 import { getMyProfile } from '@/lib/user/actions';
 import { useUserStore } from "@/lib/utils/store";
 import { LogoutUser } from '@/lib/actions';
 
 // --- NAVIGATION CONFIG ---
 const navItems = [
-    { name: 'Dashboard', path: '/pages/newuser', icon: FiHome },
-    { name: 'Packages', path: '/pages/newuser/packages', icon: FiPackage },
-    { name: 'Tracking', path: '/pages/newuser/tracking', icon: FiMapPin },
-    { name: 'History', path: '/pages/newuser/history', icon: FiClock },
-    { name: 'Addresses', path: '/pages/newuser/address', icon: FiMap },
-    { name: 'Settings', path: '/pages/newuser/settings', icon: FiSettings },
+    { name: 'Dashboard', path: '/user', icon: FiHome },
+    { name: 'Packages', path: '/user/packages', icon: FiPackage },
+    { name: 'Tracking', path: '/user/tracking', icon: FiMapPin },
+    { name: 'History', path: '/user/history', icon: FiClock },
+    { name: 'Addresses', path: '/user/address', icon: FiMap },
+    { name: 'Settings', path: '/user/settings', icon: FiSettings },
 ];
 
 export default function Sidebar() {
@@ -41,13 +41,10 @@ export default function Sidebar() {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     
-    // --- USER STATE ---
     const [userProfile, setUserProfile] = useState<{ firstName?: string, lastName?: string } | null>(null);
 
-    // Prevent hydration mismatch
     useEffect(() => setMounted(true), []);
 
-    // Fetch User Profile on Mount
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -60,19 +57,16 @@ export default function Sidebar() {
         fetchProfile();
     }, []);
 
-    // Close mobile menu when route changes
     useEffect(() => {
         setIsMobileOpen(false);
     }, [pathname]);
 
-    // Lock body scroll when mobile menu is open
     useEffect(() => {
         if (isMobileOpen) document.body.style.overflow = 'hidden';
         else document.body.style.overflow = 'unset';
         return () => { document.body.style.overflow = 'unset'; };
     }, [isMobileOpen]);
 
-    // --- LOGOUT LOGIC ---
     const handleLogout = async (e: React.MouseEvent) => {
         e.preventDefault();
         try {
@@ -84,7 +78,6 @@ export default function Sidebar() {
         }
     };
 
-    // --- HELPER FUNCTIONS FOR DYNAMIC DATA ---
     const fullName = userProfile 
         ? `${userProfile.firstName || ''} ${userProfile.lastName || ''}`.trim() 
         : 'Loading...';
@@ -98,17 +91,36 @@ export default function Sidebar() {
             {/* Background Glow */}
             <div className="absolute top-0 left-0 w-64 h-64 bg-appBanner/10 blur-[80px] rounded-full pointer-events-none -translate-x-1/2 -translate-y-1/2" />
 
-            {/* --- LOGO AREA --- */}
-            <div className={`flex items-center h-20 px-6 border-b border-white/5 transition-all duration-300 ${isCollapsed ? 'justify-center px-0' : 'justify-between'}`}>
-                <Link href="/user" className="flex items-center gap-3 relative z-10">
-                    <div className="w-10 h-10 bg-gradient-to-br from-appBanner to-appNav rounded-xl flex items-center justify-center shadow-lg border border-white/10">
-                        <span className="font-black text-xl tracking-tighter">B</span>
-                    </div>
-                    {!isCollapsed && (
-                        <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-extrabold text-xl tracking-tight">
-                            BulQ
-                        </motion.span>
-                    )}
+            {/* --- LOGO AREA (RESTORED & UPGRADED) --- */}
+            <div className={`flex items-center h-24 px-6 border-b border-white/5 transition-all duration-300 ${isCollapsed ? 'justify-center px-0' : 'justify-start'}`}>
+                <Link href="/user" className="relative z-10 flex items-center justify-center">
+                    <AnimatePresence mode="wait">
+                        {isCollapsed ? (
+                            // Show small square icon when collapsed
+                            <motion.div
+                                key="icon-logo"
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg border border-white/10 overflow-hidden p-1"
+                            >
+                                <Image src="/images/logo4.svg" alt="BulQ Icon" width={32} height={32} className="object-contain" />
+                            </motion.div>
+                        ) : (
+                            // Show full text logo when expanded
+                            <motion.div
+                                key="full-logo"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                transition={{ duration: 0.2 }}
+                                className="flex items-center"
+                            >
+                                <Image src="/images/logo5.svg" alt="BulQ Full Logo" width={140} height={40} className="w-32 h-auto drop-shadow-lg" />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </Link>
             </div>
 
@@ -153,19 +165,16 @@ export default function Sidebar() {
             <div className="p-4 border-t border-white/5 relative z-10 bg-black/10">
                 <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} mb-4`}>
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 border-2 border-white/10 flex items-center justify-center overflow-hidden shrink-0">
-                         {/* Dynamic Initials */}
                          <span className="font-bold text-xs text-white tracking-widest">{initials}</span>
                     </div>
                     {!isCollapsed && (
                         <div className="flex flex-col overflow-hidden">
-                            {/* Dynamic Name */}
                             <span className="text-sm font-bold text-white truncate">{fullName}</span>
                             <span className="text-[10px] font-bold text-appBanner uppercase tracking-widest truncate">Standard Tier</span>
                         </div>
                     )}
                 </div>
 
-                {/* THE LOGOUT BUTTON WITH onClick HANDLER */}
                 <motion.button 
                     onClick={handleLogout}
                     whileHover={{ scale: isCollapsed ? 1.05 : 1.02 }} 
@@ -184,8 +193,8 @@ export default function Sidebar() {
         <>
             {/* MOBILE FLOATING HEADER */}
             <div className="lg:hidden fixed top-0 left-0 w-full h-16 bg-appTitleBgColor/90 backdrop-blur-md border-b border-white/10 z-[40] flex items-center justify-between px-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-appBanner to-appNav rounded-lg flex items-center justify-center shadow-lg">
-                    <span className="font-black text-white">B</span>
+                <div className="flex items-center">
+                     <Image src="/images/logo5.svg" alt="BulQ Logo" width={100} height={28} className="w-24 h-auto drop-shadow-md" />
                 </div>
                 <button onClick={() => setIsMobileOpen(true)} className="p-2 text-white/80 hover:text-white bg-white/5 rounded-lg border border-white/10">
                     <FiMenu size={24} />

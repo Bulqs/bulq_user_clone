@@ -10,7 +10,7 @@ const Footer = () => {
                         {/* Copyright */}
                         <div className="text-center md:text-left">
                             <p className="text-sm font-semibold text-appTitleBgColor">
-                                © {currentYear} BULQLOGISTICS. All rights reserved.
+                                © {currentYear} BulQ. All rights reserved.
                             </p>
                         </div>
 
