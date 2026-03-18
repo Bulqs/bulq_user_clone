@@ -16,10 +16,10 @@ const Header2: React.FC<Header2Props> = ({ onLoginClick, onRegisterClick }) => {
 
     const navItems = [
         { name: 'Home', href: '/' },
-        { name: 'Services', href: '#services' },
-        { name: 'Pricing', href: '#pricing' },
-        { name: 'FAQ', href: '#faq' },
-        { name: 'Contact', href: '#contact' }
+        { name: 'Services', href: '/pages/services' },
+        { name: 'Pricing', href: '/pages/pricing' },
+        { name: 'FAQ', href: '/pages/faq' },
+        { name: 'Contact', href: '/pages/contact' }
     ];
 
     return (

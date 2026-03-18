@@ -304,6 +304,11 @@ export enum NAVIGATION {
   BRAND = `/pages/brand`,
   DRIVERSWEB = `/pages/driver`,
   DRIVERBUSINESS = `/pages/driver/driverbusiness`,
+  FAQ = `/pages/faq`,
+  CONTACT = `/pages/contact`,
+  HOW_IT_WORKS = `/pages/how-it-works`,
+  SERVICES = `/pages/services`,
+  PRICING = `/pages/pricing`,
 
   VERIFY= `/pages/verify`,
   FORGOT_PASSWORD = `/pages/forgot-password`,
