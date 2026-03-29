@@ -12,7 +12,49 @@ export enum ShipmentType {
 }
 
 
+// export type BookingPayload = {
+//     sender_firstname: string;
+//     sender_lastname: string;
+//     sender_phoneNumber: string;
+//     sender_address: string;
+//     sender_email: string;
+//     sender_city: string;
+//     sender_country: string;
+//     sender_state: string;
+//     sender_lga: string;
+//     receiver_firstname: string;
+//     receiver_lastname: string;
+//     receiver_phoneNumber: string;
+//     receiver_address: string;
+//     receiver_email: string;
+//     receiver_city: string;
+//     receiver_country: string;
+//     receiver_state: string;
+//     receiver_lga: string;
+//     package_name: string;
+//     package_description: string;
+//     package_image: string;
+//     vendor: string;
+//     weight: number;
+//     shipment_type: ShipmentType;
+//     pickupType: PickupTypes;
+//     shipping_amount: number;
+//     pick_up_date: string;
+//     pick_up_time: string;
+//     length: number;
+//     width: number;
+//     height: number;
+//     declaredValue: number;
+//     productCategory: string;
+//     hsCode: string;
+//     itemDescription: string;
+//     includeInsurance: boolean;
+//     promoCode: string;
+//     calculateShipping: boolean;
+// };
+// UPDATED: Main PUP Booking Payload
 export type BookingPayload = {
+    // --- SENDER DETAILS ---
     sender_firstname: string;
     sender_lastname: string;
     sender_phoneNumber: string;
@@ -22,6 +64,8 @@ export type BookingPayload = {
     sender_country: string;
     sender_state: string;
     sender_lga: string;
+
+    // --- RECEIVER DETAILS ---
     receiver_firstname: string;
     receiver_lastname: string;
     receiver_phoneNumber: string;
@@ -31,26 +75,19 @@ export type BookingPayload = {
     receiver_country: string;
     receiver_state: string;
     receiver_lga: string;
-    package_name: string;
-    package_description: string;
-    package_image: string;
-    vendor: string;
-    weight: number;
-    shipment_type: ShipmentType;
-    pickupType: PickupTypes;
-    shipping_amount: number;
+
+    // --- LOGISTICS & CONFIGURATION ---
+    shipment_type: ShipmentType; // Assuming ShipmentType is an enum/type like 'STANDARD' | 'EXPRESS'
+    pickupType: PickupTypes;     // Assuming PickupTypes is an enum/type
     pick_up_date: string;
     pick_up_time: string;
-    length: number;
-    width: number;
-    height: number;
-    declaredValue: number;
-    productCategory: string;
-    hsCode: string;
-    itemDescription: string;
+    
     includeInsurance: boolean;
-    promoCode: string;
-    calculateShipping: boolean;
+    promoCode?: string;
+
+    // --- NEW: THE PACKAGES ARRAY ---
+    // Replaces all the individual flat package fields
+    packages: PackageItem[];
 };
 
 export type BookingResponseDTO = {
@@ -66,6 +103,86 @@ export type BookingResponseDTO = {
     appointmentDate: string;
 };
 
+// export type BADOBookingPayload = {
+//     // --- SENDER DETAILS ---
+//     senderFirstName: string;
+//     senderLastName: string;
+//     senderPhoneNumber: string;
+//     senderAddress: string;
+//     senderEmail: string;
+//     senderCity: string;
+//     senderCountry: string;
+//     senderState: string;
+//     senderLga: string;
+//     senderPostCode: string;
+
+//     // --- RECEIVER DETAILS ---
+//     receiverFirstname: string;
+//     receiverLastname: string;
+//     receiverPhoneNumber: string;
+//     receiverAddress: string;
+//     receiverEmail: string;
+//     receiverCity: string;
+//     receiverCountry: string;
+//     receiverState: string;
+//     receiverLga: string;
+//     receiverPostCode: string;
+
+//     // --- APPOINTMENT & HUB DETAILS ---
+//     appointmentDate: string; // ISO String: 2026-02-07T07:12:38.772Z
+//     hubId: string;           // <--- ADDED: Unique ID of the selected hub
+    
+//     // Hub Metadata (Snapshot for this booking)
+//     email: string;           // Hub contact email
+//     phoneNumber: string;     // Hub contact phone
+//     city: string;            // Hub city
+//     country: string;         // Hub country
+//     address: string;         // Hub address
+//     state: string;           // Hub state (Province)
+//     lga: string;             // Hub lga (or City if replacing LGA)
+
+//     // --- PACKAGE DETAILS ---
+//     package_name: string;
+//     weight: number;
+//     length: number;
+//     width: number;
+//     height: number;
+//     package_description: string;
+//     packageImage: string;
+//     productCategory: string;
+//     hsCode: string;
+//     itemDescription: string;
+//     vendor: string;
+//     declaredValue: number;
+
+//     // --- CONFIGURATION ---
+//     shipmentType: string;
+//     pickupType: string;
+//     shippingAmount: number;
+//     pickUpDate: string;
+//     pickUpTime: string;
+//     includeInsurance: boolean;
+//     promoCode: string;
+//     calculateShipping: boolean;
+// };
+
+// NEW: Define the structure for a single package item
+export interface PackageItem {
+    packageName: string;        // Changed from package_name
+    packageDescription: string; // Changed from package_description
+    packageImage?: string;      // Optional
+    vendor?: string;            // Optional
+    weight: number;
+    length: number;
+    width: number;
+    height: number;
+    declaredValue: number;
+    productCategory?: string;
+    hsCode?: string;
+    itemDescription?: string;
+}
+
+// UPDATED: Main Booking Payload
 export type BADOBookingPayload = {
     // --- SENDER DETAILS ---
     senderFirstName: string;
@@ -93,41 +210,44 @@ export type BADOBookingPayload = {
 
     // --- APPOINTMENT & HUB DETAILS ---
     appointmentDate: string; // ISO String: 2026-02-07T07:12:38.772Z
-    hubId: string;           // <--- ADDED: Unique ID of the selected hub
-    
-    // Hub Metadata (Snapshot for this booking)
-    email: string;           // Hub contact email
-    phoneNumber: string;     // Hub contact phone
-    city: string;            // Hub city
-    country: string;         // Hub country
-    address: string;         // Hub address
-    state: string;           // Hub state (Province)
-    lga: string;             // Hub lga (or City if replacing LGA)
-
-    // --- PACKAGE DETAILS ---
-    package_name: string;
-    weight: number;
-    length: number;
-    width: number;
-    height: number;
-    package_description: string;
-    packageImage: string;
-    productCategory: string;
-    hsCode: string;
-    itemDescription: string;
-    vendor: string;
-    declaredValue: number;
+    hubId: string;           
+    email: string;           
+    phoneNumber: string;     
+    city: string;            
+    country: string;         
+    address: string;         
+    state: string;           
+    lga: string;             
 
     // --- CONFIGURATION ---
     shipmentType: string;
     pickupType: string;
-    shippingAmount: number;
     pickUpDate: string;
     pickUpTime: string;
     includeInsurance: boolean;
-    promoCode: string;
-    calculateShipping: boolean;
+    promoCode?: string;
+    shippingAmount?: number; // Kept as optional, though the backend auto-calculates
+
+    // --- NEW: THE PACKAGES ARRAY ---
+    // Replaces all the individual flat package fields
+    packages: PackageItem[]; 
 };
+
+// NEW: Define the structure for a single package item
+export interface PackageItem {
+    packageName: string;        // Changed from package_name
+    packageDescription: string; // Changed from package_description
+    packageImage?: string;      // Optional
+    vendor?: string;            // Optional
+    weight: number;
+    length: number;
+    width: number;
+    height: number;
+    declaredValue: number;
+    productCategory?: string;
+    hsCode?: string;
+    itemDescription?: string;
+}
 
 // Book a delivery appointment response DTO
 export interface BADOResponseDTO {

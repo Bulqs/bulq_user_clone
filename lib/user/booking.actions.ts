@@ -47,50 +47,158 @@ export async function getAuthHeader(): Promise<Record<string, string>> {
 /**
  * Handle POST to /booking/pup (Pick Up Package)
  */
-export async function createPickUpBooking(payload: BookingPayload): Promise<BookingResponseDTO > {
+// export async function createPickUpBooking(payload: BookingPayload): Promise<BookingResponseDTO > {
+//     const authHeader = await getAuthHeader();
+    
+//     const res = await fetch(`${BOOKING_BASE_URL}/pup`, {
+//         method: 'POST',
+//         headers: { 
+//             ...authHeader, 
+//             'Content-Type': 'application/json' 
+//         },
+//         body: JSON.stringify(payload),
+//     });
+    
+//     if (!res.ok) {
+//         const errorMsg = await res.text();
+//         throw new Error(errorMsg || "Pick-up booking failed");
+//     }
+//     return res.json();
+// }
+export async function createPickUpBooking(payload: BookingPayload): Promise<BookingResponseDTO> {
     const authHeader = await getAuthHeader();
     
-    const res = await fetch(`${BOOKING_BASE_URL}/pup`, {
-        method: 'POST',
-        headers: { 
-            ...authHeader, 
-            'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify(payload),
-    });
-    
-    if (!res.ok) {
-        const errorMsg = await res.text();
-        throw new Error(errorMsg || "Pick-up booking failed");
+    try {
+        const res = await fetch(`${BOOKING_BASE_URL}/pup`, {
+            method: 'POST',
+            headers: { 
+                ...authHeader, 
+                'Content-Type': 'application/json',
+                'accept': '*/*' 
+            },
+            body: JSON.stringify(payload),
+        });
+        
+        if (!res.ok) {
+            // FIX: Read the stream ONCE as text
+            const errorText = await res.text();
+            let errorMessage = "Pick-up booking failed";
+
+            if (errorText) {
+                try {
+                    // Try to parse it as JSON in memory
+                    const errorJson = JSON.parse(errorText);
+                    errorMessage = errorJson.message || errorJson.error || errorText;
+                } catch (e) {
+                    // If it's not JSON, just use the raw text string from Spring Boot
+                    errorMessage = errorText;
+                }
+            }
+            throw new Error(errorMessage);
+        }
+
+        const data: BookingResponseDTO = await res.json();
+        return data;
+
+    } catch (error: any) {
+        console.error("PUP Booking Error:", error.message);
+        throw error;
     }
-    return res.json();
 }
 
 /**
  * Handle POST to /booking/dp (Deliver Package)
  */
+// export async function createDeliverPackageBooking(payload: BookingPayload): Promise<BookingResponseDTO> {
+//     const authHeader = await getAuthHeader();
+    
+//     const res = await fetch(`${BOOKING_BASE_URL}/dp`, {
+//         method: 'POST',
+//         headers: { 
+//             ...authHeader, 
+//             'Content-Type': 'application/json' 
+//         },
+//         body: JSON.stringify(payload),
+//     });
+    
+//     if (!res.ok) {
+//         const errorMsg = await res.text();
+//         throw new Error(errorMsg || "Deliver package booking failed");
+//     }
+//     return res.json();
+// }
+
 export async function createDeliverPackageBooking(payload: BookingPayload): Promise<BookingResponseDTO> {
     const authHeader = await getAuthHeader();
     
-    const res = await fetch(`${BOOKING_BASE_URL}/dp`, {
-        method: 'POST',
-        headers: { 
-            ...authHeader, 
-            'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify(payload),
-    });
-    
-    if (!res.ok) {
-        const errorMsg = await res.text();
-        throw new Error(errorMsg || "Deliver package booking failed");
+    try {
+        const res = await fetch(`${BOOKING_BASE_URL}/dp`, {
+            method: 'POST',
+            headers: { 
+                ...authHeader, 
+                'Content-Type': 'application/json',
+                'accept': '*/*' 
+            },
+            body: JSON.stringify(payload),
+        });
+        
+        if (!res.ok) {
+            // FIX: Read the stream ONCE as text to prevent "Body already read" error
+            const errorText = await res.text();
+            let errorMessage = "Deliver package booking failed";
+
+            if (errorText) {
+                try {
+                    // Try to parse it as JSON in memory
+                    const errorJson = JSON.parse(errorText);
+                    errorMessage = errorJson.message || errorJson.error || errorText;
+                } catch (e) {
+                    // If it's not JSON, just use the raw text string from Spring Boot
+                    errorMessage = errorText;
+                }
+            }
+            throw new Error(errorMessage);
+        }
+
+        const data: BookingResponseDTO = await res.json();
+        return data;
+
+    } catch (error: any) {
+        console.error("DP Booking Error:", error.message);
+        throw error;
     }
-    return res.json();
 }
 
 /**
  * Handle POST to /booking/bado (Book a Delivery Appointment / Drop-off)
  */
+// export async function createDropOffBooking(payload: BADOBookingPayload): Promise<BookingResponseDTO> {
+//     const authHeader = await getAuthHeader();
+    
+//     try {
+//         const res = await fetch(`${BOOKING_BASE_URL}/bado`, {
+//             method: 'POST',
+//             headers: { 
+//                 ...authHeader, 
+//                 'Content-Type': 'application/json',
+//                 'accept': '*/*'
+//             },
+//             body: JSON.stringify(payload),
+//         });
+        
+//         if (!res.ok) {
+//             const errorMsg = await res.text();
+//             throw new Error(errorMsg || "Drop-off appointment booking failed");
+//         }
+
+//         const data: BADOResponseDTO = await res.json();
+//         return data;
+        
+//     } catch (error: any) {
+//         console.error("BADO Booking Error:", error.message);
+//         throw error;
+//     }
+// }
 export async function createDropOffBooking(payload: BADOBookingPayload): Promise<BookingResponseDTO> {
     const authHeader = await getAuthHeader();
     
@@ -106,11 +214,24 @@ export async function createDropOffBooking(payload: BADOBookingPayload): Promise
         });
         
         if (!res.ok) {
-            const errorMsg = await res.text();
-            throw new Error(errorMsg || "Drop-off appointment booking failed");
+            // FIX: Read the stream ONCE as text to prevent "Body already read" error
+            const errorText = await res.text();
+            let errorMessage = "Drop-off appointment booking failed";
+
+            if (errorText) {
+                try {
+                    // Try to parse it as JSON in memory
+                    const errorJson = JSON.parse(errorText);
+                    errorMessage = errorJson.message || errorJson.error || errorText;
+                } catch (e) {
+                    // If it's not JSON, just use the raw text string from Spring Boot
+                    errorMessage = errorText;
+                }
+            }
+            throw new Error(errorMessage);
         }
 
-        const data: BADOResponseDTO = await res.json();
+        const data: BookingResponseDTO = await res.json();
         return data;
         
     } catch (error: any) {

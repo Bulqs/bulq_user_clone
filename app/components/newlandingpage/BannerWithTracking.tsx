@@ -1,4 +1,4 @@
-"use client"; // Required for hooks
+'use client'
 
 import React, { useState } from 'react';
 import TrackingModal from '../modals/TrackingModal';
@@ -33,8 +33,8 @@ const BannerWithTracking = () => {
         // Increased mobile bottom margin to prevent the stacked tracking box from overlapping content below
         <div className="relative mb-40 md:mb-48">
             
-            {/* Banner Component */}
-            <div className='w-full relative min-h-[750px] lg:min-h-[850px] py-20 md:py-24 flex items-center justify-center'>
+            {/* Banner Component - Slightly increased mobile min-height to accommodate the new breathing space */}
+            <div className='w-full relative min-h-[800px] lg:min-h-[850px] py-20 md:py-24 flex items-center justify-center'>
                 
                 <Image
                     className='absolute z-0 object-cover'
@@ -57,8 +57,8 @@ const BannerWithTracking = () => {
                     variants={containerVariants}
                     initial="hidden"
                     animate="show"
-                    // Responsive margin-top to keep it balanced on all devices
-                    className='relative z-[60] text-center text-white px-4 w-full max-w-7xl mx-auto flex flex-col items-center justify-center mt-16 md:mt-28'
+                    // ADDED pb-36 md:pb-16 here: This creates an invisible cushion at the bottom so the absolute tracking box can't touch the LandingBanner
+                    className='relative z-[60] text-center text-white px-4 w-full max-w-7xl mx-auto flex flex-col items-center justify-center mt-16 md:mt-28 pb-36 md:pb-16'
                 >
                     {/* Fluid Typography: 4xl on mobile, 5xl on tablet, 6xl on desktop */}
                     <motion.h2 variants={itemVariants} className='font-bold text-4xl sm:text-5xl md:text-6xl mb-4 tracking-tight drop-shadow-md'>
@@ -111,12 +111,10 @@ const BannerWithTracking = () => {
                                 onChange={(e) => setInputTracking(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleTrackClick()}
                                 placeholder="Tracking number (e.g. BQ123456789)"
-                                // Separate border radii for mobile vs desktop
                                 className="flex-grow py-4 px-6 rounded-xl sm:rounded-r-none sm:rounded-l-full text-base sm:text-lg border border-gray-300 focus:ring-2 focus:ring-appNav focus:border-blue-500 focus:outline-none bg-white/95 text-gray-900 shadow-inner w-full"
                             />
                             <button
                                 onClick={handleTrackClick}
-                                // Full width on mobile, auto width on desktop
                                 className="bg-appNav hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-xl sm:rounded-l-none sm:rounded-r-full transition duration-300 whitespace-nowrap shadow-lg w-full sm:w-auto text-lg active:scale-[0.98]"
                             >
                                 Track Package
