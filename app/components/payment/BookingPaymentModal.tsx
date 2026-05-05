@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { IoClose, IoCard, IoArrowBack } from "react-icons/io5";
+import { IoClose, IoCard, IoArrowBack, IoShieldCheckmarkOutline } from "react-icons/io5";
+import { FiCheckCircle, FiLock, FiInfo } from "react-icons/fi";
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { BookingResponseDTO } from '@/types/booking';
@@ -15,6 +16,24 @@ interface BookingPaymentModalProps {
     customerName: string;
     onClose: () => void;
 }
+
+// --- HELPER TO GET METHOD DESCRIPTIONS ---
+const getMethodDescription = (provider: string) => {
+    const lowerProvider = provider.toLowerCase();
+    if (lowerProvider.includes('paystack')) {
+        return "Pay securely via Local Bank Transfer, USSD, or Debit Cards.";
+    }
+    if (lowerProvider.includes('stripe')) {
+        return "Pay internationally using major Credit and Debit cards.";
+    }
+    if (lowerProvider.includes('wallet')) {
+        return "Instant checkout using your available BulQ account balance.";
+    }
+    if (lowerProvider.includes('paypal')) {
+        return "Fast and secure international payments via PayPal.";
+    }
+    return "Proceed securely with this payment gateway.";
+};
 
 const BookingPaymentModal: React.FC<BookingPaymentModalProps> = ({ 
     bookingData, 
@@ -51,33 +70,17 @@ const BookingPaymentModal: React.FC<BookingPaymentModalProps> = ({
         setProcessingPayment(true);
         try {
             // --- CONSTRUCT URLS ---
-            // UPDATED: Points to your new Stripe specific verify page
-            // We pass the trackingNumber as 'id' so the verify page can pick it up
             const targetUrl = `${window.location.origin}/pages/paymentstatus/stripe/verify?id=${bookingData.trackingNumber}`;
-            // 2. Paystack's target URL (removed 'stripe/')
             const paystackTargetUrl = `${window.location.origin}/pages/paymentstatus/verify?id=${bookingData.trackingNumber}`;
-
-            // 3. Check if the selected method is Paystack
             const isPaystack = method.provider.toLowerCase().includes('paystack');
             
-            // const payload = {
-            //     customerEmail,
-            //     customerName,
-            //     amount: bookingData.totalCost || 0,
-            //     callbackUrl: targetUrl, 
-            //     currency: bookingData.currency,
-            //     reference: `${bookingData.trackingNumber}` 
-            // };
-
             const payload = {
                 customerEmail,
                 customerName,
                 amount: bookingData.totalCost || 0,
-                // Assign the correct URL dynamically
                 callbackUrl: isPaystack ? paystackTargetUrl : targetUrl, 
                 currency: bookingData.currency,
                 reference: `${bookingData.trackingNumber}` 
-                // reference: `${bookingData.trackingNumber}_${Date.now()}`
             };
 
             const response = await initiateShippingPayment(
@@ -138,96 +141,161 @@ const BookingPaymentModal: React.FC<BookingPaymentModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-auto max-h-[90vh]">
+            <div className="bg-white w-full max-w-5xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-[80vh]">
                 
-                {/* LEFT: Booking Summary */}
-                <div className="w-full md:w-5/12 bg-gray-50 p-6 md:p-8 border-b md:border-r border-gray-100 flex flex-col overflow-y-auto">
-                    <h3 className="text-xl font-extrabold text-gray-900 mb-6">Booking Summary</h3>
-                    <div className="space-y-4 flex-1">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Tracking ID</span>
-                            <span className="font-bold text-appBanner">{bookingData.trackingNumber}</span>
+                {/* --- LEFT: Booking Summary (Detailed Breakdown) --- */}
+                <div className="w-full md:w-5/12 bg-gradient-to-b from-gray-50 to-gray-100 p-6 md:p-10 border-b md:border-r border-gray-200 flex flex-col overflow-y-auto">
+                    <div className="mb-8">
+                        <h3 className="text-2xl font-black text-gray-900 tracking-tight">Order Summary</h3>
+                        <div className="flex items-center gap-2 mt-2">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tracking ID:</span>
+                            <span className="text-xs font-mono font-bold bg-white px-2 py-0.5 rounded border border-gray-200 text-gray-700">{bookingData.trackingNumber}</span>
                         </div>
-                        <div className="w-full h-px bg-gray-200 my-2"></div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-gray-500">Total To Pay</span>
-                            <span className="font-extrabold text-gray-900 text-lg">
-                                {bookingData.currency} {(bookingData.totalCost || 0).toLocaleString()}
-                            </span>
+                    </div>
+
+                    {/* Receipt Card */}
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 flex-1 flex flex-col relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-appBanner"></div>
+                        
+                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-dashed border-gray-200">
+                            <div>
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Billed To</p>
+                                <p className="text-sm font-bold text-gray-800 mt-1">{customerName}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</p>
+                                <p className="text-xs font-bold text-amber-500 mt-1 bg-amber-50 px-2 py-0.5 rounded inline-block">Awaiting Payment</p>
+                            </div>
                         </div>
+
+                        {/* Cost Breakdown */}
+                        <div className="space-y-4 mb-6">
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600 font-medium flex items-center gap-2"><FiCheckCircle className="text-green-500 w-4 h-4"/> Base Fee</span>
+                                <span className="font-bold text-gray-800">{bookingData.currency} {(bookingData.totalCost || 0).toLocaleString()}</span>
+                            </div>
+                            
+                            {/* Dynamically render these if your DTO supports them later, else they stay hidden */}
+                            {(bookingData as any).shippingAmount && (
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-gray-600 font-medium">Shipping Rate</span>
+                                    <span className="font-bold text-gray-800">{bookingData.currency} {(bookingData as any).shippingAmount.toLocaleString()}</span>
+                                </div>
+                            )}
+                            {(bookingData as any).insuranceAmount && (
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-gray-600 font-medium">Insurance Cover</span>
+                                    <span className="font-bold text-gray-800">{bookingData.currency} {(bookingData as any).insuranceAmount.toLocaleString()}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-auto pt-4 border-t border-dashed border-gray-200">
+                            <div className="flex justify-between items-center bg-appTitleBgColor p-4 rounded-xl shadow-inner">
+                                <div>
+                                    <span className="text-white/60 font-bold uppercase text-[10px] tracking-wider block mb-0.5">Total Amount</span>
+                                    <span className="text-xs text-white/80 font-medium">Including Taxes</span>
+                                </div>
+                                <span className="font-black text-white text-2xl drop-shadow-md">
+                                    {bookingData.currency} {(bookingData.totalCost || 0).toLocaleString()}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Trust Badge */}
+                    <div className="mt-6 flex items-start gap-3 bg-emerald-50/80 p-4 rounded-xl border border-emerald-100">
+                        <IoShieldCheckmarkOutline className="w-6 h-6 text-emerald-600 shrink-0" />
+                        <p className="text-[10px] font-bold text-emerald-800 leading-relaxed">
+                            Your payment is secured with bank-grade 256-bit encryption. We do not store your full card details on our servers.
+                        </p>
                     </div>
                 </div>
 
-                {/* RIGHT: Dynamic Payment Area */}
-                <div className="w-full md:w-7/12 p-6 md:p-8 relative flex flex-col h-full overflow-hidden">
-                    <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 p-2 z-10">
+                {/* --- RIGHT: Dynamic Payment Area --- */}
+                <div className="w-full md:w-7/12 p-6 md:p-10 relative flex flex-col h-full overflow-hidden bg-white">
+                    <button onClick={onClose} className="absolute top-6 right-6 text-gray-400 hover:text-red-500 bg-gray-50 hover:bg-red-50 p-2 rounded-full transition-colors z-10">
                         <IoClose size={24} />
                     </button>
 
                     {/* --- VIEW 1: STRIPE EMBEDDED FORM --- */}
                     {stripeSession && stripeClientSecret ? (
-                        <div className="flex flex-col h-full">
-                            <div className="flex items-center gap-2 mb-6">
+                        <div className="flex flex-col h-full animate-in slide-in-from-right-4 duration-300">
+                            <div className="flex items-center gap-3 mb-8">
                                 <button 
                                     onClick={() => { setStripeSession(null); setStripeClientSecret(null); }} 
-                                    className="p-1 hover:bg-gray-100 rounded-full"
+                                    className="p-2 hover:bg-gray-100 rounded-full border border-gray-200 transition-colors"
                                 >
-                                    <IoArrowBack size={20} />
+                                    <IoArrowBack size={20} className="text-gray-600" />
                                 </button>
-                                <h3 className="text-xl font-extrabold text-gray-900">Card Payment</h3>
+                                <div>
+                                    <h3 className="text-2xl font-extrabold text-gray-900">Card Payment</h3>
+                                    <p className="text-sm font-medium text-gray-500">Complete your transaction via Stripe</p>
+                                </div>
                             </div>
                             
-                            <Elements 
-                                stripe={loadStripe(stripeSession.publishableKey!)} 
-                                options={{ 
-                                    clientSecret: stripeClientSecret,
-                                    appearance: { theme: 'stripe' } 
-                                }}
-                            >
-                                <StripePaymentForm 
-                                    bookingId={bookingData.trackingNumber} 
-                                    // UPDATED: Points to the new page location with correct ID param
-                                    returnUrl={`${window.location.origin}/pages/paymentstatus/stripe/verify?id=${bookingData.trackingNumber}`}
-                                    onCancel={() => { setStripeSession(null); setStripeClientSecret(null); }}
-                                />
-                            </Elements>
+                            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                                <Elements 
+                                    stripe={loadStripe(stripeSession.publishableKey!)} 
+                                    options={{ 
+                                        clientSecret: stripeClientSecret,
+                                        appearance: { 
+                                            theme: 'stripe',
+                                            variables: { colorPrimary: '#0052FF', borderRadius: '12px' }
+                                        } 
+                                    }}
+                                >
+                                    <StripePaymentForm 
+                                        bookingId={bookingData.trackingNumber} 
+                                        returnUrl={`${window.location.origin}/pages/paymentstatus/stripe/verify?id=${bookingData.trackingNumber}`}
+                                        onCancel={() => { setStripeSession(null); setStripeClientSecret(null); }}
+                                    />
+                                </Elements>
+                            </div>
                         </div>
                     ) : (
                         /* --- VIEW 2: METHOD LIST --- */
-                        <div className="flex flex-col h-full overflow-y-auto">
-                            <h3 className="text-xl font-extrabold text-gray-900 mb-2">Select Payment Method</h3>
-                            <p className="text-sm text-gray-500 mb-8">Choose a secure payment gateway.</p>
+                        <div className="flex flex-col h-full overflow-hidden animate-in fade-in duration-300">
+                            <div className="mb-8 pr-12">
+                                <h3 className="text-2xl font-extrabold text-gray-900 mb-2 tracking-tight">Select Payment Method</h3>
+                                <p className="text-sm font-medium text-gray-500">Choose your preferred gateway to complete the transaction securely.</p>
+                            </div>
 
                             {loadingMethods ? (
-                                <div className="flex justify-center py-12">
-                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-appBanner"></div>
+                                <div className="flex flex-col items-center justify-center flex-1">
+                                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-100 border-t-appBanner mb-4"></div>
+                                    <p className="text-sm font-bold text-gray-400">Loading secure gateways...</p>
                                 </div>
                             ) : (
-                                <div className="grid gap-4">
+                                <div className="grid gap-4 overflow-y-auto custom-scrollbar pr-2 pb-4">
                                     {paymentMethods.map((method) => (
                                         <button
                                             key={method.provider}
                                             onClick={() => handlePaymentSelection(method)}
                                             disabled={processingPayment}
-                                            className="group flex items-center justify-between p-5 border border-gray-200 rounded-xl hover:border-appBanner hover:bg-blue-50 transition-all text-left shadow-sm disabled:opacity-50"
+                                            className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 border-2 border-gray-100 rounded-2xl hover:border-appBanner hover:bg-blue-50/30 hover:shadow-md transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 bg-white rounded-lg p-1 border border-gray-100 flex items-center justify-center">
+                                            <div className="flex items-start sm:items-center gap-5">
+                                                <div className="w-14 h-14 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center shrink-0 p-2 group-hover:scale-105 transition-transform">
                                                     {method.iconUrl ? (
-                                                        <Image src={method.iconUrl} alt={method.displayName} 
-                                                        width={48}   // <-- Add this
-                                                        height={48}  // <-- Add this
-                                                        className="w-full h-full object-contain" />
-                                                    ) : <IoCard className="text-gray-400" size={24} />}
+                                                        <Image src={method.iconUrl} alt={method.displayName} width={48} height={48} className="w-full h-full object-contain" />
+                                                    ) : <IoCard className="text-gray-400 w-8 h-8" />}
                                                 </div>
                                                 <div>
-                                                    <h4 className="font-bold text-gray-900 group-hover:text-appBanner">{method.displayName}</h4>
-                                                    <div className="flex gap-2 mt-1">
+                                                    <h4 className="text-lg font-extrabold text-gray-900 group-hover:text-appBanner transition-colors">{method.displayName}</h4>
+                                                    <p className="text-xs font-medium text-gray-500 mt-1 leading-relaxed max-w-[250px]">
+                                                        {getMethodDescription(method.provider)}
+                                                    </p>
+                                                    <div className="flex gap-1.5 mt-3">
                                                         {method.supportedCurrencies.map(c => (
-                                                            <span key={c} className="text-[10px] font-bold px-2 bg-gray-100 text-gray-600 rounded border border-gray-200">{c}</span>
+                                                            <span key={c} className="text-[9px] font-black px-2 py-0.5 bg-gray-100 group-hover:bg-white text-gray-500 rounded border border-gray-200 uppercase tracking-wider">{c}</span>
                                                         ))}
                                                     </div>
                                                 </div>
+                                            </div>
+                                            
+                                            <div className="hidden sm:flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 group-hover:bg-appBanner group-hover:text-white text-gray-400 transition-colors ml-4 shrink-0">
+                                                <FiLock size={14} />
                                             </div>
                                         </button>
                                     ))}
@@ -238,9 +306,12 @@ const BookingPaymentModal: React.FC<BookingPaymentModalProps> = ({
 
                     {/* PROCESSING OVERLAY */}
                     {processingPayment && (
-                        <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-20 rounded-xl">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-appBanner mb-4"></div>
-                            <p className="font-bold text-gray-700">Initializing Payment...</p>
+                        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center z-20 rounded-2xl animate-in fade-in">
+                            <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center mb-4">
+                                <div className="animate-spin rounded-full h-8 w-8 border-4 border-gray-100 border-t-appBanner"></div>
+                            </div>
+                            <h3 className="font-extrabold text-gray-900 text-lg">Initializing Gateway</h3>
+                            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-2">Please do not close this window</p>
                         </div>
                     )}
                 </div>
@@ -260,14 +331,7 @@ export default BookingPaymentModal;
 // import { PaymentMethodDTO, PaymentSessionResponse } from '@/types/transaction';
 // import { getPaymentMethods, initiateShippingPayment } from '@/lib/user/transaction.actions';
 // import StripePaymentForm from '../checkout/StripePaymentForm';
-// // import { 
-// //     BookingResponseDTO, 
-// //     PaymentMethodDTO, 
-// //     PaymentSessionResponse,
-// //     getPaymentMethods, 
-// //     initiateShippingPayment 
-// // } from '@/lib/user/transaction.actions';
-// // import StripePaymentForm from './StripePaymentForm'; 
+// import Image from 'next/image';
 
 // interface BookingPaymentModalProps {
 //     bookingData: BookingResponseDTO;
@@ -288,11 +352,11 @@ export default BookingPaymentModal;
     
 //     // STRIPE STATE
 //     const [stripeSession, setStripeSession] = useState<PaymentSessionResponse | null>(null);
-    
-//     // HARDCODED KEY FOR TESTING
-//     const TEST_PUBLISHABLE_KEY = 'pk_test_51LCbxwD30CaerxYvQHHfQoTY2mbrmQ8B4eLzCyfkzxm9R6EgZMGO4BIqW7P8sjNfuy7RTywuJE7K9l9HEjuQqB4s00axDuoKY9';
+//     const [stripeClientSecret, setStripeClientSecret] = useState<string | null>(null);
 
-//     // Fetch Payment Methods
+//     // MANUAL OVERRIDE (Keep empty for production)
+//     const MANUAL_CLIENT_SECRET = ""; 
+
 //     useEffect(() => {
 //         const loadMethods = async () => {
 //             try {
@@ -310,18 +374,36 @@ export default BookingPaymentModal;
 //     const handlePaymentSelection = async (method: PaymentMethodDTO) => {
 //         setProcessingPayment(true);
 //         try {
+//             // --- CONSTRUCT URLS ---
+//             // UPDATED: Points to your new Stripe specific verify page
+//             // We pass the trackingNumber as 'id' so the verify page can pick it up
+//             const targetUrl = `${window.location.origin}/pages/paymentstatus/stripe/verify?id=${bookingData.trackingNumber}`;
+//             // 2. Paystack's target URL (removed 'stripe/')
+//             const paystackTargetUrl = `${window.location.origin}/pages/paymentstatus/verify?id=${bookingData.trackingNumber}`;
+
+//             // 3. Check if the selected method is Paystack
+//             const isPaystack = method.provider.toLowerCase().includes('paystack');
+            
+//             // const payload = {
+//             //     customerEmail,
+//             //     customerName,
+//             //     amount: bookingData.totalCost || 0,
+//             //     callbackUrl: targetUrl, 
+//             //     currency: bookingData.currency,
+//             //     reference: `${bookingData.trackingNumber}` 
+//             // };
+
 //             const payload = {
 //                 customerEmail,
 //                 customerName,
 //                 amount: bookingData.totalCost || 0,
-//                 // Verify page usually looks up by ID, so we keep ID here
-//                 callbackUrl: `${window.location.origin}/paymentstatus/verify?id=${bookingData.trackingNumber}`, 
+//                 // Assign the correct URL dynamically
+//                 callbackUrl: isPaystack ? paystackTargetUrl : targetUrl, 
 //                 currency: bookingData.currency,
-//                 // Reference uses Tracking Number for readability
-//                 reference: `${bookingData.trackingNumber}}`
+//                 reference: `${bookingData.trackingNumber}` 
+//                 // reference: `${bookingData.trackingNumber}_${Date.now()}`
 //             };
 
-//             // IMPORTANT: Use trackingNumber (UUID) for the API route, not trackingNumber
 //             const response = await initiateShippingPayment(
 //                 bookingData.trackingNumber, 
 //                 method.provider, 
@@ -331,28 +413,29 @@ export default BookingPaymentModal;
 //             console.log("Payment Response:", response);
 //             let flow = response.flowType;
 
-//             // FALLBACK Logic for older backend responses
+//             // FALLBACK Logic
 //             if (!flow) {
 //                 if (response.authorizationUrl) flow = 'REDIRECT';
-//                 else if (response.clientSecret) flow = 'EMBEDDED'; // Client secret implies embedded
+//                 else if (response.clientSecret || response.sessionId) flow = 'EMBEDDED';
 //                 else if (response.success) flow = 'INSTANT';
 //             }
 
 //             // 1. STRIPE / EMBEDDED FLOW
 //             if (flow === 'EMBEDDED' || (flow === 'MODAL' && method.provider.toLowerCase().includes('stripe'))) {
                 
-//                 // Key Priority: 1. Backend Response -> 2. Hardcoded Test Key -> 3. Env Var
-//                 const resolvedKey = response.publishableKey || TEST_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+//                 const resolvedKey = response.publishableKey || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+//                 const resolvedSecret = response.clientSecret || response.sessionId || (response as any).paymentMetadata?.clientSecret || MANUAL_CLIENT_SECRET;
 
-//                 if (response.clientSecret && resolvedKey) {
+//                 if (resolvedSecret && resolvedKey) {
 //                     setStripeSession({
 //                         ...response,
 //                         publishableKey: resolvedKey 
 //                     });
+//                     setStripeClientSecret(resolvedSecret);
 //                     setProcessingPayment(false); 
 //                 } else {
-//                     console.error("Stripe Config Error", { backendKey: response.publishableKey, localKey: response.publishableKey });
-//                     alert("Configuration Error: Stripe Keys missing.");
+//                     console.error("Stripe Config Error", { hasKey: !!resolvedKey, hasSecret: !!resolvedSecret });
+//                     alert("Configuration Error: Stripe Client Secret is missing.");
 //                     setProcessingPayment(false);
 //                 }
 //             }
@@ -406,11 +489,11 @@ export default BookingPaymentModal;
 //                     </button>
 
 //                     {/* --- VIEW 1: STRIPE EMBEDDED FORM --- */}
-//                     {stripeSession ? (
+//                     {stripeSession && stripeClientSecret ? (
 //                         <div className="flex flex-col h-full">
 //                             <div className="flex items-center gap-2 mb-6">
 //                                 <button 
-//                                     onClick={() => setStripeSession(null)} 
+//                                     onClick={() => { setStripeSession(null); setStripeClientSecret(null); }} 
 //                                     className="p-1 hover:bg-gray-100 rounded-full"
 //                                 >
 //                                     <IoArrowBack size={20} />
@@ -421,14 +504,15 @@ export default BookingPaymentModal;
 //                             <Elements 
 //                                 stripe={loadStripe(stripeSession.publishableKey!)} 
 //                                 options={{ 
-//                                     clientSecret: stripeSession.clientSecret,
+//                                     clientSecret: stripeClientSecret,
 //                                     appearance: { theme: 'stripe' } 
 //                                 }}
 //                             >
 //                                 <StripePaymentForm 
-//                                     bookingId={bookingData.trackingNumber} // Display purposes inside form
-//                                     returnUrl={`${window.location.origin}/paymentstatus/verify/verify?id=${bookingData.trackingNumber}`}
-//                                     onCancel={() => setStripeSession(null)}
+//                                     bookingId={bookingData.trackingNumber} 
+//                                     // UPDATED: Points to the new page location with correct ID param
+//                                     returnUrl={`${window.location.origin}/pages/paymentstatus/stripe/verify?id=${bookingData.trackingNumber}`}
+//                                     onCancel={() => { setStripeSession(null); setStripeClientSecret(null); }}
 //                                 />
 //                             </Elements>
 //                         </div>
@@ -454,7 +538,10 @@ export default BookingPaymentModal;
 //                                             <div className="flex items-center gap-4">
 //                                                 <div className="w-12 h-12 bg-white rounded-lg p-1 border border-gray-100 flex items-center justify-center">
 //                                                     {method.iconUrl ? (
-//                                                         <Image src={method.iconUrl} alt={method.displayName} className="w-full h-full object-contain" />
+//                                                         <Image src={method.iconUrl} alt={method.displayName} 
+//                                                         width={48}   // <-- Add this
+//                                                         height={48}  // <-- Add this
+//                                                         className="w-full h-full object-contain" />
 //                                                     ) : <IoCard className="text-gray-400" size={24} />}
 //                                                 </div>
 //                                                 <div>
@@ -478,254 +565,6 @@ export default BookingPaymentModal;
 //                         <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-20 rounded-xl">
 //                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-appBanner mb-4"></div>
 //                             <p className="font-bold text-gray-700">Initializing Payment...</p>
-//                         </div>
-//                     )}
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default BookingPaymentModal;
-
-// "use client";
-// import { getPaymentMethods, initiateShippingPayment } from '@/lib/user/transaction.actions';
-// import { BookingResponseDTO } from '@/types/booking';
-// import { PaymentMethodDTO } from '@/types/transaction';
-// import React, { useEffect, useState } from 'react';
-// import { IoClose, IoCard } from "react-icons/io5";
-
-// interface BookingPaymentModalProps {
-//     bookingData: BookingResponseDTO;
-//     customerEmail: string;
-//     customerName: string;
-//     onClose: () => void;
-// }
-
-// const BookingPaymentModal: React.FC<BookingPaymentModalProps> = ({ 
-//     bookingData, 
-//     customerEmail, 
-//     customerName,
-//     onClose 
-// }) => {
-//     const [paymentMethods, setPaymentMethods] = useState<PaymentMethodDTO[]>([]);
-//     const [loadingMethods, setLoadingMethods] = useState(true);
-//     const [processingPayment, setProcessingPayment] = useState(false);
-
-//     // Fetch Payment Methods on Mount
-//     useEffect(() => {
-//         const loadMethods = async () => {
-//             try {
-//                 const methods = await getPaymentMethods();
-                
-//                 console.log("API Methods:", methods);
-//                 console.log("Booking Currency:", bookingData.currency);
-
-//                 // FIX: Only filter by 'available'. REMOVED currency check.
-//                 // This allows Paystack (NGN) to appear even for USD bookings.
-//                 const validMethods = methods.filter(m => m.available);
-                
-//                 setPaymentMethods(validMethods);
-//             } catch (error) {
-//                 console.error("Failed to load payment methods", error);
-//             } finally {
-//                 setLoadingMethods(false);
-//             }
-//         };
-//         loadMethods();
-//     }, [bookingData.currency]);
-
-//     const handlePaymentSelection = async (method: PaymentMethodDTO) => {
-//         setProcessingPayment(true);
-//         try {
-//             // 1. Prepare Payload
-//             const payload = {
-//                 customerEmail,
-//                 customerName,
-//                 amount: bookingData.totalCost || 0,
-//                 callbackUrl: `${window.location.origin}/paymentstatus/verify?id=${bookingData.trackingNumber}`,
-//                 currency: bookingData.currency,
-//                 reference: `${bookingData.trackingNumber}-${Date.now()}` // Unique Ref
-//             };
-
-//             console.log("🚀 [Frontend] Sending Payment Payload:", payload);
-
-//             // 2. Call API
-//             const response = await initiateShippingPayment(
-//                 bookingData.trackingNumber, 
-//                 method.provider, 
-//                 payload
-//             );
-            
-//             console.log("✅ [Backend] Raw Payment Response:", response);
-
-//             // --- 3. ROBUST FLOW DETECTION ---
-//             let flow = response.flowType;
-//             console.log("ℹ️ [Logic] Initial Flow Type:", flow);
-
-//             // FALLBACK: If backend sent null, infer the flow
-//             if (!flow) {
-//                 if (response.authorizationUrl) {
-//                     console.log("⚠️ [Logic] Flow inferred as REDIRECT (Found authorizationUrl).");
-//                     flow = 'REDIRECT';
-//                 } else if (response.success || response.status === 'success' || response.sessionId) {
-//                     console.log("⚠️ [Logic] Flow inferred as INSTANT (Found success flag/sessionId).");
-//                     flow = 'INSTANT';
-//                 }
-//             } else {
-//                 console.log(`ℹ️ [Logic] Using explicit Flow Type: ${flow}`);
-//             }
-//             // --------------------------------
-
-//             // 4. Handle The Flow
-//             if (flow === 'REDIRECT') {
-//                 if (response.authorizationUrl) {
-//                     console.log("🔄 [Action] Redirecting to:", response.authorizationUrl);
-//                     window.location.href = response.authorizationUrl;
-//                 } else {
-//                     console.error("❌ [Error] REDIRECT flow but no URL found in response.");
-//                     alert("Error: Payment provider returned REDIRECT but no URL.");
-//                     setProcessingPayment(false);
-//                 }
-//             } 
-            
-//             else if (flow === 'INSTANT' || flow === 'DIRECT') {
-//                 console.log("⚡ [Action] Payment Instant/Direct. Verifying...");
-//                 window.location.href = payload.callbackUrl;
-//             }
-
-//             else if (flow === 'EMBEDDED' || flow === 'MODAL') {
-//                 console.log("🧩 [Action] Handling Embedded/Modal Flow.");
-//                 if (method.provider.toLowerCase() === 'stripe') {
-//                      alert("Stripe Integration: Please use the Client Secret: " + (response.clientSecret || response.sessionId));
-//                      setProcessingPayment(false);
-//                 } else if (response.authorizationUrl) {
-//                     window.location.href = response.authorizationUrl;
-//                 } else {
-//                     alert(`Please check your ${method.provider} integration.`);
-//                     setProcessingPayment(false);
-//                 }
-//             }
-
-//             else {
-//                 console.warn("❓ [Warning] Unknown Flow Type:", flow);
-//                 alert(`Unexpected payment flow: ${flow || 'null'}. Please contact support.`);
-//                 setProcessingPayment(false);
-//             }
-
-//         } catch (error: any) {
-//             console.error("❌ [Error] Payment Initiation Failed:", error);
-//             alert(error.message || "Failed to start payment.");
-//             setProcessingPayment(false);
-//         }
-//     };
-
-//     return (
-//         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-//             <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-auto max-h-[90vh]">
-                
-//                 {/* LEFT: Booking Summary */}
-//                 <div className="w-full md:w-5/12 bg-gray-50 p-6 md:p-8 border-b md:border-r border-gray-100 flex flex-col overflow-y-auto">
-//                     <h3 className="text-xl font-extrabold text-gray-900 mb-6">Booking Summary</h3>
-                    
-//                     <div className="space-y-4 flex-1">
-//                         <div className="flex justify-between text-sm">
-//                             <span className="text-gray-500">Tracking ID</span>
-//                             <span className="font-bold text-appBanner">{bookingData.trackingNumber}</span>
-//                         </div>
-//                         <div className="w-full h-px bg-gray-200 my-2"></div>
-                        
-//                         <div className="flex justify-between text-sm">
-//                             <span className="text-gray-500">Base Shipping</span>
-//                             <span className="font-medium text-gray-900">{bookingData.currency} {(bookingData.baseShippingCost || 0).toLocaleString()}</span>
-//                         </div>
-//                         <div className="flex justify-between text-sm">
-//                             <span className="text-gray-500">Insurance</span>
-//                             <span className="font-medium text-gray-900">{bookingData.currency} {(bookingData.insuranceCost || 0).toLocaleString()}</span>
-//                         </div>
-//                         <div className="flex justify-between text-sm">
-//                             <span className="text-gray-500">Customs/Tax</span>
-//                             <span className="font-medium text-gray-900">{bookingData.currency} {(bookingData.customsCost || 0).toLocaleString()}</span>
-//                         </div>
-                        
-//                         {(bookingData.discountAmount || 0) > 0 && (
-//                             <div className="flex justify-between text-sm text-green-600">
-//                                 <span>Discount</span>
-//                                 <span>-{bookingData.currency} {(bookingData.discountAmount || 0).toLocaleString()}</span>
-//                             </div>
-//                         )}
-//                     </div>
-
-//                     <div className="mt-8 pt-6 border-t border-gray-200">
-//                         <div className="flex justify-between items-end">
-//                             <span className="text-gray-500 font-medium">Total To Pay</span>
-//                             <span className="text-2xl font-extrabold text-gray-900">
-//                                 {bookingData.currency} {(bookingData.totalCost || 0).toLocaleString()}
-//                             </span>
-//                         </div>
-//                     </div>
-//                 </div>
-
-//                 {/* RIGHT: Payment Method Selection */}
-//                 <div className="w-full md:w-7/12 p-6 md:p-8 relative overflow-y-auto">
-//                     <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 p-2 z-10">
-//                         <IoClose size={24} />
-//                     </button>
-
-//                     <h3 className="text-xl font-extrabold text-gray-900 mb-2">Select Payment Method</h3>
-//                     <p className="text-sm text-gray-500 mb-8">Choose a secure payment gateway to complete your booking.</p>
-
-//                     {loadingMethods ? (
-//                         <div className="flex justify-center py-12">
-//                             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-appBanner"></div>
-//                         </div>
-//                     ) : (
-//                         <div className="grid gap-4">
-//                             {paymentMethods.length > 0 ? paymentMethods.map((method) => (
-//                                 <button
-//                                     key={method.provider}
-//                                     onClick={() => handlePaymentSelection(method)}
-//                                     disabled={processingPayment}
-//                                     className="group flex items-center justify-between p-5 border border-gray-200 rounded-xl hover:border-appBanner hover:bg-blue-50 transition-all duration-200 text-left shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-//                                 >
-//                                     <div className="flex items-center gap-4">
-//                                         <div className="w-12 h-12 relative bg-white rounded-lg p-1 border border-gray-100 flex items-center justify-center overflow-hidden">
-//                                             {method.iconUrl ? (
-//                                                 <Image src={method.iconUrl} alt={method.displayName} className="w-full h-full object-contain" />
-//                                             ) : (
-//                                                 <IoCard className="text-gray-400" size={24} />
-//                                             )}
-//                                         </div>
-//                                         <div>
-//                                             <h4 className="font-bold text-gray-900 group-hover:text-appBanner">{method.displayName}</h4>
-                                            
-//                                             {/* Currency Badge */}
-//                                             <div className="flex gap-2 mt-1">
-//                                                 {method.supportedCurrencies.map(curr => (
-//                                                     <span key={curr} className="text-[10px] font-bold px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md border border-gray-200">
-//                                                         {curr}
-//                                                     </span>
-//                                                 ))}
-//                                             </div>
-//                                         </div>
-//                                     </div>
-                                    
-//                                     <div className="w-6 h-6 rounded-full border-2 border-gray-300 group-hover:border-appBanner flex items-center justify-center">
-//                                         <div className="w-3 h-3 rounded-full bg-appBanner opacity-0 group-hover:opacity-100 transition-opacity"></div>
-//                                     </div>
-//                                 </button>
-//                             )) : (
-//                                 <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-//                                     No payment methods available for {bookingData.currency}
-//                                 </div>
-//                             )}
-//                         </div>
-//                     )}
-
-//                     {processingPayment && (
-//                         <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-20 rounded-xl">
-//                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-appBanner mb-4"></div>
-//                             <p className="font-bold text-gray-700">Redirecting to Payment Gateway...</p>
 //                         </div>
 //                     )}
 //                 </div>
