@@ -28,7 +28,7 @@ const navItems = [
     { name: 'Packages', path: '/pages/newuser/packages', icon: FiPackage },
     { name: 'Tracking', path: '/pages/newuser/tracking', icon: FiMapPin },
     { name: 'History', path: '/pages/newuser/history', icon: FiClock },
-    { name: 'Addresses', path: '/user/address', icon: FiMap },
+    // { name: 'Addresses', path: '/pages/newuser/address', icon: FiMap },
     { name: 'Settings', path: '/pages/newuser/settings', icon: FiSettings },
 ];
 

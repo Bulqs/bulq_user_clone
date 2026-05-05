@@ -1,27 +1,74 @@
 'use server'
 
-import { AddHubTelephoneRequest, AddHubWorkingHoursRequest, CreateHubRequest, CreateHubResponse, HubFullDetailDTO, UpdateAuthoritiesRequest, UpdateHubRequest, UpdateHubResponse, UserFilterParams, UserResponseDTO } from "@/types/admin";
+import { AddHubTelephoneRequest, AddHubWorkingHoursRequest, CreateHubRequest, CreateHubResponse, CustomsDuty, HubFullDetailDTO, UpdateAuthoritiesRequest, UpdateHubRequest, UpdateHubResponse, UserFilterParams, UserResponseDTO } from "@/types/admin";
 import { cookies } from "next/headers";
 import { AuthResponse } from "../actions";
 import { DriverDetailDTO, DriverSummaryDTO, MapDriverRequest, TrackingEvent } from "@/types/driver";
+import { getAuthHeader } from "../user/actions";
 
 
 
-async function getAuthHeader(): Promise<Record<string, string>> {
-    const session = (await cookies()).get("session")?.value;
-    if (!session) return {};
+// async function getAuthHeader(): Promise<Record<string, string>> {
+//     const session = (await cookies()).get("session")?.value;
+//     if (!session) return {};
     
-    try {
-        // Since you're using createSession from your session logic,
-        // the cookie is likely an encrypted/encoded string.
-        // If it's the raw JSON string:
-        const user = JSON.parse(session) as AuthResponse;
-        return { 'Authorization': `Bearer ${user.token}` };
-    } catch (e) {
-        console.error("Auth header error:", e);
-        return {};
+//     try {
+//         // Since you're using createSession from your session logic,
+//         // the cookie is likely an encrypted/encoded string.
+//         // If it's the raw JSON string:
+//         const user = JSON.parse(session) as AuthResponse;
+//         return { 'Authorization': `Bearer ${user.token}` };
+//     } catch (e) {
+//         console.error("Auth header error:", e);
+//         return {};
+//     }
+// }
+
+const ADMIN_SHIPPING_API = "http://localhost:8087/api/v1/admin/shipping";
+
+
+// ==========================================
+// 🛠️ INTERNAL HELPER
+// ==========================================
+
+async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const authHeader = await getAuthHeader();
+    
+    const headers = {
+        ...authHeader,
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+    };
+
+    const response = await fetch(`${ADMIN_SHIPPING_API}${endpoint}`, {
+        ...options,
+        headers,
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Error (${response.status}): ${errorText || response.statusText}`);
     }
+
+    if (response.status === 204) {
+        return null as unknown as T; // Handle 204 No Content for Deletes
+    }
+
+    // Handle plain text responses (like bulk updates)
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("text/plain")) {
+        return response.text() as unknown as T;
+    }
+
+    return response.json();
 }
+
+// ==========================================
+// 7. CUSTOMS DUTIES
+// ==========================================
+
+export const getCustomsDuties = () => fetchAPI<CustomsDuty[]>("/customs-duties");
+
 
 /**
  * Fetch a paginated list of users with advanced filtering.

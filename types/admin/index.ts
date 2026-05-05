@@ -176,3 +176,15 @@ export interface DeleteDocumentImageRequest {
  * e.g., "business product deleted"
  */
 export type FleetDeleteResponse = string;
+
+export interface CustomsDuty {
+    id: number;
+    hsCode: string;
+    productCategory: string;
+    productDescription: string;
+    originCountry: string;
+    destinationCountry: string;
+    dutyRate: number;
+    dutyFreeThreshold: number;
+    isActive: boolean;
+}
