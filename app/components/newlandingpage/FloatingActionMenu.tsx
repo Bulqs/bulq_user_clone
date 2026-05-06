@@ -5,7 +5,7 @@ import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { 
     FiX, FiMapPin, FiLayers, FiBox, FiChevronDown, 
     FiTruck, FiZap, FiDollarSign, FiPackage, FiArrowRight, 
-    FiMessageCircle, FiPlus 
+    FiMessageCircle, FiGrid, FiCpu, FiStar
 } from 'react-icons/fi';
 
 import { CountryDTO } from '@/types/user';
@@ -29,8 +29,8 @@ export interface CustomsDuty {
 
 // --- ANIMATION VARIANTS ---
 const modalBackdrop: Variants = {
-    hidden: { opacity: 0 },
-    show: { opacity: 1 }
+    hidden: { opacity: 0, backdropFilter: "blur(0px)" },
+    show: { opacity: 1, backdropFilter: "blur(8px)", transition: { duration: 0.3 } }
 };
 
 const modalContent: Variants = {
@@ -41,16 +41,18 @@ const modalContent: Variants = {
 
 const floatingMenuVariants: Variants = {
     hidden: { opacity: 0, y: 50 },
-    show: { opacity: 1, y: 0, transition: { staggerChildren: 0.1, delayChildren: 0.2 } }
+    show: { opacity: 1, y: 0, transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
+    exit: { opacity: 0, y: 20, transition: { staggerChildren: 0.05, staggerDirection: -1 } }
 };
 
 const floatingBtnVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.5 },
-    show: { opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 400, damping: 15 } }
+    hidden: { opacity: 0, scale: 0.5, y: 20 },
+    show: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 400, damping: 15 } },
+    exit: { opacity: 0, scale: 0.5, transition: { duration: 0.2 } }
 };
 
 // ==========================================
-// 1. SHIPPING CALCULATOR MODAL
+// 1. SHIPPING CALCULATOR MODAL (Unchanged functionality)
 // ==========================================
 const ShippingCalculatorModal = ({ onClose }: { onClose: () => void }) => {
     const [calculatorPayload, setCalculatorPayload] = useState<ShippingRateRequest>({
@@ -67,14 +69,8 @@ const ShippingCalculatorModal = ({ onClose }: { onClose: () => void }) => {
     const [estimatedCostValue, setEstimatedCostValue] = useState(0);
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch Countries
-    useEffect(() => {
-        getSupportedCountries().then(data => {
-            if (data) setCountry(data);
-        }).catch(console.error);
-    }, []);
+    useEffect(() => { getSupportedCountries().then(data => { if (data) setCountry(data); }).catch(console.error); }, []);
 
-    // Fetch Customs Duties & Categories
     useEffect(() => {
         getCustomsDuties().then(data => {
             if (data && data.length > 0) {
@@ -87,7 +83,6 @@ const ShippingCalculatorModal = ({ onClose }: { onClose: () => void }) => {
         }).catch(console.error);
     }, []);
 
-    // Calculate Rate Effect
     useEffect(() => {
         const getRate = async () => {
             if (!calculatorPayload.originCountry || !calculatorPayload.destinationCountry || calculatorPayload.weight <= 0) return;
@@ -103,8 +98,7 @@ const ShippingCalculatorModal = ({ onClose }: { onClose: () => void }) => {
                 setCalculating(false);
             }
         };
-        
-        const timeoutId = setTimeout(() => getRate(), 500); // Debounce
+        const timeoutId = setTimeout(() => getRate(), 500); 
         return () => clearTimeout(timeoutId);
     }, [calculatorPayload.shippingMethodCode, calculatorPayload.weight, calculatorPayload.destinationCountry, calculatorPayload.originCountry]); 
 
@@ -119,13 +113,10 @@ const ShippingCalculatorModal = ({ onClose }: { onClose: () => void }) => {
         });
     };
 
-    const handleProceedToBooking = () => {
-        // You can redirect to the booking page here, optionally passing parameters via URL
-        window.location.href = '/dashboard/book';
-    };
+    const handleProceedToBooking = () => { window.location.href = '/dashboard/book'; };
 
     return (
-        <motion.div variants={modalBackdrop} initial="hidden" animate="show" exit="hidden" className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+        <motion.div variants={modalBackdrop} initial="hidden" animate="show" exit="hidden" className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4">
             <motion.div variants={modalContent} className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl shadow-2xl w-full max-w-3xl overflow-hidden relative border border-white/50 flex flex-col max-h-[90vh]">
                 
                 {/* Header */}
@@ -211,22 +202,37 @@ const ShippingCalculatorModal = ({ onClose }: { onClose: () => void }) => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="relative">
                                     <label className="block text-[11px] font-black text-gray-500 mb-2 uppercase tracking-widest">Category <span className="text-rose-500">*</span></label>
-                                    <select 
-                                        value={calculatorPayload.productCategory} 
-                                        onChange={(e) => handleShippingRateChange('productCategory', e.target.value)} 
-                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-slate-700 appearance-none focus:ring-2 focus:ring-appBanner/50 focus:border-appBanner shadow-sm"
-                                    >
+                                    <select value={calculatorPayload.productCategory} onChange={(e) => handleShippingRateChange('productCategory', e.target.value)} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-slate-700 appearance-none focus:ring-2 focus:ring-appBanner/50 focus:border-appBanner shadow-sm">
                                         <option value="">Select Category</option>
                                         {categoryOptions.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                                     </select>
                                     <FiChevronDown className="absolute right-4 bottom-4 text-gray-400 pointer-events-none" />
                                 </div>
-
                                 <div>
                                     <label className="block text-[11px] font-black text-gray-500 mb-2 uppercase tracking-widest">Value (USD) <span className="text-rose-500">*</span></label>
                                     <input type="number" value={calculatorPayload.declaredValue || ''} onChange={(e) => handleShippingRateChange('declaredValue', parseFloat(e.target.value))} placeholder="$ 0.00" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-appBanner/50 focus:border-appBanner shadow-sm" />
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Promo Code */}
+                        <div className="grid grid-cols-1 gap-4">
+                            <div>
+                                <label className="block text-[11px] font-black text-gray-500 mb-2 uppercase tracking-widest">Promo Code</label>
+                                <input type="text" value={calculatorPayload.promoCode} onChange={(e) => handleShippingRateChange('promoCode', e.target.value)} placeholder="Enter Code" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-appBanner/50 focus:border-appBanner shadow-sm" />
+                            </div>
+                        </div>
+
+                        {/* Toggles */}
+                        <div className="flex flex-wrap items-center gap-6 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <input type="checkbox" checked={calculatorPayload.includeInsurance} onChange={(e) => handleShippingRateChange('includeInsurance', e.target.checked)} className="w-4 h-4 text-appBanner rounded focus:ring-appBanner cursor-pointer" />
+                                <span className="text-sm font-bold text-slate-600 group-hover:text-appBanner transition-colors">Include Insurance</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer group">
+                                <input type="checkbox" checked={calculatorPayload.pickupRequired} onChange={(e) => handleShippingRateChange('pickupRequired', e.target.checked)} className="w-4 h-4 text-appBanner rounded focus:ring-appBanner cursor-pointer" />
+                                <span className="text-sm font-bold text-slate-600 group-hover:text-appBanner transition-colors">Request Pickup</span>
+                            </label>
                         </div>
 
                         {/* Shipping Method Grid */}
@@ -257,25 +263,12 @@ const ShippingCalculatorModal = ({ onClose }: { onClose: () => void }) => {
                                 })}
                             </div>
                         </div>
-
-                        {/* Toggles */}
-                        <div className="flex flex-wrap items-center gap-6 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <input type="checkbox" checked={calculatorPayload.includeInsurance} onChange={(e) => handleShippingRateChange('includeInsurance', e.target.checked)} className="w-4 h-4 text-appBanner rounded focus:ring-appBanner cursor-pointer" />
-                                <span className="text-sm font-bold text-slate-600 group-hover:text-appBanner transition-colors">Include Insurance</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <input type="checkbox" checked={calculatorPayload.pickupRequired} onChange={(e) => handleShippingRateChange('pickupRequired', e.target.checked)} className="w-4 h-4 text-appBanner rounded focus:ring-appBanner cursor-pointer" />
-                                <span className="text-sm font-bold text-slate-600 group-hover:text-appBanner transition-colors">Request Pickup</span>
-                            </label>
-                        </div>
                     </div>
                 </div>
 
                 {/* Footer Results & Submission */}
                 <div className="bg-gradient-to-br from-slate-900 to-appTitleBgColor p-6 shrink-0 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-appBanner/20 rounded-full blur-2xl -translate-y-10 translate-x-10" />
-                    
                     <div className="relative z-10 w-full md:w-auto flex justify-between md:flex-col items-center md:items-start">
                         <div>
                             <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-0.5">Estimated Total</p>
@@ -302,7 +295,7 @@ const ShippingCalculatorModal = ({ onClose }: { onClose: () => void }) => {
 };
 
 // ==========================================
-// 2. CONTACT SUPPORT MODAL (Placeholder)
+// 2. CONTACT SUPPORT MODAL
 // ==========================================
 const SupportModal = ({ onClose }: { onClose: () => void }) => {
     return (
@@ -336,25 +329,75 @@ const SupportModal = ({ onClose }: { onClose: () => void }) => {
 };
 
 // ==========================================
-// 3. MAIN FLOATING MENU COMPONENT
+// 3. BOOK WITH AI MODAL (Coming Soon)
 // ==========================================
-type ActiveModalType = 'calculator' | 'support' | null;
+const AIComingSoonModal = ({ onClose }: { onClose: () => void }) => {
+    return (
+        <motion.div variants={modalBackdrop} initial="hidden" animate="show" exit="hidden" className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+            <motion.div variants={modalContent} className="bg-gradient-to-br from-[#0B1121] to-[#111827] border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(59,130,246,0.3)] w-full max-w-sm p-8 relative text-center overflow-hidden">
+                
+                {/* Magical Background Glow */}
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
+                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
+
+                <button onClick={onClose} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white bg-white/5 rounded-full transition-colors z-10">
+                    <FiX size={20} />
+                </button>
+                
+                <div className="relative z-10 flex flex-col items-center">
+                    <motion.div 
+                        animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-purple-500/30 border border-white/20"
+                    >
+                        <FiStar size={32} className="fill-white" />
+                    </motion.div>
+                    
+                    <h3 className="text-2xl font-black text-white mb-2 tracking-tight">AI Booking Agent</h3>
+                    <div className="inline-block px-3 py-1 bg-white/10 border border-white/20 rounded-full text-xs font-black text-blue-300 uppercase tracking-widest mb-4">
+                        Coming Soon
+                    </div>
+                    <p className="text-sm text-gray-400 font-medium mb-8 leading-relaxed">
+                        We are training our AI to handle your bookings automatically. Soon, you'll be able to just type or speak what you need to ship!
+                    </p>
+                    
+                    <button onClick={onClose} className="w-full bg-white text-appTitleBgColor hover:bg-gray-100 font-bold py-3.5 rounded-xl shadow-lg transition-colors">
+                        Got it, I'll wait!
+                    </button>
+                </div>
+            </motion.div>
+        </motion.div>
+    );
+};
+
+// ==========================================
+// 4. MAIN FLOATING MENU COMPONENT
+// ==========================================
+type ActiveModalType = 'calculator' | 'support' | 'ai' | null;
 
 export default function FloatingActionMenu() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [activeModal, setActiveModal] = useState<ActiveModalType>(null);
+    const [showGuideTooltip, setShowGuideTooltip] = useState(true);
+
+    // Hide tooltip automatically after 8 seconds, or immediately if menu is opened
+    useEffect(() => {
+        if (isMenuOpen) setShowGuideTooltip(false);
+        const timer = setTimeout(() => setShowGuideTooltip(false), 8000);
+        return () => clearTimeout(timer);
+    }, [isMenuOpen]);
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
     
     const openModal = (type: ActiveModalType) => {
         setActiveModal(type);
-        setIsMenuOpen(false); // Close the floating menu when a modal opens
+        setIsMenuOpen(false); 
     };
 
     return (
         <>
-            {/* The Floating Menu */}
-            <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+            {/* The Floating Menu Area */}
+            <div className="fixed bottom-10 right-8 z-50 flex flex-col items-end gap-4">
                 
                 <AnimatePresence>
                     {isMenuOpen && (
@@ -362,55 +405,137 @@ export default function FloatingActionMenu() {
                             variants={floatingMenuVariants} 
                             initial="hidden" 
                             animate="show" 
-                            exit="hidden" 
-                            className="flex flex-col items-end gap-3 mb-2"
+                            exit="exit" 
+                            className="flex flex-col items-end gap-4 mb-2"
                         >
+                            {/* Action 1: Calculator */}
                             <motion.button 
                                 variants={floatingBtnVariants}
+                                whileHover={{ scale: 1.1, x: -5 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => openModal('calculator')}
                                 className="flex items-center gap-3 group"
                             >
-                                <span className="bg-white px-3 py-1.5 rounded-lg text-xs font-bold text-gray-700 shadow-sm border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-300">
+                                <span className="bg-white px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider text-gray-700 shadow-md border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
                                     Calculate Rate
                                 </span>
-                                <div className="w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-appBanner hover:scale-110 transition-transform">
-                                    <FiPackage size={22} />
+                                <div className="w-14 h-14 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-appBanner">
+                                    <FiPackage size={24} />
+                                </div>
+                            </motion.button>
+
+                            {/* Action 2: Book with AI */}
+                            <motion.button 
+                                variants={floatingBtnVariants}
+                                whileHover={{ scale: 1.1, x: -5 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => openModal('ai')}
+                                className="flex items-center gap-3 group"
+                            >
+                                <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                    <FiStar className="fill-white" /> Book with AI
+                                </span>
+                                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full shadow-lg border border-white/20 flex items-center justify-center text-white">
+                                    <FiCpu size={24} />
                                 </div>
                             </motion.button>
                             
+                            {/* Action 3: Support */}
                             <motion.button 
                                 variants={floatingBtnVariants}
+                                whileHover={{ scale: 1.1, x: -5 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => openModal('support')}
                                 className="flex items-center gap-3 group"
                             >
-                                <span className="bg-white px-3 py-1.5 rounded-lg text-xs font-bold text-gray-700 shadow-sm border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-300">
+                                <span className="bg-white px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider text-gray-700 shadow-md border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
                                     Support
                                 </span>
-                                <div className="w-12 h-12 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-blue-500 hover:scale-110 transition-transform">
-                                    <FiMessageCircle size={22} />
+                                <div className="w-14 h-14 bg-white rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-blue-500">
+                                    <FiMessageCircle size={24} />
                                 </div>
                             </motion.button>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* Primary Toggle Button */}
-                <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={toggleMenu}
-                    className="w-14 h-14 bg-gradient-to-r from-appBanner to-appNav rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.2)] flex items-center justify-center text-white border-2 border-white/20 z-50 relative overflow-hidden"
-                >
-                    <motion.div animate={{ rotate: isMenuOpen ? 45 : 0 }} transition={{ duration: 0.2 }}>
-                        {isMenuOpen ? <FiX size={26} /> : <FiPlus size={28} />}
-                    </motion.div>
-                </motion.button>
+                {/* Primary Toggle Button & Tooltip Wrapper */}
+                <div className="relative flex items-center">
+                    
+                    {/* Onboarding Tooltip Guide */}
+                    <AnimatePresence>
+                        {showGuideTooltip && !isMenuOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, x: 20, scale: 0.8 }}
+                                animate={{ opacity: 1, x: 0, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+                                className="absolute right-20 bg-white text-gray-800 px-4 py-2.5 rounded-2xl shadow-xl border border-gray-200 text-sm font-extrabold whitespace-nowrap flex items-center gap-3 origin-right"
+                            >
+                                <motion.span 
+                                    animate={{ rotate: [0, 20, -20, 0] }} 
+                                    transition={{ repeat: Infinity, duration: 1.5, repeatDelay: 1 }}
+                                    className="text-lg inline-block origin-bottom-right"
+                                >
+                                    👋
+                                </motion.span>
+                                Explore Quick Tools!
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setShowGuideTooltip(false); }}
+                                    className="ml-1 text-gray-400 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 rounded-full p-1 transition-colors"
+                                >
+                                    <FiX size={14} />
+                                </button>
+                                {/* Little triangle arrow pointing right */}
+                                <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[6px] border-t-transparent border-l-[8px] border-l-white border-b-[6px] border-b-transparent"></div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Main FAB */}
+                    <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        animate={{ 
+                            boxShadow: isMenuOpen 
+                                ? "0px 0px 0px rgba(0,0,0,0)" 
+                                : ["0px 0px 0px 0px rgba(13, 27, 42, 0.4)", "0px 0px 0px 15px rgba(13, 27, 42, 0)"] 
+                        }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        onClick={toggleMenu}
+                        className="w-16 h-16 bg-gradient-to-br from-appTitleBgColor to-appNav rounded-full shadow-2xl flex items-center justify-center text-white border border-white/20 z-50 relative overflow-hidden"
+                    >
+                        <AnimatePresence mode="wait">
+                            {isMenuOpen ? (
+                                <motion.div 
+                                    key="close"
+                                    initial={{ rotate: -90, opacity: 0 }}
+                                    animate={{ rotate: 0, opacity: 1 }}
+                                    exit={{ rotate: 90, opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <FiX size={28} />
+                                </motion.div>
+                            ) : (
+                                <motion.div 
+                                    key="grid"
+                                    initial={{ rotate: 90, opacity: 0 }}
+                                    animate={{ rotate: 0, opacity: 1 }}
+                                    exit={{ rotate: -90, opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <FiGrid size={26} />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </motion.button>
+                </div>
             </div>
 
-            {/* Modals */}
+            {/* Render Active Modals */}
             <AnimatePresence>
                 {activeModal === 'calculator' && <ShippingCalculatorModal onClose={() => setActiveModal(null)} />}
                 {activeModal === 'support' && <SupportModal onClose={() => setActiveModal(null)} />}
+                {activeModal === 'ai' && <AIComingSoonModal onClose={() => setActiveModal(null)} />}
             </AnimatePresence>
         </>
     );
