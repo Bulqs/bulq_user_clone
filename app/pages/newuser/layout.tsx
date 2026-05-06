@@ -4,6 +4,7 @@ import TopBar from '@/app/components/newuserdashboardlayout/TopBar'
 import Footer from '@/app/components/newuserdashboardlayout/Footer'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import FloatingActionMenu from '@/app/components/newlandingpage/FloatingActionMenu'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -36,6 +37,10 @@ const UserLayout = ({
                         </div>
                     </div>
                 </main>
+
+                {/* Floating Action Menu */}
+                <FloatingActionMenu />
+
 
                 {/* Footer */}
                 <Footer />

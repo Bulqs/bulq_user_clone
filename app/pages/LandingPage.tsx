@@ -122,6 +122,7 @@ import Footer from '../components/newlandingpage/Footer'
 import Header from '../components/Header'
 import LandingBanner from '../components/landingbanner/LandingBanner'
 import HomeHeader from '../components/newlandingpage/HomeHeader'
+import FloatingActionMenu from '../components/newlandingpage/FloatingActionMenu'
 
 const LandingPage = () => {
   return (
@@ -137,6 +138,9 @@ const LandingPage = () => {
       <PlanSubscription />
       <TrustedByShopper />
       <SignUpWithBulq /> */}
+
+      {/* Floating Action Menu */}
+                      <FloatingActionMenu />
       <Footer />
     </div>
   )

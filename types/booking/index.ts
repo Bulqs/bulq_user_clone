@@ -263,6 +263,16 @@ export interface BADOResponseDTO {
     appointmentDate: string;     // Date string from backend
 }
 
+export interface BookingPackageDTO {
+    packageName: string;
+    packageDescription: string;
+    weight: number;
+    length: number;
+    width: number;
+    height: number;
+    productCategory: string;
+}
+
 // Individual booking item in the list
 export interface FilterBookingViewDTO {
     id: number;
@@ -293,6 +303,9 @@ export interface FilterBookingViewDTO {
     packageImage?: string;
     status?: string;
     vendor: string
+
+    // Add this new field
+    packages?: BookingPackageDTO[];
 }
 
 // Search/Filter parameters for the GET request
