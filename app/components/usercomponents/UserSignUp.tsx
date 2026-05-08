@@ -22,7 +22,7 @@ const UserSignUp: React.FC<UserSignUpProps> = ({ onSwitchToLogin }) => {
     const [formData, setFormData] = useState<RegisterUser>({
         firstName: '', lastName: '', username: '', email: '',
         phoneNumber: '', password: '',
-        country: '', address: '', city: '', state: '',
+        country: '', city: '', state: '',
         termsAndConditions: ''
     });
 
@@ -196,10 +196,10 @@ const UserSignUp: React.FC<UserSignUpProps> = ({ onSwitchToLogin }) => {
                         </div>
 
                         {/* Address */}
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
                             <InputField id="address" name="address" value={formData.address} placeholder="Street address" required onChange={handleInputChange} />
-                        </div>
+                        </div> */}
 
                         {/* Passwords */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
