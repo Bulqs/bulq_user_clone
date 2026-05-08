@@ -44,7 +44,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
     }, [isOpen]);
 
     const handleGoogleLogin = () => {
-        window.location.href = "http://localhost:8084/oauth2/authorization/google";
+        // window.location.href = "http://localhost:8084/oauth2/authorization/google";
+        window.location.href = "https://www.sendbulq.com/oauth2/authorization/google";
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
