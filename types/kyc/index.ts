@@ -53,3 +53,32 @@ export interface CreateKYCResponseDTO {
     reviewedAt: string;
     rejectionReason: string;
 }
+
+export interface KYCPersonalInfo {
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string; 
+    phoneNumber: string;
+    address: string;
+    city: string;
+    state: string;
+    nationality: string;
+}
+
+export interface KYCDocuments {
+    idType: string; // e.g., 'LICENSE', 'PASSPORT', 'NIN'
+    idNumber: string;
+    idFrontImage: string;
+    idBackImage: string;
+    selfieImage: string;
+}
+
+export interface KYCResponseDTO {
+    id: string;
+    kycStatus: 'APPROVED' | 'PENDING' | 'REJECTED' | 'UNVERIFIED' | string; 
+    personalInfo: KYCPersonalInfo;
+    documents: KYCDocuments;
+    submittedAt: string;
+    reviewedAt: string | null;
+    rejectionReason: string | null;
+}

@@ -387,7 +387,7 @@ export type RegisterUser = {
   country: string,
   state: string,
   city: string,
-  address: string,
+  // address: string,
   termsAndConditions: string
 }
 
@@ -587,7 +587,7 @@ export interface ResetPasswordRequest {
 
 export interface UpdateProfileRequest {
     email: string;
-    password?: string; // Optional if only updating contact info
+    // password?: string; // Optional if only updating contact info
     phoneNumber: string;
     firstName: string;
     lastName: string;
@@ -596,6 +596,7 @@ export interface UpdateProfileRequest {
     state: string;
     city: string;
     defaultAddress: string;
+    profileImage?: string; // ✅ ADD THIS
 }
 
 export interface UpdateProfileResponse {

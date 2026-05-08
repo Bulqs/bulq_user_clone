@@ -6,8 +6,7 @@ import {
     CheckCircle, Download, Copy, Settings, Key, Upload, MapPin,
     Volume2, VolumeX, ChevronDown, FileText, Save, X, Loader2,
     CreditCard, Calendar, Briefcase, Building, Home, Check,
-    Plus, Edit, Star, Package,
-    Phone
+    Plus, Edit, Star, Package, Phone, Clock, AlertCircle, CheckCircle2, Circle
 } from 'lucide-react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import Image from 'next/image';
@@ -15,11 +14,12 @@ import Image from 'next/image';
 import { UserResponseDTO } from '@/types/admin';
 import { 
     getMyProfile, updateProfile, getSupportedCountries, 
-    addUserAddress, deleteAddress, getAddressCount, getAllUserAddresses, updateAddress 
+    addUserAddress, deleteAddress, getAddressCount, getAllUserAddresses, updateAddress,
+    updatePassword // <--- Added updatePassword
 } from '@/lib/user/actions';
 import { CountryDTO, UpdateProfileRequest, AddressCountResponseDTO, AddressRequest } from '@/types/user';
-import { KYCPersonalInfoRequest } from '@/types/kyc';
-import { submitKYC } from '@/lib/user/kyc.actions';
+import { submitKYC, getKYCStatus } from '@/lib/user/kyc.actions'; 
+import { KYCPersonalInfoRequest, KYCResponseDTO } from '@/types/kyc';
 import Heading from '@/app/components/generalheading/Heading';
 
 // --- TYPES ---
@@ -37,6 +37,13 @@ interface AddAddressModalProps {
     setFormData: React.Dispatch<React.SetStateAction<AddressRequest>>;
     isEditing: boolean;
 }
+
+// --- HELPER FUNCTIONS ---
+const getInitials = (firstName: string, lastName: string) => {
+    const first = firstName ? firstName.charAt(0).toUpperCase() : '';
+    const last = lastName ? lastName.charAt(0).toUpperCase() : '';
+    return `${first}${last}` || 'U'; 
+};
 
 // --- FRAMER MOTION VARIANTS ---
 const staggerContainer: Variants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
@@ -323,6 +330,7 @@ const SettingsPage = () => {
     // --- PROFILE TAB STATE ---
     const [isSaving, setIsSaving] = useState(false);
     const [profileImage, setProfileImage] = useState('');
+    const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [formData, setFormData] = useState<UpdateProfileRequest>({
         firstName: '', lastName: '', email: '', phoneNumber: '',
@@ -345,13 +353,17 @@ const SettingsPage = () => {
     const isLimitReached = addressStats ? addressStats.totalAddresses >= addressStats.maxAllowed : false;
 
     // --- SECURITY TAB STATE ---
+    const [currentPassword, setCurrentPassword] = useState(''); // Optional, for UI consistency
+    const [newPassword, setNewPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
     // --- NOTIFICATION TAB STATE ---
     const [desktopNotifications, setDesktopNotifications] = useState(true);
     const [communicationEmail, setCommunicationEmail] = useState(true);
 
     // --- KYC TAB STATE ---
+    const [kycData, setKycData] = useState<KYCResponseDTO | null>(null); 
     const [kycLoading, setKycLoading] = useState(false);
     const [showKycSuccess, setShowKycSuccess] = useState(false);
     const idFrontRef = useRef<HTMLInputElement>(null);
@@ -383,7 +395,7 @@ const SettingsPage = () => {
 
                 setProfile(userData);
                 setCountries(countryData || []);
-                setProfileImage(userData.profileImage || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face');
+                setProfileImage(userData.profileImage || '');
 
                 setFormData({
                     firstName: userData.firstName || '', lastName: userData.lastName || '', email: userData.email || '',
@@ -397,8 +409,38 @@ const SettingsPage = () => {
                     address: userData.defaultAddress || '', city: userData.city || '', state: userData.state || ''
                 }));
 
-                // Fetch Addresses for Address Tab
                 fetchCountsAndAddresses();
+
+                try {
+                    const fetchedKyc = await getKYCStatus();
+                    setKycData(fetchedKyc);
+                    if (fetchedKyc && fetchedKyc.personalInfo) {
+                        setKycFormData(prev => ({
+                            ...prev,
+                            firstName: fetchedKyc.personalInfo.firstName || prev.firstName,
+                            lastName: fetchedKyc.personalInfo.lastName || prev.lastName,
+                            phoneNumber: fetchedKyc.personalInfo.phoneNumber || prev.phoneNumber,
+                            address: fetchedKyc.personalInfo.address || prev.address,
+                            city: fetchedKyc.personalInfo.city || prev.city,
+                            state: fetchedKyc.personalInfo.state || prev.state,
+                            nationality: fetchedKyc.personalInfo.nationality || prev.nationality,
+                            dateOfBirth: fetchedKyc.personalInfo.dateOfBirth 
+                                ? new Date(fetchedKyc.personalInfo.dateOfBirth).toISOString().split('T')[0] 
+                                : prev.dateOfBirth,
+                            idType: fetchedKyc.documents?.idType || prev.idType,
+                            idNumber: fetchedKyc.documents?.idNumber || prev.idNumber,
+                        }));
+                        
+                        setKycPreviews(prev => ({
+                            ...prev,
+                            idFront: fetchedKyc.documents?.idFrontImage || null,
+                            idBack: fetchedKyc.documents?.idBackImage || null,
+                            selfie: fetchedKyc.documents?.selfieImage || null,
+                        }));
+                    }
+                } catch (kycErr) {
+                    console.log("No existing KYC found or error fetching:", kycErr);
+                }
 
             } catch (err: any) {
                 console.error(err);
@@ -421,7 +463,27 @@ const SettingsPage = () => {
         if (!profile?.id) return;
         setIsSaving(true);
         try {
-            await updateProfile(profile.id, formData);
+            let finalImageUrl = profileImage; 
+
+            if (profileImageFile) {
+                const cloudName = "dhydpleqs"; 
+                const uploadPreset = "abokina"; 
+                const fd = new FormData();
+                fd.append("file", profileImageFile); 
+                fd.append("upload_preset", uploadPreset);
+                
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: fd });
+                if (!response.ok) throw new Error("Image upload failed");
+                const data = await response.json();
+                finalImageUrl = data.secure_url;
+            }
+
+            const payloadToSave = {
+                ...formData,
+                profileImage: finalImageUrl 
+            } as any; 
+
+            await updateProfile(profile.id, payloadToSave);
             alert("Profile updated successfully!");
         } catch (error) {
             console.error("Update failed", error);
@@ -434,6 +496,7 @@ const SettingsPage = () => {
     const handleProfileImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
+            setProfileImageFile(file); 
             const reader = new FileReader();
             reader.onload = (e) => setProfileImage(e.target?.result as string);
             reader.readAsDataURL(file);
@@ -441,6 +504,7 @@ const SettingsPage = () => {
     };
 
     // Address Handlers
+    // (Unchanged fetchCountsAndAddresses, handleEditAddress, handleAddNewAddressClick, handleDeleteAddress, handleSetDefault, handleSaveAddress...)
     const fetchCountsAndAddresses = async () => {
         try {
             const [counts, data] = await Promise.all([getAddressCount(), getAllUserAddresses()]);
@@ -508,6 +572,7 @@ const SettingsPage = () => {
     };
 
     // KYC Handlers
+    // (Unchanged handleKycChange, handleKycFileUpload, uploadImageToCloudKyc, handleKycSubmit...)
     const handleKycChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => { setKycFormData(prev => ({ ...prev, [e.target.name]: e.target.value })); };
     const handleKycFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: keyof typeof kycFiles) => {
         const file = e.target.files?.[0];
@@ -531,26 +596,83 @@ const SettingsPage = () => {
     };
 
     const handleKycSubmit = async () => {
-        if (!kycFiles.idFront || !kycFiles.idBack || !kycFiles.selfie || !kycFiles.proof) { alert("Please upload all required documents (ID Front, Back, Selfie, Proof of Address)."); return; }
-        if (!kycFormData.bvn || !kycFormData.idNumber || !kycFormData.dateOfBirth) { alert("Please fill in all required text fields."); return; }
+        const hasFront = kycFiles.idFront || kycPreviews.idFront;
+        const hasBack = kycFiles.idBack || kycPreviews.idBack;
+        const hasSelfie = kycFiles.selfie || kycPreviews.selfie;
+        const hasProof = kycFiles.proof || kycPreviews.proof;
+
+        if (!hasFront || !hasBack || !hasSelfie || !hasProof) { 
+            alert("Please ensure all required documents are provided."); return; 
+        }
+        if (!kycFormData.bvn || !kycFormData.idNumber || !kycFormData.dateOfBirth) { 
+            alert("Please fill in all required text fields."); return; 
+        }
 
         setKycLoading(true);
         try {
-            const [frontUrl, backUrl, selfieUrl, proofUrl] = await Promise.all([
-                uploadImageToCloudKyc(kycFiles.idFront), uploadImageToCloudKyc(kycFiles.idBack), uploadImageToCloudKyc(kycFiles.selfie), uploadImageToCloudKyc(kycFiles.proof)
-            ]);
+            const frontUrl = kycFiles.idFront ? await uploadImageToCloudKyc(kycFiles.idFront) : kycPreviews.idFront;
+            const backUrl = kycFiles.idBack ? await uploadImageToCloudKyc(kycFiles.idBack) : kycPreviews.idBack;
+            const selfieUrl = kycFiles.selfie ? await uploadImageToCloudKyc(kycFiles.selfie) : kycPreviews.selfie;
+            const proofUrl = kycFiles.proof ? await uploadImageToCloudKyc(kycFiles.proof) : kycPreviews.proof;
 
             const payload: KYCPersonalInfoRequest = {
                 ...kycFormData,
                 dateOfBirth: new Date(kycFormData.dateOfBirth).toISOString(),
                 idExpiryDate: new Date(kycFormData.idExpiryDate).toISOString(),
-                profilePhoto: selfieUrl, idFrontPhoto: frontUrl, idBackPhoto: backUrl, proofOfAddress: proofUrl
+                profilePhoto: selfieUrl as string, 
+                idFrontPhoto: frontUrl as string, 
+                idBackPhoto: backUrl as string, 
+                proofOfAddress: proofUrl as string
             };
 
             await submitKYC(payload);
             setShowKycSuccess(true);
+            const updatedKyc = await getKYCStatus();
+            setKycData(updatedKyc);
         } catch (error: any) { alert(error.message || "KYC Submission Failed"); } finally { setKycLoading(false); }
     };
+
+
+    // --- SECURITY HANDLERS ---
+    const getPasswordStrength = (pass: string) => {
+        const rules = [
+            { id: 'length', label: 'At least 8 characters', passed: pass.length >= 8 },
+            { id: 'upper', label: 'At least 1 uppercase letter', passed: /[A-Z]/.test(pass) },
+            { id: 'numbers', label: 'At least 2 numbers', passed: (pass.match(/\d/g) || []).length >= 2 },
+            { id: 'special', label: 'At least 1 special character', passed: /[^A-Za-z0-9]/.test(pass) }
+        ];
+        
+        const passedCount = rules.filter(r => r.passed).length;
+        const score = (passedCount / rules.length) * 100;
+        
+        let colorClass = 'bg-gray-200';
+        if (score === 25) colorClass = 'bg-red-500';
+        if (score === 50) colorClass = 'bg-orange-500';
+        if (score === 75) colorClass = 'bg-blue-500';
+        if (score === 100) colorClass = 'bg-green-500';
+
+        return { rules, score, colorClass, isReady: score === 100 };
+    };
+
+    const { rules: pwdRules, score: pwdScore, colorClass: pwdColorClass, isReady: isPwdReady } = getPasswordStrength(newPassword);
+
+    const handlePasswordSubmit = async () => {
+        if (!isPwdReady) return;
+        setIsUpdatingPassword(true);
+        try {
+            // API only requires the new password according to UpdatePasswordRequest
+            await updatePassword({ password: newPassword });
+            alert("Password updated successfully!");
+            setNewPassword('');
+            setCurrentPassword(''); // Clear out form fields
+        } catch (error: any) {
+            console.error(error);
+            alert(error.message || "Failed to update password.");
+        } finally {
+            setIsUpdatingPassword(false);
+        }
+    };
+
 
     const menuItems = [
         { id: 'profile' as SettingsPage, label: 'Profile Settings', icon: User, color: 'text-appBanner', bg: 'from-appBanner/20 to-appNav/20' },
@@ -593,9 +715,15 @@ const SettingsPage = () => {
                                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Photo</h3>
                                     <div className="flex items-center gap-4">
                                         <div className="relative">
-                                            <Image width={150} height={150} src={profileImage} alt="Profile" className="w-20 h-20 rounded-xl object-cover border-2 border-appBanner/30" />
+                                            {profileImage ? (
+                                                <Image width={150} height={150} src={profileImage} alt="Profile" className="w-20 h-20 rounded-xl object-cover border-2 border-appBanner/30" />
+                                            ) : (
+                                                <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-appBanner to-appNav text-white flex items-center justify-center text-3xl font-bold border-2 border-appBanner/30">
+                                                    {getInitials(formData.firstName, formData.lastName)}
+                                                </div>
+                                            )}
                                             <button onClick={() => fileInputRef.current?.click()} className="absolute -bottom-2 -right-2 bg-appBanner rounded-full p-2 text-white"><Camera className="w-3 h-3" /></button>
-                                            <input type="file" ref={fileInputRef} onChange={handleProfileImageUpload} className="hidden" />
+                                            <input type="file" ref={fileInputRef} onChange={handleProfileImageUpload} className="hidden" accept="image/*" />
                                         </div>
                                         <div className="flex-1">
                                             <button onClick={() => fileInputRef.current?.click()} className="bg-appBanner text-white py-2 px-3 rounded-lg text-sm">Upload New</button>
@@ -685,14 +813,94 @@ const SettingsPage = () => {
                     <div className="space-y-8 animate-in fade-in duration-300">
                         <div><h2 className="text-2xl font-bold text-gray-900 mb-2">Security Settings</h2><p className="text-gray-600">Manage password and security</p></div>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                            
+                            {/* --- PASSWORD UPDATE MODULE --- */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col h-full">
                                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2"><Key className="w-5 h-5 text-blue-500" /> Change Password</h3>
-                                <div className="space-y-4">
-                                    <div><label className="text-sm font-medium">Current Password</label><div className="relative mt-2"><input type={showPassword ? "text" : "password"} className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none" /><button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{showPassword ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}</button></div></div>
-                                    <div><label className="text-sm font-medium">New Password</label><input type="password" className="w-full mt-2 bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none" /></div>
-                                    <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold mt-4">Update Password</button>
+                                
+                                <div className="space-y-4 flex-1">
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700">Current Password</label>
+                                        <div className="relative mt-2">
+                                            <input 
+                                                type={showPassword ? "text" : "password"} 
+                                                value={currentPassword}
+                                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                                className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-shadow" 
+                                                placeholder="Enter current password"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-sm font-medium text-gray-700">New Password</label>
+                                        <div className="relative mt-2">
+                                            <input 
+                                                type={showPassword ? "text" : "password"} 
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
+                                                className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-shadow pr-12" 
+                                                placeholder="Create new password"
+                                            />
+                                            <button 
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)} 
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                            >
+                                                {showPassword ? <EyeOff className="w-5 h-5"/> : <Eye className="w-5 h-5"/>}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Gamified Password Tracker */}
+                                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 mt-4">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Password Strength</span>
+                                            <span className={`text-xs font-bold ${pwdScore === 100 ? 'text-green-500' : 'text-gray-400'}`}>
+                                                {pwdScore}%
+                                            </span>
+                                        </div>
+                                        
+                                        {/* Progress Bar */}
+                                        <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden mb-4">
+                                            <motion.div 
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${pwdScore}%` }}
+                                                className={`h-full transition-colors duration-300 ${pwdColorClass}`}
+                                            />
+                                        </div>
+
+                                        {/* Dynamic Rules Checklist */}
+                                        <div className="space-y-2">
+                                            {pwdRules.map((rule) => (
+                                                <div key={rule.id} className="flex items-center gap-2 text-sm transition-colors duration-300">
+                                                    {rule.passed ? (
+                                                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><CheckCircle2 className="w-4 h-4 text-green-500" /></motion.div>
+                                                    ) : (
+                                                        <Circle className="w-4 h-4 text-gray-300" />
+                                                    )}
+                                                    <span className={rule.passed ? "text-gray-700 font-medium" : "text-gray-400"}>
+                                                        {rule.label}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <button 
+                                    onClick={handlePasswordSubmit}
+                                    disabled={!isPwdReady || isUpdatingPassword}
+                                    className={`w-full py-3.5 rounded-xl font-bold mt-6 flex items-center justify-center gap-2 transition-all duration-300
+                                        ${isPwdReady 
+                                            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg' 
+                                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                        }`}
+                                >
+                                    {isUpdatingPassword ? <><Loader2 className="w-5 h-5 animate-spin"/> Updating...</> : "Update Password"}
+                                </button>
                             </div>
+
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2"><Shield className="w-5 h-5 text-green-500" /> 2FA</h3>
                                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border"><div className="text-sm font-medium">Two-Factor Authentication</div><input type="checkbox" className="toggle" /></div>
@@ -719,12 +927,85 @@ const SettingsPage = () => {
                 );
 
             case 'kyc':
+                const isApproved = kycData?.kycStatus === 'APPROVED';
+                const isPending = kycData?.kycStatus === 'PENDING';
+                const isRejected = kycData?.kycStatus === 'REJECTED';
+
+                // --- READ-ONLY UI FOR APPROVED OR PENDING ---
+                if (isApproved || isPending) {
+                    return (
+                        <div className="space-y-8 animate-in fade-in duration-300">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-2">Identity Verification</h2>
+                                <p className="text-gray-600">Your verification status and details.</p>
+                            </div>
+
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 md:p-12 text-center">
+                                <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl ${isApproved ? 'bg-green-100 shadow-green-100' : 'bg-blue-100 shadow-blue-100'}`}>
+                                    {isApproved 
+                                        ? <CheckCircle className="w-12 h-12 text-green-600" /> 
+                                        : <Clock className="w-12 h-12 text-blue-600" />
+                                    }
+                                </div>
+                                <h3 className="text-3xl font-bold text-gray-900 mb-2">
+                                    {isApproved ? 'Verification Approved' : 'Verification Pending'}
+                                </h3>
+                                <p className="text-gray-600 max-w-lg mx-auto mb-8 leading-relaxed">
+                                    {isApproved 
+                                        ? 'Congratulations! Your identity has been successfully verified. You now have full access to all platform features.'
+                                        : 'We are currently reviewing your submitted documents. This usually takes about 1 to 24 hours. We will notify you once the review is complete.'}
+                                </p>
+
+                                <div className="bg-gray-50 rounded-xl p-6 text-left max-w-2xl mx-auto border border-gray-200">
+                                    <h4 className="font-bold text-gray-900 mb-4 border-b border-gray-200 pb-2">Submitted Details</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-sm text-gray-500">Full Name</p>
+                                            <p className="font-semibold text-gray-900 capitalize">
+                                                {kycData?.personalInfo?.firstName} {kycData?.personalInfo?.lastName}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-500">Nationality</p>
+                                            <p className="font-semibold text-gray-900 capitalize">{kycData?.personalInfo?.nationality}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-500">ID Type</p>
+                                            <p className="font-semibold text-gray-900">{kycData?.documents?.idType?.replace('_', ' ')}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-500">Submitted On</p>
+                                            <p className="font-semibold text-gray-900">
+                                                {kycData?.submittedAt ? new Date(kycData.submittedAt).toLocaleDateString() : 'N/A'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+
+                // --- FORM UI FOR UNVERIFIED OR REJECTED ---
                 return (
                     <div className="space-y-8 animate-in fade-in duration-300">
                         <div>
                             <h2 className="text-2xl font-bold text-gray-900 mb-2">Identity Verification</h2>
                             <p className="text-gray-600">Complete all fields to verify your identity.</p>
                         </div>
+
+                        {/* REJECTION BANNER */}
+                        {isRejected && (
+                            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl flex items-start gap-3">
+                                <AlertCircle className="w-6 h-6 text-red-500 mt-0.5" />
+                                <div>
+                                    <h3 className="font-bold text-red-800">Verification Rejected</h3>
+                                    <p className="text-red-700 text-sm mt-1">
+                                        {kycData?.rejectionReason || 'Your previous submission was not accepted. Please review your details and resubmit valid documents.'}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 lg:p-8 space-y-8">
                             
@@ -907,569 +1188,3 @@ const SettingsPage = () => {
 };
 
 export default SettingsPage;
-
-// 'use client';
-
-// import React, { useState, useRef, useEffect } from 'react';
-// import {
-//     User, Lock, Bell, Trash2, Shield, Mail, Camera, Eye, EyeOff,
-//     CheckCircle, Download, Copy, Settings, Key, Upload, MapPin,
-//     Volume2, VolumeX, ChevronDown, FileText, Save, X, Loader2,
-//     CreditCard, Calendar, Briefcase, Building
-// } from 'lucide-react';
-// import { UserResponseDTO } from '@/types/admin';
-// import { getMyProfile, updateProfile, getSupportedCountries } from '@/lib/user/actions';
-// import { CountryDTO, UpdateProfileRequest } from '@/types/user';
-// import { KYCPersonalInfoRequest } from '@/types/kyc';
-// import { submitKYC } from '@/lib/user/kyc.actions';
-// import Image from 'next/image';
-// // import { submitKYC, KYCPersonalInfoRequest } from '@/lib/user/booking.actions';
-
-// type SettingsPage = 'profile' | 'security' | 'notifications' | 'delete' | 'kyc';
-
-// const SettingsPage = () => {
-//     // --- GLOBAL STATE ---
-//     const [activePage, setActivePage] = useState<SettingsPage>('profile');
-//     const [loading, setLoading] = useState(true);
-//     const [profile, setProfile] = useState<UserResponseDTO | null>(null);
-//     const [countries, setCountries] = useState<CountryDTO[]>([]);
-//     const [error, setError] = useState<string | null>(null);
-
-//     // --- PROFILE TAB STATE ---
-//     const [isSaving, setIsSaving] = useState(false);
-//     const [profileImage, setProfileImage] = useState('');
-//     const fileInputRef = useRef<HTMLInputElement>(null);
-//     const [formData, setFormData] = useState<UpdateProfileRequest>({
-//         firstName: '', lastName: '', email: '', phoneNumber: '',
-//         country: '', city: '', state: '', defaultAddress: '', username: ''
-//     });
-
-//     // --- SECURITY TAB STATE ---
-//     const [showPassword, setShowPassword] = useState(false);
-
-//     // --- NOTIFICATION TAB STATE ---
-//     const [desktopNotifications, setDesktopNotifications] = useState(true);
-//     const [unreadNotifications, setUnreadNotifications] = useState(true);
-//     const [pushNotificationTimeout, setPushNotificationTimeout] = useState('30');
-//     const [communicationEmail, setCommunicationEmail] = useState(true);
-//     const [announcementUpdates, setAnnouncementUpdates] = useState(false);
-//     const [disableAllSounds, setDisableAllSounds] = useState(false);
-
-//     // --- KYC TAB STATE ---
-//     const [kycLoading, setKycLoading] = useState(false);
-//     const [showKycSuccess, setShowKycSuccess] = useState(false);
-    
-//     // File Refs
-//     const idFrontRef = useRef<HTMLInputElement>(null);
-//     const idBackRef = useRef<HTMLInputElement>(null);
-//     const selfieRef = useRef<HTMLInputElement>(null);
-//     const proofRef = useRef<HTMLInputElement>(null);
-
-//     // KYC Form Data (Matches KYCPersonalInfoRequest)
-//     const [kycFormData, setKycFormData] = useState({
-//         firstName: '', lastName: '', phoneNumber: '', email: '',
-//         dateOfBirth: '', nationality: '', occupation: '',
-//         address: '', city: '', state: '', postalCode: '', country: '',
-//         idType: '', idNumber: '', idExpiryDate: '',
-//         bankName: '', accountNumber: '', bvn: ''
-//     });
-
-//     // KYC Files & Previews
-//     const [kycFiles, setKycFiles] = useState<{
-//         idFront: File | null; idBack: File | null; selfie: File | null; proof: File | null;
-//     }>({ idFront: null, idBack: null, selfie: null, proof: null });
-
-//     const [kycPreviews, setKycPreviews] = useState<{
-//         idFront: string | null; idBack: string | null; selfie: string | null; proof: string | null;
-//     }>({ idFront: null, idBack: null, selfie: null, proof: null });
-
-
-//     // --- 1. INITIAL DATA FETCH ---
-//     useEffect(() => {
-//         const initData = async () => {
-//             try {
-//                 setLoading(true);
-//                 const [userData, countryData] = await Promise.all([
-//                     getMyProfile(),
-//                     getSupportedCountries()
-//                 ]);
-
-//                 setProfile(userData);
-//                 setCountries(countryData || []);
-//                 setProfileImage(userData.profileImage || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face');
-
-//                 // Populate Profile Form
-//                 setFormData({
-//                     firstName: userData.firstName || '',
-//                     lastName: userData.lastName || '',
-//                     email: userData.email || '',
-//                     phoneNumber: userData.phoneNumber || '',
-//                     country: userData.country || '',
-//                     city: userData.city || '',
-//                     state: userData.state || '',
-//                     defaultAddress: userData.defaultAddress || '',
-//                     username: userData.username || '',
-//                 });
-
-//                 // Pre-fill KYC Form (Auto-fill known fields)
-//                 setKycFormData(prev => ({
-//                     ...prev,
-//                     firstName: userData.firstName || '',
-//                     lastName: userData.lastName || '',
-//                     email: userData.email || '',
-//                     phoneNumber: userData.phoneNumber || '',
-//                     country: userData.country || '',
-//                     nationality: userData.country || '', // Default to country
-//                     address: userData.defaultAddress || '',
-//                     city: userData.city || '',
-//                     state: userData.state || ''
-//                 }));
-
-//             } catch (err: any) {
-//                 console.error(err);
-//                 setError(err.message || "Failed to load data");
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
-//         initData();
-//     }, []);
-
-
-//     // --- 2. HANDLERS ---
-
-//     // Profile Handlers
-//     const handleProfileInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-//         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-//     };
-
-//     const handleSaveProfile = async () => {
-//         if (!profile?.id) return;
-//         setIsSaving(true);
-//         try {
-//             await updateProfile(profile.id, formData);
-//             alert("Profile updated successfully!");
-//         } catch (error) {
-//             console.error("Update failed", error);
-//             alert("Failed to update profile.");
-//         } finally {
-//             setIsSaving(false);
-//         }
-//     };
-
-//     const handleProfileImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-//         const file = event.target.files?.[0];
-//         if (file) {
-//             const reader = new FileReader();
-//             reader.onload = (e) => setProfileImage(e.target?.result as string);
-//             reader.readAsDataURL(file);
-//         }
-//     };
-
-//     // KYC Handlers
-//     const handleKycChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-//         setKycFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-//     };
-
-//     const handleKycFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: keyof typeof kycFiles) => {
-//         const file = e.target.files?.[0];
-//         if (file) {
-//             setKycFiles(prev => ({ ...prev, [field]: file }));
-//             const reader = new FileReader();
-//             reader.onload = (ev) => setKycPreviews(prev => ({ ...prev, [field]: ev.target?.result as string }));
-//             reader.readAsDataURL(file);
-//         }
-//     };
-
-//     // Cloudinary Logic
-//     const uploadImageToCloud = async (file: File): Promise<string> => {
-//         const cloudName = "dhydpleqs"; 
-//         const uploadPreset = "abokina"; 
-
-//         const formData = new FormData();
-//         formData.append("file", file);
-//         formData.append("upload_preset", uploadPreset);
-
-//         try {
-//             const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: formData });
-//             if (!response.ok) throw new Error("Image upload failed");
-//             const data = await response.json();
-//             return data.secure_url;
-//         } catch (error) {
-//             console.error("Upload error:", error);
-//             throw error;
-//         }
-//     };
-
-//     const handleKycSubmit = async () => {
-//         // 1. Validation
-//         if (!kycFiles.idFront || !kycFiles.idBack || !kycFiles.selfie || !kycFiles.proof) {
-//             alert("Please upload all required documents (ID Front, Back, Selfie, Proof of Address).");
-//             return;
-//         }
-//         if (!kycFormData.bvn || !kycFormData.idNumber || !kycFormData.dateOfBirth) {
-//             alert("Please fill in all required text fields.");
-//             return;
-//         }
-
-//         setKycLoading(true);
-//         try {
-//             // 2. Upload Images
-//             const [frontUrl, backUrl, selfieUrl, proofUrl] = await Promise.all([
-//                 uploadImageToCloud(kycFiles.idFront),
-//                 uploadImageToCloud(kycFiles.idBack),
-//                 uploadImageToCloud(kycFiles.selfie),
-//                 uploadImageToCloud(kycFiles.proof)
-//             ]);
-
-//             // 3. Format Dates for Backend (java.util.Date usually wants ISO)
-//             const dobISO = new Date(kycFormData.dateOfBirth).toISOString(); // YYYY-MM-DD -> ISO
-//             const expISO = new Date(kycFormData.idExpiryDate).toISOString(); 
-
-//             // 4. Construct Payload
-//             const payload: KYCPersonalInfoRequest = {
-//                 firstName: kycFormData.firstName,
-//                 lastName: kycFormData.lastName,
-//                 phoneNumber: kycFormData.phoneNumber,
-//                 email: kycFormData.email,
-//                 dateOfBirth: dobISO, // Sending as ISO
-//                 nationality: kycFormData.nationality,
-//                 occupation: kycFormData.occupation,
-                
-//                 address: kycFormData.address,
-//                 city: kycFormData.city,
-//                 state: kycFormData.state,
-//                 postalCode: kycFormData.postalCode,
-//                 country: kycFormData.country,
-                
-//                 idType: kycFormData.idType, // Enum string (e.g. "NIN")
-//                 idNumber: kycFormData.idNumber,
-//                 idExpiryDate: expISO, // Sending as ISO
-                
-//                 bankName: kycFormData.bankName,
-//                 accountNumber: kycFormData.accountNumber,
-//                 bvn: kycFormData.bvn,
-                
-//                 profilePhoto: selfieUrl,
-//                 idFrontPhoto: frontUrl,
-//                 idBackPhoto: backUrl,
-//                 proofOfAddress: proofUrl
-//             };
-
-//             console.log("Submitting KYC:", payload);
-
-//             // 5. Submit
-//             await submitKYC(payload);
-//             setShowKycSuccess(true);
-
-//         } catch (error: any) {
-//             console.error(error);
-//             alert(error.message || "KYC Submission Failed");
-//         } finally {
-//             setKycLoading(false);
-//         }
-//     };
-
-//     const menuItems = [
-//         { id: 'profile' as SettingsPage, label: 'Profile Settings', icon: User, color: 'text-appBanner', bg: 'from-appBanner/20 to-appNav/20' },
-//         { id: 'security' as SettingsPage, label: 'Security', icon: Lock, color: 'text-blue-400', bg: 'from-blue-500/20 to-cyan-500/20' },
-//         { id: 'notifications' as SettingsPage, label: 'Notifications', icon: Bell, color: 'text-green-400', bg: 'from-green-500/20 to-emerald-500/20' },
-//         { id: 'kyc' as SettingsPage, label: 'Identity Verification', icon: Shield, color: 'text-purple-500', bg: 'from-purple-500/20 to-violet-500/20' },
-//         { id: 'delete' as SettingsPage, label: 'Delete Account', icon: Trash2, color: 'text-red-400', bg: 'from-red-500/20 to-pink-500/20' },
-//     ];
-
-//     if (loading) return <div className="flex h-screen items-center justify-center text-appBanner"><Loader2 className="w-8 h-8 animate-spin" /></div>;
-//     if (error) return <div className="p-8 text-red-500">Error loading settings: {error}</div>;
-
-//     // --- RENDER CONTENT ---
-//     const renderContent = () => {
-//         switch (activePage) {
-//             case 'profile':
-//                 return (
-//                     <div className="space-y-8 animate-in fade-in duration-300">
-//                         <div>
-//                             <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Settings</h2>
-//                             <p className="text-gray-600">Manage your personal information</p>
-//                         </div>
-//                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-//                             {/* Personal Info */}
-//                             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-//                                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2"><User className="w-5 h-5 text-appBanner" /> Personal Information</h3>
-//                                 <div className="space-y-4">
-//                                     <div className="grid grid-cols-2 gap-4">
-//                                         <div><label className="text-sm font-medium text-gray-700">First Name</label><input type="text" name="firstName" value={formData.firstName} onChange={handleProfileInputChange} className="w-full mt-2 bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-appBanner" /></div>
-//                                         <div><label className="text-sm font-medium text-gray-700">Last Name</label><input type="text" name="lastName" value={formData.lastName} onChange={handleProfileInputChange} className="w-full mt-2 bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-appBanner" /></div>
-//                                     </div>
-//                                     <div><label className="text-sm font-medium text-gray-700">Email</label><input type="email" name="email" value={formData.email} onChange={handleProfileInputChange} className="w-full mt-2 bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-appBanner" /></div>
-//                                     <div><label className="text-sm font-medium text-gray-700">Username</label><input type="text" name="username" value={formData.username} onChange={handleProfileInputChange} className="w-full mt-2 bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-appBanner" /></div>
-//                                     <div><label className="text-sm font-medium text-gray-700">Phone</label><input type="tel" name="phoneNumber" value={formData.phoneNumber} onChange={handleProfileInputChange} className="w-full mt-2 bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-appBanner" /></div>
-//                                 </div>
-//                             </div>
-                            
-//                             {/* Photo & Location */}
-//                             <div className="space-y-6">
-//                                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-//                                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Photo</h3>
-//                                     <div className="flex items-center gap-4">
-//                                         <div className="relative">
-//                                             <Image width={150} height={150} src={profileImage} alt="Profile" className="w-20 h-20 rounded-xl object-cover border-2 border-appBanner/30" />
-//                                             <button onClick={() => fileInputRef.current?.click()} className="absolute -bottom-2 -right-2 bg-appBanner rounded-full p-2 text-white"><Camera className="w-3 h-3" /></button>
-//                                             <input type="file" ref={fileInputRef} onChange={handleProfileImageUpload} className="hidden" />
-//                                         </div>
-//                                         <div className="flex-1">
-//                                             <button onClick={() => fileInputRef.current?.click()} className="bg-appBanner text-white py-2 px-3 rounded-lg text-sm">Upload New</button>
-//                                         </div>
-//                                     </div>
-//                                 </div>
-//                                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-//                                     <h3 className="text-lg font-semibold text-gray-900 mb-4"><MapPin className="w-5 h-5 inline mr-2 text-green-500" /> Location</h3>
-//                                     <div className="grid grid-cols-2 gap-4">
-//                                         <div><label className="text-sm font-medium text-gray-700">Country</label><input type="text" name="country" value={formData.country} onChange={handleProfileInputChange} className="w-full mt-2 bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-appBanner" /></div>
-//                                         <div><label className="text-sm font-medium text-gray-700">City</label><input type="text" name="city" value={formData.city} onChange={handleProfileInputChange} className="w-full mt-2 bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-appBanner" /></div>
-//                                     </div>
-//                                     <div className="mt-4"><label className="text-sm font-medium text-gray-700">Default Address Type</label>
-//                                         <div className="relative mt-2">
-//                                             <select name="defaultAddress" value={formData.defaultAddress} onChange={handleProfileInputChange} className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 pr-10 outline-none focus:ring-2 focus:ring-appBanner appearance-none">
-//                                                 <option value="">Select Type</option><option value="HOME">HOME</option><option value="OFFICE">OFFICE</option>
-//                                             </select>
-//                                             <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-//                                         </div>
-//                                     </div>
-//                                 </div>
-//                             </div>
-//                         </div>
-//                         <div className="flex gap-3 pt-4">
-//                             <button onClick={handleSaveProfile} disabled={isSaving} className="bg-appBanner text-white py-3 px-6 rounded-xl font-semibold flex items-center gap-2 hover:bg-appNav transition-colors disabled:opacity-50">
-//                                 {isSaving ? <><Loader2 className="w-4 h-4 animate-spin"/> Saving...</> : <><Save className="w-4 h-4" /> Save Changes</>}
-//                             </button>
-//                         </div>
-//                     </div>
-//                 );
-
-//             case 'security':
-//                 return (
-//                     <div className="space-y-8 animate-in fade-in duration-300">
-//                         <div><h2 className="text-2xl font-bold text-gray-900 mb-2">Security Settings</h2><p className="text-gray-600">Manage password and security</p></div>
-//                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-//                             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-//                                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2"><Key className="w-5 h-5 text-blue-500" /> Change Password</h3>
-//                                 <div className="space-y-4">
-//                                     <div><label className="text-sm font-medium">Current Password</label><div className="relative mt-2"><input type={showPassword ? "text" : "password"} className="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none" /><button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{showPassword ? <EyeOff className="w-4 h-4"/> : <Eye className="w-4 h-4"/>}</button></div></div>
-//                                     <div><label className="text-sm font-medium">New Password</label><input type="password" className="w-full mt-2 bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 outline-none" /></div>
-//                                     <button className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold mt-4">Update Password</button>
-//                                 </div>
-//                             </div>
-//                             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-//                                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2"><Shield className="w-5 h-5 text-green-500" /> 2FA</h3>
-//                                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border"><div className="text-sm font-medium">Two-Factor Authentication</div><input type="checkbox" className="toggle" /></div>
-//                             </div>
-//                         </div>
-//                     </div>
-//                 );
-
-//             case 'notifications':
-//                 return (
-//                     <div className="space-y-8 animate-in fade-in duration-300">
-//                         <div><h2 className="text-2xl font-bold text-gray-900 mb-2">Notification Settings</h2><p className="text-gray-600">Configure alerts</p></div>
-//                         <div className="space-y-4 max-w-2xl">
-//                             <div className="flex justify-between items-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
-//                                 <div><h4 className="font-medium">Desktop Notifications</h4><p className="text-xs text-gray-500">Get updates on your screen</p></div>
-//                                 <input type="checkbox" checked={desktopNotifications} onChange={(e) => setDesktopNotifications(e.target.checked)} />
-//                             </div>
-//                             <div className="flex justify-between items-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
-//                                 <div><h4 className="font-medium">Email Updates</h4><p className="text-xs text-gray-500">Receive order updates via email</p></div>
-//                                 <input type="checkbox" checked={communicationEmail} onChange={(e) => setCommunicationEmail(e.target.checked)} />
-//                             </div>
-//                         </div>
-//                     </div>
-//                 );
-
-//             case 'kyc':
-//                 return (
-//                     <div className="space-y-8 animate-in fade-in duration-300">
-//                         <div>
-//                             <h2 className="text-2xl font-bold text-gray-900 mb-2">Identity Verification</h2>
-//                             <p className="text-gray-600">Complete all fields to verify your identity.</p>
-//                         </div>
-
-//                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 lg:p-8 space-y-8">
-                            
-//                             {/* 1. PERSONAL DETAILS */}
-//                             <div>
-//                                 <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2"><User className="w-5 h-5 text-purple-600"/> Personal Details</h3>
-//                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//                                     <div><label className="text-sm font-bold block mb-2">First Name</label><input type="text" name="firstName" value={kycFormData.firstName} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500" /></div>
-//                                     <div><label className="text-sm font-bold block mb-2">Last Name</label><input type="text" name="lastName" value={kycFormData.lastName} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500" /></div>
-//                                     <div><label className="text-sm font-bold block mb-2">Email</label><input type="email" name="email" value={kycFormData.email} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500" /></div>
-//                                     <div><label className="text-sm font-bold block mb-2">Phone</label><input type="tel" name="phoneNumber" value={kycFormData.phoneNumber} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500" /></div>
-//                                     <div><label className="text-sm font-bold block mb-2">Date of Birth</label><input type="date" name="dateOfBirth" value={kycFormData.dateOfBirth} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500" /></div>
-//                                     <div><label className="text-sm font-bold block mb-2">Occupation</label><input type="text" name="occupation" value={kycFormData.occupation} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-purple-500" /></div>
-//                                 </div>
-//                             </div>
-
-//                             {/* 2. ADDRESS & LOCATION */}
-//                             <div>
-//                                 <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2"><MapPin className="w-5 h-5 text-green-600"/> Address & Location</h3>
-//                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-//                                     <div className="md:col-span-2"><label className="text-sm font-bold block mb-2">Residential Address</label><input type="text" name="address" value={kycFormData.address} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-500" /></div>
-                                    
-//                                     {/* Country Dropdown */}
-//                                     <div className="relative">
-//                                         <label className="text-sm font-bold block mb-2">Country</label>
-//                                         <select name="country" value={kycFormData.country} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-500 appearance-none">
-//                                             <option value="">Select Country</option>
-//                                             {countries.map(c => <option key={c.countryCode} value={c.countryName}>{c.countryName}</option>)}
-//                                         </select>
-//                                         <ChevronDown className="absolute right-4 bottom-4 w-4 h-4 text-gray-500 pointer-events-none" />
-//                                     </div>
-
-//                                     {/* Nationality Dropdown */}
-//                                     <div className="relative">
-//                                         <label className="text-sm font-bold block mb-2">Nationality</label>
-//                                         <select name="nationality" value={kycFormData.nationality} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-500 appearance-none">
-//                                             <option value="">Select Nationality</option>
-//                                             {countries.map(c => <option key={c.countryCode} value={c.countryName}>{c.countryName}</option>)}
-//                                         </select>
-//                                         <ChevronDown className="absolute right-4 bottom-4 w-4 h-4 text-gray-500 pointer-events-none" />
-//                                     </div>
-
-//                                     <div><label className="text-sm font-bold block mb-2">State/Region</label><input type="text" name="state" value={kycFormData.state} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-500" /></div>
-//                                     <div><label className="text-sm font-bold block mb-2">City</label><input type="text" name="city" value={kycFormData.city} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-500" /></div>
-//                                     <div><label className="text-sm font-bold block mb-2">Postal Code</label><input type="text" name="postalCode" value={kycFormData.postalCode} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-500" /></div>
-//                                 </div>
-//                             </div>
-
-//                             {/* 3. IDENTIFICATION */}
-//                             <div>
-//                                 <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2"><Briefcase className="w-5 h-5 text-blue-600"/> Identification</h3>
-//                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//                                     <div className="relative">
-//                                         <label className="text-sm font-bold block mb-2">ID Type</label>
-//                                         <select name="idType" value={kycFormData.idType} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
-//                                             <option value="">Select ID Type</option>
-//                                             {/* ENUM VALUES MUST MATCH BACKEND EXACTLY */}
-//                                             <option value="NIN">NIN (National Identity Number)</option>
-//                                             <option value="PASSPORT">International Passport</option>
-//                                             <option value="DRIVERS_LICENSE">Driver's License</option>
-//                                             <option value="VOTERS_CARD">Voter's Card</option>
-//                                             <option value="BUSINESS_LICENSE">Business License</option>
-//                                         </select>
-//                                         <ChevronDown className="absolute right-4 bottom-4 w-4 h-4 text-gray-500 pointer-events-none" />
-//                                     </div>
-//                                     <div><label className="text-sm font-bold block mb-2">ID Number</label><input type="text" name="idNumber" value={kycFormData.idNumber} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" /></div>
-//                                     <div><label className="text-sm font-bold block mb-2">Expiry Date</label><input type="date" name="idExpiryDate" value={kycFormData.idExpiryDate} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500" /></div>
-//                                 </div>
-//                             </div>
-
-//                             {/* 4. FINANCIALS */}
-//                             <div>
-//                                 <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2"><CreditCard className="w-5 h-5 text-orange-600"/> Financial Information</h3>
-//                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//                                     <div><label className="text-sm font-bold block mb-2">BVN</label><input type="text" name="bvn" value={kycFormData.bvn} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-500" /></div>
-//                                     <div><label className="text-sm font-bold block mb-2">Bank Name</label><input type="text" name="bankName" value={kycFormData.bankName} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-500" /></div>
-//                                     <div><label className="text-sm font-bold block mb-2">Account Number</label><input type="text" name="accountNumber" value={kycFormData.accountNumber} onChange={handleKycChange} className="w-full bg-gray-50 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-orange-500" /></div>
-//                                 </div>
-//                             </div>
-
-//                             {/* 5. DOCUMENTS */}
-//                             <div>
-//                                 <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2"><FileText className="w-5 h-5 text-indigo-600"/> Documents</h3>
-//                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-//                                     {[
-//                                         { key: 'idFront', label: "ID Front", ref: idFrontRef },
-//                                         { key: 'idBack', label: "ID Back", ref: idBackRef },
-//                                         { key: 'selfie', label: "Selfie", ref: selfieRef },
-//                                         { key: 'proof', label: "Proof of Address", ref: proofRef },
-//                                     ].map((doc) => (
-//                                         <div key={doc.key} onClick={() => doc.ref.current?.click()} className="border-2 border-dashed border-gray-300 rounded-xl h-40 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors relative group">
-//                                             {kycPreviews[doc.key as keyof typeof kycPreviews] ? (
-//                                                 <Image width={150} height={150} src={kycPreviews[doc.key as keyof typeof kycPreviews]!} alt={doc.label} className="w-full h-full object-cover rounded-lg" />
-//                                             ) : (
-//                                                 <>
-//                                                     <Upload className="w-8 h-8 text-gray-400 mb-2 group-hover:text-indigo-500" />
-//                                                     <span className="text-xs font-bold text-gray-600">{doc.label}</span>
-//                                                 </>
-//                                             )}
-//                                             <input type="file" ref={doc.ref} onChange={(e) => handleKycFileUpload(e, doc.key as any)} className="hidden" accept="image/*" />
-//                                         </div>
-//                                     ))}
-//                                 </div>
-//                             </div>
-
-//                             <div className="flex justify-end pt-4">
-//                                 <button onClick={handleKycSubmit} disabled={kycLoading} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 px-8 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2">
-//                                     {kycLoading ? <><Loader2 className="w-5 h-5 animate-spin"/> Submitting...</> : "Submit Verification"}
-//                                 </button>
-//                             </div>
-//                         </div>
-//                     </div>
-//                 );
-
-//             case 'delete':
-//                 return (
-//                     <div className="space-y-8 animate-in fade-in duration-300">
-//                         <div><h2 className="text-2xl font-bold text-gray-900 mb-2">Account Settings</h2><p className="text-gray-600">Danger Zone</p></div>
-//                         <div className="max-w-2xl bg-red-50 border border-red-200 p-6 rounded-2xl">
-//                             <h3 className="text-xl font-semibold text-red-700 mb-2">Delete Account</h3>
-//                             <p className="text-red-600 mb-4 text-sm">Once deleted, your data is gone forever.</p>
-//                             <button className="bg-red-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-red-700">Delete My Account</button>
-//                         </div>
-//                     </div>
-//                 );
-
-//             default: return null;
-//         }
-//     };
-
-//     return (
-//         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-appBanner/5 p-4 lg:p-6 relative">
-//             <div className="relative z-10 w-full max-w-7xl mx-auto">
-//                 {/* Header */}
-//                 <div className="w-full flex flex-col md:flex-row justify-between bg-gradient-to-r from-appTitleBgColor to-appNav p-6 md:p-8 mb-8 rounded-2xl shadow-xl min-h-[8rem]">
-//                     <div className="flex items-center gap-4">
-//                         <div className="w-12 h-12 bg-gradient-to-br from-appBanner to-appNav rounded-xl flex items-center justify-center shadow-lg"><Settings className="w-6 h-6 text-white" /></div>
-//                         <div><h1 className='font-bold text-xl md:text-2xl text-white'>Account Settings</h1><p className='text-white/90'>Manage your account</p></div>
-//                     </div>
-//                     <div className="text-white text-right"><p className="text-sm font-semibold">STATUS</p><p className="text-2xl font-bold">{profile?.verified || 'UNVERIFIED'}</p></div>
-//                 </div>
-
-//                 <div className="flex flex-col lg:flex-row gap-6">
-//                     {/* Sidebar */}
-//                     <div className="lg:w-64">
-//                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-//                             <nav className="space-y-2">
-//                                 {menuItems.map((item) => {
-//                                     const Icon = item.icon;
-//                                     return (
-//                                         <button key={item.id} onClick={() => setActivePage(item.id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activePage === item.id ? `bg-gradient-to-r ${item.bg} border-l-4 border-${item.color.split('-')[1]}-500 shadow-sm` : 'hover:bg-gray-50'}`}>
-//                                             <Icon className={`w-4 h-4 ${item.color}`} />
-//                                             <span className={`text-sm font-medium ${activePage === item.id ? 'text-gray-900' : 'text-gray-600'}`}>{item.label}</span>
-//                                         </button>
-//                                     );
-//                                 })}
-//                             </nav>
-//                         </div>
-//                     </div>
-
-//                     {/* Content */}
-//                     <div className="flex-1">{renderContent()}</div>
-//                 </div>
-//             </div>
-
-//             {/* Success Modal */}
-//             {showKycSuccess && (
-//                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-//                     <div className="bg-white w-full max-w-md rounded-2xl p-8 shadow-2xl relative flex flex-col items-center text-center">
-//                         <button onClick={() => setShowKycSuccess(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X className="w-6 h-6" /></button>
-//                         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(34,197,94,0.5)] animate-pulse"><CheckCircle className="w-10 h-10 text-green-600" /></div>
-//                         <h3 className="text-2xl font-bold text-gray-900 mb-4">Submission Successful</h3>
-//                         <p className="text-gray-600 font-medium leading-relaxed">You have completed your identity verification. We will review it as soon as possible and notify you of the results. The review is expected to be completed in 1 hour.</p>
-//                         <button onClick={() => setShowKycSuccess(false)} className="mt-8 bg-gray-900 text-white py-3 px-10 rounded-xl font-bold hover:bg-gray-800 transition-all w-full">Got it</button>
-//                     </div>
-//                 </div>
-//             )}
-//         </div>
-//     );
-// };
-
-// export default SettingsPage;

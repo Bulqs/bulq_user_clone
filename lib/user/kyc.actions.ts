@@ -2,9 +2,9 @@
 'use server'
 import { cookies } from "next/headers";
 import { AuthResponse } from "../actions";
-import { CreateKYCResponseDTO, KYCPersonalInfoRequest } from "@/types/kyc";
+import { CreateKYCResponseDTO, KYCPersonalInfoRequest, KYCResponseDTO } from "@/types/kyc";
 import { getSession } from "../session";
-const KYC_BASE_URL = process.env.KYC_BASE_URL
+const KYC_BASE_URL = process.env.KYC_BASE_URL || 'http://localhost:8091/api/v1/kyc'
 export async function getAuthHeader(): Promise<Record<string, string>> {
     // 1. Use your existing getSession logic to decrypt the cookie
     const session = await getSession();
@@ -67,7 +67,7 @@ export async function submitKYC(
  * Fetch the current user's KYC details and verification status.
  * Matches GET ${KYC_BASE_URL}/status
  */
-export async function getKYCStatus(): Promise<CreateKYCResponseDTO> {
+export async function getKYCStatus(): Promise<KYCResponseDTO> {
     const authHeader = await getAuthHeader();
 
     try {

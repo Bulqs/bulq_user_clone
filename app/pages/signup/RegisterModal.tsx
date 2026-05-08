@@ -2,11 +2,12 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image';
 import Link from 'next/link';
-import { IoHome, IoMail } from "react-icons/io5"; // Added IoMail for the new modal
+import { IoHome, IoMail } from "react-icons/io5";
 import { FaUserPlus } from "react-icons/fa";
 import { RiLoginCircleFill } from "react-icons/ri";
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle2, Circle } from 'lucide-react'; // Added for the password tracker
 
 // Logic & Component Imports
 import { AuthResponse, getSupportedCities, getSupportedCountries, Register } from '@/lib/user/actions';
@@ -28,13 +29,13 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
     
     const [formData, setFormData] = useState<RegisterUser>({
         firstName: '', lastName: '', username: '', email: '', phoneNumber: '',
-        password: '', country: '', address: '', city: '', state: '', termsAndConditions: ''
+        password: '', country: '', city: '', state: '', termsAndConditions: ''
     });
 
     const [error, setErrorMessage] = useState<String>("");
     const [submissionPending, setSubmissionPending] = useState<boolean>(false);
     
-    // NEW STATE: Controls the visibility of the success verification modal
+    // Controls the visibility of the success verification modal
     const [showVerificationModal, setShowVerificationModal] = useState<boolean>(false);
     
     const router = useRouter();
@@ -44,15 +45,39 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
     const [loadingLocations, setLoadingLocations] = useState(true);
 
     // =========================================================================
-    // RESTORED: Logs the entire object state whenever it finishes updating
+    // PASSWORD STRENGTH TRACKER LOGIC
     // =========================================================================
+    const getPasswordStrength = (pass: string) => {
+        const rules = [
+            { id: 'length', label: 'At least 8 characters', passed: pass.length >= 8 },
+            { id: 'upper', label: 'At least 1 uppercase letter', passed: /[A-Z]/.test(pass) },
+            { id: 'numbers', label: 'At least 2 numbers', passed: (pass.match(/\d/g) || []).length >= 2 },
+            { id: 'special', label: 'At least 1 special character', passed: /[^A-Za-z0-9]/.test(pass) }
+        ];
+        
+        const passedCount = rules.filter(r => r.passed).length;
+        const score = pass ? (passedCount / rules.length) * 100 : 0;
+        
+        let colorClass = 'bg-gray-500';
+        if (score > 0 && score <= 25) colorClass = 'bg-red-500';
+        if (score === 50) colorClass = 'bg-orange-500';
+        if (score === 75) colorClass = 'bg-blue-500';
+        if (score === 100) colorClass = 'bg-green-500';
+
+        return { rules, score, colorClass, isReady: score === 100 };
+    };
+
+    const { rules: pwdRules, score: pwdScore, colorClass: pwdColorClass, isReady: isPwdReady } = getPasswordStrength(formData.password);
+
+    // =========================================================================
+
     useEffect(() => {
         console.log("Current Form Data Object:", formData);
     }, [formData]);
 
-    // RESTORED: API Fetch for Countries
+    // API Fetch for Countries
     useEffect(() => {
-        if (!isOpen) return; // Only fetch when modal is open
+        if (!isOpen) return; 
         const fetchCountries = async () => {
             try {
                 const data = await getSupportedCountries();
@@ -60,7 +85,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                     const formattedCountries = data.map((c) => ({
                         label: c.countryName,
                         value: c.countryName,
-                        code: c.countryCode // Keep this for reference if needed elsewhere
+                        code: c.countryCode 
                     }));
                     setCountries(formattedCountries);
                     console.log("Fetched Countries:", formattedCountries); 
@@ -74,7 +99,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
         fetchCountries();
     }, [isOpen]);
 
-    // RESTORED: API Fetch for Cities
+    // API Fetch for Cities
     useEffect(() => {
         const fetchCities = async () => {
             if (!formData.country) {
@@ -82,7 +107,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                 return;
             }
             try {
-                // formData.country is the full country name, which works perfectly here
                 const data = await getSupportedCities(formData.country);
                 if (data && Array.isArray(data)) {
                     const formattedCities = data.map((cityName) => ({
@@ -98,18 +122,10 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
         fetchCities();
     }, [formData.country]);
 
-    // =========================================================================
-    // RESTORED: Console logs immediately as each specific field changes
-    // =========================================================================
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-
         console.log(`Field Changed => [${name}]:`, value);
-
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        setFormData((prev) => ({ ...prev, [name]: value, }));
         if (name === 'country') console.log("Current Country:", value);
     };
 
@@ -118,7 +134,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
         console.log("Dial Code Changed =>", newCode);
         setPhoneCode(newCode);
     };
-    // =========================================================================
 
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -132,13 +147,19 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
             return;
         }
 
+        // Failsafe: Ensure password rules are met before submission
+        if (!isPwdReady) {
+            setErrorMessage("Please ensure your password meets all strength requirements.");
+            setSubmissionPending(false);
+            return;
+        }
+
         if (formData.password !== confirmPassword) {
             setErrorMessage("Passwords do not match!");
             setSubmissionPending(false);
             return;
         }
 
-         // Add this quick helper function right inside handleSubmit (or outside the component)
         const toTitleCase = (str: string) => {
             if (!str) return "";
             return str.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
@@ -146,7 +167,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
 
         (async function () {
             try {
-                // REVERTED: Just send the raw formData (which contains the countryName) + combined phone number
                 const apiPayload = {
                     ...formData,
                     phoneNumber: `${phoneCode}${formData.phoneNumber}`,
@@ -161,7 +181,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                     throw new Error("Failed to register");
                 }
                 
-                // SUCCESS! Show the beautiful verification modal instead of closing immediately.
                 setSubmissionPending(false);
                 setShowVerificationModal(true);
 
@@ -254,15 +273,46 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                                 </div>
                             </div>
 
+                            {/* --- GAMIFIED PASSWORD TRACKER --- */}
+                            <div className="bg-black/20 rounded-xl p-4 border border-white/5 w-full">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Password Strength</span>
+                                    <span className={`text-xs font-bold ${pwdScore === 100 ? 'text-green-500' : 'text-gray-400'}`}>
+                                        {pwdScore}%
+                                    </span>
+                                </div>
+                                
+                                {/* Progress Bar */}
+                                <div className="h-2 w-full bg-gray-700/50 rounded-full overflow-hidden mb-4">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${pwdScore}%` }}
+                                        className={`h-full transition-colors duration-300 ${pwdColorClass}`}
+                                    />
+                                </div>
+
+                                {/* Dynamic Rules Checklist */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    {pwdRules.map((rule) => (
+                                        <div key={rule.id} className="flex items-center gap-2 text-sm transition-colors duration-300">
+                                            {rule.passed ? (
+                                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><CheckCircle2 className="w-4 h-4 text-green-500" /></motion.div>
+                                            ) : (
+                                                <Circle className="w-4 h-4 text-gray-500" />
+                                            )}
+                                            <span className={rule.passed ? "text-gray-200 font-medium" : "text-gray-500"}>
+                                                {rule.label}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
                             {/* Row 5: Country & Address */}
                             <div className="flex flex-col md:flex-row gap-5">
                                 <div className=' w-full'>
                                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Country</label>
                                     <InputField name="country" value={formData.country} placeholder={loadingLocations ? "Loading..." : "Select country"} required dropdownOptions={countries} onChange={handleChange} disabled={loadingLocations} />
-                                </div>
-                                <div className="w-full">
-                                    <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Address</label>
-                                    <InputField type="text" name="address" value={formData.address} placeholder="Enter your full address" required onChange={handleChange} />
                                 </div>
                             </div>
 
@@ -280,39 +330,46 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                         </div>
 
                         {/* Row 7: Terms and Conditions */}
-                            <div className="flex items-start gap-3 mt-2">
-                                <div className="flex items-center h-5">
-                                    <input
-                                        id="termsAndConditions"
-                                        name="termsAndConditions"
-                                        type="checkbox"
-                                        required
-                                        checked={formData.termsAndConditions === "accepted"}
-                                        onChange={(e) => setFormData(prev => ({ 
-                                            ...prev, 
-                                            termsAndConditions: e.target.checked ? "accepted" : "" 
-                                        }))}
-                                        className="w-4 h-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900 transition-colors"
-                                    />
-                                </div>
-                                <div className="text-xs">
-                                    <label htmlFor="termsAndConditions" className="font-medium text-gray-300">
-                                        I agree to the{' '}
-                                        <Link href="#" className="text-blue-400 hover:text-blue-300 hover:underline transition-colors">
-                                            Terms and Conditions
-                                        </Link>
-                                        {' '}and Privacy Policy.
-                                    </label>
-                                </div>
+                        <div className="flex items-start gap-3 mt-2">
+                            <div className="flex items-center h-5">
+                                <input
+                                    id="termsAndConditions"
+                                    name="termsAndConditions"
+                                    type="checkbox"
+                                    required
+                                    checked={formData.termsAndConditions === "accepted"}
+                                    onChange={(e) => setFormData(prev => ({ 
+                                        ...prev, 
+                                        termsAndConditions: e.target.checked ? "accepted" : "" 
+                                    }))}
+                                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500 focus:ring-offset-gray-900 transition-colors"
+                                />
                             </div>
+                            <div className="text-xs">
+                                <label htmlFor="termsAndConditions" className="font-medium text-gray-300">
+                                    I agree to the{' '}
+                                    <Link href="#" className="text-blue-400 hover:text-blue-300 hover:underline transition-colors">
+                                        Terms and Conditions
+                                    </Link>
+                                    {' '}and Privacy Policy.
+                                </label>
+                            </div>
+                        </div>
 
-                        <Button type="submit" disabled={submissionPending} className='group relative w-full overflow-hidden bg-appNav py-4 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-300 active:scale-[0.98] disabled:opacity-70'>
-                            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                            <div className="relative flex justify-center items-center gap-3 text-white font-bold text-lg">
+                        <Button 
+                            type="submit" 
+                            disabled={submissionPending || !isPwdReady} 
+                            className={`group relative w-full overflow-hidden py-4 rounded-xl shadow-lg transition-all duration-300 
+                                ${isPwdReady 
+                                    ? 'bg-appNav hover:shadow-blue-500/25 active:scale-[0.98]' 
+                                    : 'bg-gray-700 cursor-not-allowed text-gray-400 opacity-70'}`}
+                        >
+                            {isPwdReady && <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>}
+                            <div className="relative flex justify-center items-center gap-3 font-bold text-lg">
                                 {submissionPending ? (
-                                    <span className="animate-pulse">Creating Account...</span>
+                                    <span className="animate-pulse text-white">Creating Account...</span>
                                 ) : (
-                                    <><FaUserPlus className="text-xl" /> <span> Create Account </span></>
+                                    <><FaUserPlus className={isPwdReady ? "text-xl text-white" : "text-xl"} /> <span className={isPwdReady ? "text-white" : ""}> Create Account </span></>
                                 )}
                             </div>
                         </Button>
@@ -390,7 +447,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                                 className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-40 bg-blue-500/20 blur-[60px] rounded-full pointer-events-none"
                             />
 
-                            {/* Bouncing Mail Icon (Array Animation Fixed!) */}
+                            {/* Bouncing Mail Icon */}
                             <motion.div 
                                 initial={{ scale: 0, rotate: -20 }}
                                 animate={{ scale: 1, rotate: 0 }}
@@ -428,7 +485,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
                             >
                                 <Button
                                     type="button"
-                                    onClick={onSwitchToLogin} // Uses your existing prop to swap straight to the Login modal!
+                                    onClick={onSwitchToLogin}
                                     className="group w-full bg-appNav hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-blue-500/40 active:scale-[0.98] flex justify-center items-center gap-2 text-lg"
                                 >
                                     <span>Proceed to Login</span>

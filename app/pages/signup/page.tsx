@@ -7,6 +7,7 @@ import { FaUserPlus } from "react-icons/fa";
 import { RiLoginCircleFill } from "react-icons/ri";
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle2, Circle } from 'lucide-react'; // Added for password tracker
 
 // Logic & Component Imports
 import { AuthResponse, getSupportedCities, getSupportedCountries, Register } from '@/lib/user/actions';
@@ -22,8 +23,9 @@ const RegisterPage: React.FC = () => {
 
     const [formData, setFormData] = useState<RegisterUser>({
         firstName: '', lastName: '', username: '', email: '', phoneNumber: '',
-        password: '', country: '', address: '', city: '', state: '', termsAndConditions: ''
+        password: '', country: '',  city: '', state: '', termsAndConditions: ''
     });
+    // address: '', removed the sddress from the formData
 
     const [error, setErrorMessage] = useState<String>("");
     const [submissionPending, setSubmissionPending] = useState<boolean>(false);
@@ -36,6 +38,32 @@ const RegisterPage: React.FC = () => {
     const [countries, setCountries] = useState<{ label: string; value: string; code: string }[]>([]);
     const [cities, setCities] = useState<{ label: string; value: string }[]>([]);
     const [loadingLocations, setLoadingLocations] = useState(true);
+
+    // =========================================================================
+    // PASSWORD STRENGTH TRACKER LOGIC
+    // =========================================================================
+    const getPasswordStrength = (pass: string) => {
+        const rules = [
+            { id: 'length', label: 'At least 8 characters', passed: pass.length >= 8 },
+            { id: 'upper', label: 'At least 1 uppercase letter', passed: /[A-Z]/.test(pass) },
+            { id: 'numbers', label: 'At least 2 numbers', passed: (pass.match(/\d/g) || []).length >= 2 },
+            { id: 'special', label: 'At least 1 special character', passed: /[^A-Za-z0-9]/.test(pass) }
+        ];
+        
+        const passedCount = rules.filter(r => r.passed).length;
+        const score = pass ? (passedCount / rules.length) * 100 : 0;
+        
+        let colorClass = 'bg-gray-500';
+        if (score > 0 && score <= 25) colorClass = 'bg-red-500';
+        if (score === 50) colorClass = 'bg-orange-500';
+        if (score === 75) colorClass = 'bg-blue-500';
+        if (score === 100) colorClass = 'bg-green-500';
+
+        return { rules, score, colorClass, isReady: score === 100 };
+    };
+
+    const { rules: pwdRules, score: pwdScore, colorClass: pwdColorClass, isReady: isPwdReady } = getPasswordStrength(formData.password);
+    // =========================================================================
 
     useEffect(() => {
         console.log("Current Form Data Object:", formData);
@@ -110,6 +138,13 @@ const RegisterPage: React.FC = () => {
 
         if (!formData) {
             setErrorMessage("Incomplete credentials");
+            setSubmissionPending(false);
+            return;
+        }
+
+        // Failsafe: Ensure password rules are met
+        if (!isPwdReady) {
+            setErrorMessage("Please ensure your password meets all strength requirements.");
             setSubmissionPending(false);
             return;
         }
@@ -233,16 +268,51 @@ const RegisterPage: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* --- GAMIFIED PASSWORD TRACKER --- */}
+                            <div className="bg-black/20 rounded-xl p-4 border border-white/5 w-full">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Password Strength</span>
+                                    <span className={`text-xs font-bold ${pwdScore === 100 ? 'text-green-500' : 'text-gray-400'}`}>
+                                        {pwdScore}%
+                                    </span>
+                                </div>
+                                
+                                {/* Progress Bar */}
+                                <div className="h-2 w-full bg-gray-700/50 rounded-full overflow-hidden mb-4">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${pwdScore}%` }}
+                                        className={`h-full transition-colors duration-300 ${pwdColorClass}`}
+                                    />
+                                </div>
+
+                                {/* Dynamic Rules Checklist */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    {pwdRules.map((rule) => (
+                                        <div key={rule.id} className="flex items-center gap-2 text-sm transition-colors duration-300">
+                                            {rule.passed ? (
+                                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}><CheckCircle2 className="w-4 h-4 text-green-500" /></motion.div>
+                                            ) : (
+                                                <Circle className="w-4 h-4 text-gray-500" />
+                                            )}
+                                            <span className={rule.passed ? "text-gray-200 font-medium" : "text-gray-500"}>
+                                                {rule.label}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
                             {/* Row 5: Country & Address */}
                             <div className="flex flex-col md:flex-row gap-5">
                                 <div className=' w-full'>
                                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Country</label>
                                     <InputField name="country" value={formData.country} placeholder={loadingLocations ? "Loading..." : "Select country"} required dropdownOptions={countries} onChange={handleChange} disabled={loadingLocations} />
                                 </div>
-                                <div className="w-full">
+                                {/* <div className="w-full">
                                     <label className="block text-xs font-medium text-gray-300 mb-1 uppercase tracking-wider">Address</label>
                                     <InputField type="text" name="address" value={formData.address} placeholder="Enter your full address" required onChange={handleChange} />
-                                </div>
+                                </div> */}
                             </div>
 
                             {/* Row 6: State & City */}
@@ -285,13 +355,20 @@ const RegisterPage: React.FC = () => {
                             </div>
                         </div>
 
-                        <Button type="submit" disabled={submissionPending} className='group relative w-full overflow-hidden bg-appNav py-4 rounded-xl shadow-lg hover:shadow-blue-500/25 transition-all duration-300 active:scale-[0.98] disabled:opacity-70'>
-                            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                            <div className="relative flex justify-center items-center gap-3 text-white font-bold text-lg">
+                        <Button 
+                            type="submit" 
+                            disabled={submissionPending || !isPwdReady} 
+                            className={`group relative w-full overflow-hidden py-4 rounded-xl shadow-lg transition-all duration-300 
+                                ${isPwdReady 
+                                    ? 'bg-appNav hover:shadow-blue-500/25 active:scale-[0.98]' 
+                                    : 'bg-gray-700 cursor-not-allowed text-gray-400 opacity-70'}`}
+                        >
+                            {isPwdReady && <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-[shimmer_1.5s_infinite]"></div>}
+                            <div className="relative flex justify-center items-center gap-3 font-bold text-lg">
                                 {submissionPending ? (
-                                    <span className="animate-pulse">Creating Account...</span>
+                                    <span className="animate-pulse text-white">Creating Account...</span>
                                 ) : (
-                                    <><FaUserPlus className="text-xl" /> <span> Create Account </span></>
+                                    <><FaUserPlus className={isPwdReady ? "text-xl text-white" : "text-xl"} /> <span className={isPwdReady ? "text-white" : ""}> Create Account </span></>
                                 )}
                             </div>
                         </Button>

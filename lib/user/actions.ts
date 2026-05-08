@@ -105,7 +105,7 @@ export async function handleSocialLogin(userData: AuthData) {
 
 const test_url: string = "${CUSTOMER_BASE_URL}";
 const BOOKING_API = "http://localhost:8087/api/v1/booking";
-const CUSTOMER_BASE_URL = process.env.CUSTOMER_BASE_URL
+const CUSTOMER_BASE_URL = process.env.CUSTOMER_BASE_URL || 'http://localhost:8084/api/v1/customers'
 
 export async function Register(payload: RegisterUser): Promise<AuthResponse> {
 

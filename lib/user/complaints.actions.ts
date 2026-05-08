@@ -3,25 +3,26 @@
 import { cookies } from "next/headers";
 import { AuthResponse } from "../actions";
 import { ComplaintFilterParams, CreateComplaintRequest, CreateComplaintResponseDTO, SingleComplaintResponseDTO, UpdateComplaintRequestDTO } from "@/types/complaints";
+import { getAuthHeader } from "./actions";
 
 
 const COMPLAINT_BASE_URL = process.env.COMPLAINT_BASE_URL;
 
-async function getAuthHeader(): Promise<Record<string, string>> {
-    const session = (await cookies()).get("session")?.value;
-    if (!session) return {};
+// async function getAuthHeader(): Promise<Record<string, string>> {
+//     const session = (await cookies()).get("session")?.value;
+//     if (!session) return {};
     
-    try {
-        // Since you're using createSession from your session logic, 
-        // the cookie is likely an encrypted/encoded string.
-        // If it's the raw JSON string:
-        const user = JSON.parse(session) as AuthResponse;
-        return { 'Authorization': `Bearer ${user.token}` };
-    } catch (e) {
-        console.error("Auth header error:", e);
-        return {};
-    }
-}
+//     try {
+//         // Since you're using createSession from your session logic, 
+//         // the cookie is likely an encrypted/encoded string.
+//         // If it's the raw JSON string:
+//         const user = JSON.parse(session) as AuthResponse;
+//         return { 'Authorization': `Bearer ${user.token}` };
+//     } catch (e) {
+//         console.error("Auth header error:", e);
+//         return {};
+//     }
+// }
 
 /**
  * Log a new complaint for a user.

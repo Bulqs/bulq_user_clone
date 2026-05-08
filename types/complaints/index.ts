@@ -1,6 +1,7 @@
 export interface CreateComplaintRequest {
     email: string;
     complaint: string;
+    trackinNumber: string;
 }
 
 export interface CreateComplaintResponseDTO {
