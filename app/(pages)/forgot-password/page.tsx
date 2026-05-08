@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="absolute top-8 md:top-12 z-20 cursor-pointer"
-                onClick={() => router.push('/pages/home')}
+                onClick={() => router.push('/home')}
             >
                 <Image src="/images/logo5.svg" alt="BulQ Logo" width={180} height={45} className="w-32 md:w-48 h-auto drop-shadow-lg" />
             </motion.div>
@@ -136,7 +136,7 @@ export default function ForgotPasswordPage() {
 
                             <motion.div variants={itemVariants} className="mt-8 w-full border-t border-white/10 pt-6">
                                 <button 
-                                    onClick={() => router.push('/pages/signin')}
+                                    onClick={() => router.push('/signin')}
                                     className="flex items-center justify-center gap-2 text-gray-400 hover:text-white transition-colors w-full font-medium"
                                 >
                                     <IoArrowBack className="text-lg" />
@@ -178,7 +178,7 @@ export default function ForgotPasswordPage() {
                             </div>
                             
                             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="w-full pt-6 relative z-10">
-                                <Button onClick={() => router.push('/pages/signin')} className="w-full bg-white/10 hover:bg-white/20 text-white py-4 rounded-xl font-bold transition-all backdrop-blur-sm active:scale-95 text-lg border border-white/10">
+                                <Button onClick={() => router.push('/signin')} className="w-full bg-white/10 hover:bg-white/20 text-white py-4 rounded-xl font-bold transition-all backdrop-blur-sm active:scale-95 text-lg border border-white/10">
                                     Return to Login
                                 </Button>
                             </motion.div>

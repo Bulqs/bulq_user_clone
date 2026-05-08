@@ -201,7 +201,7 @@ const RegisterPage: React.FC = () => {
                 className="relative flex w-full max-w-6xl h-[95vh] lg:h-[90vh] bg-appTitleBgColor rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden border border-gray-800"
             >
                 <button
-                    onClick={() => router.push('/pages/home')}
+                    onClick={() => router.push('/home')}
                     className="absolute top-6 right-6 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white hover:bg-red-500 hover:text-white transition-all duration-300 backdrop-blur-md"
                 >
                     ✕
@@ -383,13 +383,13 @@ const RegisterPage: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
-                            <Button type="button" onClick={() => router.push('/pages/signin')} className='bg-white/10 hover:bg-white/20 text-white w-full flex justify-center items-center py-3 rounded-xl backdrop-blur-sm transition-colors'>
+                            <Button type="button" onClick={() => router.push('/signin')} className='bg-white/10 hover:bg-white/20 text-white w-full flex justify-center items-center py-3 rounded-xl backdrop-blur-sm transition-colors'>
                                 <div className="flex items-center gap-2 font-medium">
                                     <RiLoginCircleFill className="text-xl text-blue-400" /> <span> Login </span>
                                 </div>
                             </Button>
 
-                            <Button type="button" onClick={() => router.push('/pages/home')} className='bg-black/40 hover:bg-black/60 text-white w-full flex justify-center items-center py-3 rounded-xl transition-colors border border-gray-800'>
+                            <Button type="button" onClick={() => router.push('/home')} className='bg-black/40 hover:bg-black/60 text-white w-full flex justify-center items-center py-3 rounded-xl transition-colors border border-gray-800'>
                                 <div className="flex items-center gap-2 font-medium">
                                     <IoHome className="text-xl text-gray-400" /> <span> Cancel </span>
                                 </div>
@@ -485,7 +485,7 @@ const RegisterPage: React.FC = () => {
                             >
                                 <Button
                                     type="button"
-                                    onClick={() => router.push('/pages/signin')}
+                                    onClick={() => router.push('/signin')}
                                     className="group w-full bg-appNav hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-blue-500/40 active:scale-[0.98] flex justify-center items-center gap-2 text-lg"
                                 >
                                     <span>Proceed to Login</span>

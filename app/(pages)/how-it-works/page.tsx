@@ -126,7 +126,7 @@ export default function HowItWorksPage() {
                         <p className="text-gray-400 mb-10 max-w-xl mx-auto text-lg">
                             Join thousands of users who trust BulQ to deliver their international packages safely and affordably.
                         </p>
-                        <Link href="/pages/register" passHref legacyBehavior>
+                        <Link href="/register" passHref legacyBehavior>
                             <motion.a 
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}

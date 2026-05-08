@@ -39,7 +39,7 @@ const AdminSidebar = () => {
         {
             id: 'dashboard',
             name: 'Dashboard',
-            href: '/pages/admindashboard',
+            href: '/admindashboard',
             icon: <FiHome className="h-5 w-5" />,
             subItems: []
         },
@@ -49,11 +49,11 @@ const AdminSidebar = () => {
             href: '#',
             icon: <FiUsers className="h-5 w-5" />,
             subItems: [
-                { name: 'All Users', href: '/pages/admindashboard/usermanagement/all-users' },
-                { name: 'Active Users', href: '/pages/admindashboard/usermanagement/active-users' },
-                { name: 'Inactive Users', href: '/pages/admindashboard/usermanagement/inactive-users' },
-                { name: 'Access Control', href: '/pages/admindashboard/usermanagement/access-control' },
-                { name: 'Restrictions', href: '/pages/admindashboard/usermanagement/restrictions' }
+                { name: 'All Users', href: '/admindashboard/usermanagement/all-users' },
+                { name: 'Active Users', href: '/admindashboard/usermanagement/active-users' },
+                { name: 'Inactive Users', href: '/admindashboard/usermanagement/inactive-users' },
+                { name: 'Access Control', href: '/admindashboard/usermanagement/access-control' },
+                { name: 'Restrictions', href: '/admindashboard/usermanagement/restrictions' }
             ]
         },
         {
@@ -62,10 +62,10 @@ const AdminSidebar = () => {
             href: '#',
             icon: <FiPackage className="h-5 w-5" />,
             subItems: [
-                { name: 'Inventory', href: '/pages/admindashboard/warehouse/inventory' },
-                { name: 'Storage', href: '/pages/admindashboard/warehouse/storage' },
-                { name: 'Locations', href: '/pages/admindashboard/warehouse/locations' },
-                { name: 'Activities', href: '/pages/admindashboard/warehouse/activities' }
+                { name: 'Inventory', href: '/admindashboard/warehouse/inventory' },
+                { name: 'Storage', href: '/admindashboard/warehouse/storage' },
+                { name: 'Locations', href: '/admindashboard/warehouse/locations' },
+                { name: 'Activities', href: '/admindashboard/warehouse/activities' }
             ]
         },
         {
@@ -74,12 +74,12 @@ const AdminSidebar = () => {
             href: '#',
             icon: <FiTruck className="h-5 w-5" />,
             subItems: [
-                { name: 'All Shipments', href: '/pages/admindashboard/shipments/all' },
-                { name: 'Pending', href: '/pages/admindashboard/shipments/pending' },
-                { name: 'In Transit', href: '/pages/admindashboard/shipments/in-transit' },
-                { name: 'Delivered', href: '/pages/admindashboard/shipments/delivered' },
-                { name: 'Tracking', href: '/pages/admindashboard/shipments/tracking' },
-                { name: 'History', href: '/pages/admindashboard/shipments/history' }
+                { name: 'All Shipments', href: '/admindashboard/shipments/all' },
+                { name: 'Pending', href: '/admindashboard/shipments/pending' },
+                { name: 'In Transit', href: '/admindashboard/shipments/in-transit' },
+                { name: 'Delivered', href: '/admindashboard/shipments/delivered' },
+                { name: 'Tracking', href: '/admindashboard/shipments/tracking' },
+                { name: 'History', href: '/admindashboard/shipments/history' }
             ]
         },
         {
@@ -88,9 +88,9 @@ const AdminSidebar = () => {
             href: '#',
             icon: <FiDollarSign className="h-5 w-5" />,
             subItems: [
-                { name: 'Invoices', href: '/pages/admindashboard/payments/invoices' },
-                { name: 'Payments', href: '/pages/admindashboard/payments/all' },
-                { name: 'Reports', href: '/pages/admindashboard/payments/reports' }
+                { name: 'Invoices', href: '/admindashboard/payments/invoices' },
+                { name: 'Payments', href: '/admindashboard/payments/all' },
+                { name: 'Reports', href: '/admindashboard/payments/reports' }
             ]
         },
         {
@@ -99,9 +99,9 @@ const AdminSidebar = () => {
             href: '#',
             icon: <FiBell className="h-5 w-5" />,
             subItems: [
-                { name: 'System Alerts', href: '/pages/admindashboard/notifications/alerts' },
-                { name: 'Notifications', href: '/pages/admindashboard/notifications/all' },
-                { name: 'Settings', href: '/pages/admindashboard/notifications/settings' }
+                { name: 'System Alerts', href: '/admindashboard/notifications/alerts' },
+                { name: 'Notifications', href: '/admindashboard/notifications/all' },
+                { name: 'Settings', href: '/admindashboard/notifications/settings' }
             ]
         },
         {
@@ -110,9 +110,9 @@ const AdminSidebar = () => {
             href: '#',
             icon: <FiBarChart2 className="h-5 w-5" />,
             subItems: [
-                { name: 'Shipment Reports', href: '/pages/admindashboard/reports/shipments' },
-                { name: 'Warehouse Reports', href: '/pages/admindashboard/reports/warehouse' },
-                { name: 'Payment Reports', href: '/pages/admindashboard/reports/payments' }
+                { name: 'Shipment Reports', href: '/admindashboard/reports/shipments' },
+                { name: 'Warehouse Reports', href: '/admindashboard/reports/warehouse' },
+                { name: 'Payment Reports', href: '/admindashboard/reports/payments' }
             ]
         },
         {

@@ -59,7 +59,7 @@ export default function ServicesPage() {
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-16 text-center">
-                    <Link href="/pages/register">
+                    <Link href="/register">
                         <button className="bg-gradient-to-r from-appBanner to-appNav text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-appBanner/30 hover:scale-105 transition-all">
                             Start Shipping Today
                         </button>

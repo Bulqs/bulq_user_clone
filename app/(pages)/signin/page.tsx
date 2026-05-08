@@ -143,7 +143,7 @@ const UserLogin: React.FC = () => {
                                 required
                             />
                             <div className="mt-2 text-right">
-                                <Link href="/pages/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors">
+                                <Link href="/forgot-password" className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors">
                                     Forgot Password?
                                 </Link>
                             </div>
@@ -185,7 +185,7 @@ const UserLogin: React.FC = () => {
                         Don't have an Account?{' '}
                         {/* CHANGED THIS TO A NEXT.JS LINK */}
                         <Link 
-                            href="/pages/signup" 
+                            href="/signup" 
                             className="text-appTitleBgColor font-bold hover:underline transition-colors ml-1"
                         >
                             Sign Up

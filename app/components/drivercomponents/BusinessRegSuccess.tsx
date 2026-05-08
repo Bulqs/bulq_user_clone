@@ -78,7 +78,7 @@ const BusinessRegSuccess = ({ onClose }: BusinessRegSuccessProps) => {
                 onClick={onClose}
                 className="px-6 py-2 bg-appNav rounded-md hover:bg-black transition-colors mt-10"
             >
-                <Link href="/pages/business">Return to Home</Link>
+                <Link href="/business">Return to Home</Link>
             </button>
         </div>
     );

@@ -26,14 +26,14 @@
 //     const pathname = usePathname();
 
 //     const navItems = [
-//         { name: 'DASHBOARD', path: '/pages/driver/driverdashboard/dashboard', icon: <FiPackage /> },
-//         { name: 'Available Orders', path: '/pages/driver/driverdashboard/orders', icon: <FiPackage /> },
-//         { name: 'My Deliveries', path: '/pages/driver/driverdashboard/deliveries', icon: <FiTruck /> },
-//         { name: 'Earning', path: '/pages/driver/driverdashboard/earnings', icon: <FiDollarSign /> },
-//         { name: 'Performance', path: '/pages/driver/driverdashboard/performance', icon: <FiTrendingUp /> },
-//         { name: 'My Vehicles', path: '/pages/driver/driverdashboard/vehicles', icon: <FaCar /> },
-//         { name: 'Help Center', path: '/pages/driver/driverdashboard/help', icon: <FiHelpCircle /> },
-//         { name: 'Settings', path: '/pages/driver/driverdashboard/settings', icon: <FiSettings /> },
+//         { name: 'DASHBOARD', path: '/driver/driverdashboard/dashboard', icon: <FiPackage /> },
+//         { name: 'Available Orders', path: '/driver/driverdashboard/orders', icon: <FiPackage /> },
+//         { name: 'My Deliveries', path: '/driver/driverdashboard/deliveries', icon: <FiTruck /> },
+//         { name: 'Earning', path: '/driver/driverdashboard/earnings', icon: <FiDollarSign /> },
+//         { name: 'Performance', path: '/driver/driverdashboard/performance', icon: <FiTrendingUp /> },
+//         { name: 'My Vehicles', path: '/driver/driverdashboard/vehicles', icon: <FaCar /> },
+//         { name: 'Help Center', path: '/driver/driverdashboard/help', icon: <FiHelpCircle /> },
+//         { name: 'Settings', path: '/driver/driverdashboard/settings', icon: <FiSettings /> },
 //     ];
 
 //     const handleSignOut = () => {
@@ -146,15 +146,15 @@ const Aside = ({ isOpen, onClose }: AsideProps) => {
     const pathname = usePathname();
 
     const navItems = [
-        { name: 'DASHBOARD', path: '/pages/driver/driverdashboard/dashboard', icon: <FiPackage /> },
-        { name: 'Available Orders', path: '/pages/driver/driverdashboard/orders', icon: <FiPackage /> },
-        { name: 'My Deliveries', path: '/pages/driver/driverdashboard/deliveries', icon: <FiTruck /> },
-        // { name: 'Earning', path: '/pages/driver/driverdashboard/earnings', icon: <FiDollarSign /> },
-        { name: 'Performance', path: '/pages/driver/driverdashboard/performance', icon: <FiTrendingUp /> },
-        { name: 'My Vehicles', path: '/pages/driver/driverdashboard/vehicles', icon: <FaCar /> },
-        { name: 'Messages', path: '/pages/driver/driverdashboard/messages', icon: <FiMessageSquare /> },
-        { name: 'Help Center', path: '/pages/driver/driverdashboard/help', icon: <FiHelpCircle /> },
-        { name: 'Settings', path: '/pages/driver/driverdashboard/settings', icon: <FiSettings /> },
+        { name: 'DASHBOARD', path: '/driver/driverdashboard/dashboard', icon: <FiPackage /> },
+        { name: 'Available Orders', path: '/driver/driverdashboard/orders', icon: <FiPackage /> },
+        { name: 'My Deliveries', path: '/driver/driverdashboard/deliveries', icon: <FiTruck /> },
+        // { name: 'Earning', path: '/driver/driverdashboard/earnings', icon: <FiDollarSign /> },
+        { name: 'Performance', path: '/driver/driverdashboard/performance', icon: <FiTrendingUp /> },
+        { name: 'My Vehicles', path: '/driver/driverdashboard/vehicles', icon: <FaCar /> },
+        { name: 'Messages', path: '/driver/driverdashboard/messages', icon: <FiMessageSquare /> },
+        { name: 'Help Center', path: '/driver/driverdashboard/help', icon: <FiHelpCircle /> },
+        { name: 'Settings', path: '/driver/driverdashboard/settings', icon: <FiSettings /> },
     ];
 
     const handleSignOut = () => {

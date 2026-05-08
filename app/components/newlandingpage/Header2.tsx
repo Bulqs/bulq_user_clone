@@ -16,10 +16,10 @@ const Header2: React.FC<Header2Props> = ({ onLoginClick, onRegisterClick }) => {
 
     const navItems = [
         { name: 'Home', href: '/' },
-        { name: 'Services', href: '/pages/services' },
-        { name: 'Pricing', href: '/pages/pricing' },
-        { name: 'FAQ', href: '/pages/faq' },
-        { name: 'Contact', href: '/pages/contact' }
+        { name: 'Services', href: '/services' },
+        { name: 'Pricing', href: '/pricing' },
+        { name: 'FAQ', href: '/faq' },
+        { name: 'Contact', href: '/contact' }
     ];
 
     return (
@@ -113,11 +113,11 @@ export default Header2;
 //     const router = useRouter();
 
 //     const navItems = [
-//         { name: 'Home', href: '/pages/home' },
-//         { name: 'How It Works', href: '/pages/how-it-works' },
-//         { name: 'Pricing', href: '/pages/pricing' },
-//         { name: 'FAQ', href: '/pages/faq' },
-//         { name: 'Contact', href: '/pages/contact' }
+//         { name: 'Home', href: '/home' },
+//         { name: 'How It Works', href: '/how-it-works' },
+//         { name: 'Pricing', href: '/pricing' },
+//         { name: 'FAQ', href: '/faq' },
+//         { name: 'Contact', href: '/contact' }
 //     ];
 
 //     const handleOpenModal = () => {
@@ -179,7 +179,7 @@ export default Header2;
 //                             e.preventDefault();
 //                             LogoutUser();
 //                             destroyUserInfo(user)
-//                             router.push("/pages/signin");
+//                             router.push("/signin");
 //                         }}
 //                     >
 //                         Sign Out

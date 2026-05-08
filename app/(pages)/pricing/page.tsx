@@ -89,7 +89,7 @@ export default function PricingPage() {
                                     </li>
                                 ))}
                             </ul>
-                            <Link href="/pages/register">
+                            <Link href="/register">
                                 <button className={`w-full py-4 rounded-xl font-bold transition-all ${plan.highlight ? 'bg-appBanner text-white hover:bg-blue-600 shadow-lg' : 'bg-white/10 text-white hover:bg-white/20'}`}>
                                     {plan.buttonText}
                                 </button>

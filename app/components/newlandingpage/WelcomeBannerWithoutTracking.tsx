@@ -80,7 +80,7 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ onGetStartedClick }) => {
                 <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-5 justify-center items-center">
                     
                     {/* Primary Shimmering Button -> Now a Next.js Link */}
-                    <Link href="/pages/signup" passHref legacyBehavior>
+                    <Link href="/signup" passHref legacyBehavior>
                         <motion.a 
                             onClick={onGetStartedClick}
                             whileHover={{ scale: 1.05 }}
@@ -98,7 +98,7 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ onGetStartedClick }) => {
                     </Link>
                     
                     {/* Secondary Ghost Button -> Now a Next.js Link */}
-                    <Link href="/pages/how-it-works" passHref legacyBehavior>
+                    <Link href="/how-it-works" passHref legacyBehavior>
                         <motion.a 
                             whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)" }}
                             whileTap={{ scale: 0.95 }}

@@ -24,12 +24,12 @@ import { LogoutUser } from '@/lib/actions';
 
 // --- NAVIGATION CONFIG ---
 const navItems = [
-    { name: 'Dashboard', path: '/pages/newuser', icon: FiHome },
-    { name: 'Packages', path: '/pages/newuser/packages', icon: FiPackage },
-    { name: 'Tracking', path: '/pages/newuser/tracking', icon: FiMapPin },
-    { name: 'History', path: '/pages/newuser/history', icon: FiClock },
-    // { name: 'Addresses', path: '/pages/newuser/address', icon: FiMap },
-    { name: 'Settings', path: '/pages/newuser/settings', icon: FiSettings },
+    { name: 'Dashboard', path: '/newuser', icon: FiHome },
+    { name: 'Packages', path: '/newuser/packages', icon: FiPackage },
+    { name: 'Tracking', path: '/newuser/tracking', icon: FiMapPin },
+    { name: 'History', path: '/newuser/history', icon: FiClock },
+    // { name: 'Addresses', path: '/newuser/address', icon: FiMap },
+    { name: 'Settings', path: '/newuser/settings', icon: FiSettings },
 ];
 
 export default function Sidebar() {
@@ -72,7 +72,7 @@ export default function Sidebar() {
         try {
             await LogoutUser();
             destroyUserInfo(user);
-            router.push("/pages/signin");
+            router.push("/signin");
         } catch (error) {
             console.error("Logout failed:", error);
         }
@@ -282,14 +282,14 @@ export default function Sidebar() {
 //     const router = useRouter();
 
 //     const navItems = [
-//         { name: 'Dashboard', href: '/pages/newuser', icon: <FiHome className="h-5 w-5" /> },
-//         { name: 'My Packages', href: '/pages/newuser/packages', icon: <FiPackage className="h-5 w-5" /> },
-//         { name: 'Shipping', href: '/pages/newuser/shipping', icon: <FiTruck className="h-5 w-5" /> },
-//         { name: 'Subscription', href: '/pages/newuser/subscription', icon: <FiCreditCard className="h-5 w-5" /> },
-//         { name: 'Address', href: '/pages/newuser/address', icon: <FiArchive className="h-5 w-5" /> },
-//         { name: 'Tracking', href: '/pages/newuser/tracking', icon: <FiMap className="h-5 w-5" /> },
-//         { name: 'History', href: '/pages/newuser/history', icon: <FiClock className="h-5 w-5" /> },
-//         { name: 'Settings', href: '/pages/newuser/settings', icon: <FiSettings className="h-5 w-5" /> },
+//         { name: 'Dashboard', href: '/newuser', icon: <FiHome className="h-5 w-5" /> },
+//         { name: 'My Packages', href: '/newuser/packages', icon: <FiPackage className="h-5 w-5" /> },
+//         { name: 'Shipping', href: '/newuser/shipping', icon: <FiTruck className="h-5 w-5" /> },
+//         { name: 'Subscription', href: '/newuser/subscription', icon: <FiCreditCard className="h-5 w-5" /> },
+//         { name: 'Address', href: '/newuser/address', icon: <FiArchive className="h-5 w-5" /> },
+//         { name: 'Tracking', href: '/newuser/tracking', icon: <FiMap className="h-5 w-5" /> },
+//         { name: 'History', href: '/newuser/history', icon: <FiClock className="h-5 w-5" /> },
+//         { name: 'Settings', href: '/newuser/settings', icon: <FiSettings className="h-5 w-5" /> },
 //     ]
 
 //     const handleSignOut = () => {
@@ -381,7 +381,7 @@ export default function Sidebar() {
 //                             e.preventDefault();
 //                             LogoutUser();
 //                             destroyUserInfo(user)
-//                             router.push("/pages/signin");
+//                             router.push("/signin");
 //                         }}
 //                         className="w-full flex items-center justify-center p-4 rounded-2xl font-semibold text-appWhite bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
 //                     >

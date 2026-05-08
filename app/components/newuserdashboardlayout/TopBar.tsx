@@ -54,7 +54,7 @@ const TopBar = () => {
         try {
             await LogoutUser();
             destroyUserInfo(user);
-            router.push("/pages/signin");
+            router.push("/signin");
         } catch (error) {
             console.error("Logout failed:", error);
         }
@@ -327,7 +327,7 @@ export default TopBar
 //                                                     e.preventDefault();
 //                                                     LogoutUser();
 //                                                     destroyUserInfo(user)
-//                                                     router.push("/pages/signin");
+//                                                     router.push("/signin");
 //                                                   }}
 //                                         />
 //                                         Sign Out

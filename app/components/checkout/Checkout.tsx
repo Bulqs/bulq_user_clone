@@ -36,9 +36,9 @@ export default function CheckoutPage({ sessionData }: CheckoutPageProps) {
           <StripePaymentForm 
             bookingId={sessionData.transactionId}
             // 1. Provide the Return URL (Where Stripe redirects after success)
-            returnUrl={`${window.location.origin}/pages/paymentstatus/stripe/verify?id=${sessionData.transactionId}`}
+            returnUrl={`${window.location.origin}/paymentstatus/stripe/verify?id=${sessionData.transactionId}`}
             // 2. Provide Cancel Handler (e.g., Go back to dashboard)
-            onCancel={() => router.push('/pages/home')}
+            onCancel={() => router.push('/home')}
           />
        </Elements>
     </div>

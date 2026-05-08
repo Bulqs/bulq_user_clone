@@ -65,9 +65,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
                 useUserStore.getState().addUserInfo(userAside);
 
                 onClose(); 
-                if (authorities.includes(USER_AUTHORITES.ADMIN)) router.push(NAVIGATION.ADMIN);
-                else if (authorities.includes(USER_AUTHORITES.VENDOR)) router.push(NAVIGATION.VENDOR);
-                else if (authorities.includes(USER_AUTHORITES.USER)) router.push(NAVIGATION.HOMELOGGEDIN);
+                if (authorities.includes(USER_AUTHORITES.USER)) router.push(NAVIGATION.USER);
+                // else if (authorities.includes(USER_AUTHORITES.VENDOR)) router.push(NAVIGATION.VENDOR);
+                // else if (authorities.includes(USER_AUTHORITES.USER)) router.push(NAVIGATION.HOMELOGGEDIN);
             }
         } catch (error) {
             setErrorMessage("Error validating credentials!");
@@ -136,7 +136,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
                             <div>
                                 <div className="flex justify-between items-center mb-2">
                                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide">Password</label>
-                                    <Link href="/pages/forgot-password" className="text-sm font-bold text-blue-600 hover:text-blue-500 transition-colors">Forgot Password?</Link>
+                                    <Link href="/forgot-password" className="text-sm font-bold text-blue-600 hover:text-blue-500 transition-colors">Forgot Password?</Link>
                                 </div>
                                 <input
                                     type="password"

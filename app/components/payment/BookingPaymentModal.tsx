@@ -70,8 +70,8 @@ const BookingPaymentModal: React.FC<BookingPaymentModalProps> = ({
         setProcessingPayment(true);
         try {
             // --- CONSTRUCT URLS ---
-            const targetUrl = `${window.location.origin}/pages/paymentstatus/stripe/verify?id=${bookingData.trackingNumber}`;
-            const paystackTargetUrl = `${window.location.origin}/pages/paymentstatus/verify?id=${bookingData.trackingNumber}`;
+            const targetUrl = `${window.location.origin}/paymentstatus/stripe/verify?id=${bookingData.trackingNumber}`;
+            const paystackTargetUrl = `${window.location.origin}/paymentstatus/verify?id=${bookingData.trackingNumber}`;
             const isPaystack = method.provider.toLowerCase().includes('paystack');
             
             const payload = {
@@ -247,7 +247,7 @@ const BookingPaymentModal: React.FC<BookingPaymentModalProps> = ({
                                 >
                                     <StripePaymentForm 
                                         bookingId={bookingData.trackingNumber} 
-                                        returnUrl={`${window.location.origin}/pages/paymentstatus/stripe/verify?id=${bookingData.trackingNumber}`}
+                                        returnUrl={`${window.location.origin}/paymentstatus/stripe/verify?id=${bookingData.trackingNumber}`}
                                         onCancel={() => { setStripeSession(null); setStripeClientSecret(null); }}
                                     />
                                 </Elements>

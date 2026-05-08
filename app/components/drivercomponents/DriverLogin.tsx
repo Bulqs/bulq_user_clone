@@ -106,7 +106,7 @@
 
 //                             <div>
 //                                 <Link
-//                                     href="/pages/driver/driverdashboard/dashboard"
+//                                     href="/driver/driverdashboard/dashboard"
 //                                     className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-appNav hover:bg-appNav/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
 //                                 >
 //                                     Sign In
@@ -327,7 +327,7 @@ const DriverLogin: React.FC = () => {
 
                             <div>
                                 <Link
-                                    href="/pages/driver/driverdashboard/dashboard"
+                                    href="/driver/driverdashboard/dashboard"
                                     className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-appNav hover:bg-appNav/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                                 >
                                     Sign In

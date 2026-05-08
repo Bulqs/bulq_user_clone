@@ -31,7 +31,7 @@ const HomeHeader: React.FC = () => {
             {/* Dashboard Button Section (Right) */}
             <div className="flex items-center">
                 <Link 
-                    href="/pages/newuser"
+                    href="/newuser"
                     className="bg-green-600 text-white px-6 py-2.5 rounded-full font-bold text-sm md:text-base shadow-[0_0_15px_rgba(22,163,74,0.4)] hover:bg-green-500 hover:shadow-[0_0_25px_rgba(22,163,74,0.6)] transition-all duration-300 transform active:scale-95 border border-green-400/50 backdrop-blur-sm"
                 >
                     My Dashboard
@@ -75,7 +75,7 @@ export default HomeHeader;
 //             {/* Dashboard Button Section (Right) */}
 //             <div className="flex items-center">
 //                 <Link 
-//                     href="/pages/newuser"
+//                     href="/newuser"
 //                     className="bg-green-600 text-white px-6 py-2.5 rounded-full font-bold text-sm md:text-base shadow-md hover:bg-green-700 hover:shadow-lg transition-all duration-300 transform active:scale-95 border border-green-500"
 //                 >
 //                     My Dashboard

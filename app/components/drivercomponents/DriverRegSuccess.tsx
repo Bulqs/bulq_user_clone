@@ -83,7 +83,7 @@ const DriverRegSuccess: React.FC<DriverRegSuccessProps> = ({ onClose }) => {
             <button
                 onClick={onClose}
                 className="px-6 py-2 bg-appNav rounded-md hover:bg-black transition-colors mt-10"
-            ><Link href={`/pages/driver`}></Link>
+            ><Link href={`/driver`}></Link>
                 Return to Home
             </button>
         </div>

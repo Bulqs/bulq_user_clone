@@ -201,7 +201,7 @@ const LandingBanner: React.FC = () => {
                           
                           <div className="flex flex-col w-full gap-3">
                               <button 
-                                  onClick={() => router.push('/pages/newuser/settings')} 
+                                  onClick={() => router.push('/newuser/settings')} 
                                   className="w-full bg-appTitleBgColor hover:bg-appNav text-white font-bold py-3.5 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 group"
                               >
                                   Go to Profile <FiArrowRight className="group-hover:translate-x-1 transition-transform" />

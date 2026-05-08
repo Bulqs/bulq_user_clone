@@ -164,13 +164,13 @@ const Header: React.FC = () => {
                                 <div className="absolute right-6 mt-16 w-48 bg-white shadow-lg rounded-lg z-50">
                                     <ul className="pt-2 bg-appTitleBgColor rounded-md">
                                         <li className="px-4 py-2 hover:bg-gray-100 hover:text-black cursor-pointer text-white font-semibold">
-                                            <Link href="/pages/userdashboard">
+                                            <Link href="/userdashboard">
                                              My Dashboard
                                             </Link>
                                            
                                         </li>
                                         <li className="px-4 py-2 hover:bg-gray-100 hover:text-black cursor-pointer text-white font-semibold">
-                                            <Link href="/pages/userdashboard/settings">
+                                            <Link href="/userdashboard/settings">
                                                 Settings
                                             </Link>
                                         </li>
@@ -317,13 +317,13 @@ const Header: React.FC = () => {
                                         <div className="md:absolute right-0 md:right-6 mt-4 md:mt-16 w-full md:w-48 bg-white shadow-lg rounded-lg z-50">
                                             <ul className="pt-2 bg-appTitleBgColor rounded-md w-full">
                                                 <li className="px-4 py-2 hover:bg-gray-100 hover:text-black cursor-pointer text-white font-semibold">
-                                                    <Link href="/pages/userdashboard">
+                                                    <Link href="/userdashboard">
                                                         My Dashboard
                                                     </Link>
 
                                                 </li>
                                                 <li className="px-4 py-2 hover:bg-gray-100 hover:text-black cursor-pointer text-white font-semibold">
-                                                    <Link href="/pages/userdashboard/settings">
+                                                    <Link href="/userdashboard/settings">
                                                         Settings
                                                     </Link>
                                                 </li>

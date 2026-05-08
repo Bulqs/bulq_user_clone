@@ -90,9 +90,9 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
 
       <nav className="flex flex-col space-y-0 md:space-y-2">
         <Link
-          href="/pages/userdashboard"
+          href="/userdashboard"
           className={`userdashboardasidestyle font-semibold  ${
-            pathname === "/pages/userdashboard"
+            pathname === "/userdashboard"
               ? "bg-gray-700"
               : "hover:bg-gray-700"
           }`}
@@ -105,9 +105,9 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
           )}
         </Link>
         <Link
-          href="/pages/userdashboard/trackinglist"
+          href="/userdashboard/trackinglist"
           className={`userdashboardasidestyle ${
-            pathname === "/pages/userdashboard/trackinglist"
+            pathname === "/userdashboard/trackinglist"
               ? "bg-gray-700"
               : "hover:bg-gray-700"
           }`}
@@ -120,9 +120,9 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
           )}
         </Link>
         <Link
-          href="/pages/userdashboard/orderlist"
+          href="/userdashboard/orderlist"
           className={`userdashboardasidestyle ${
-            pathname === "/pages/userdashboard/orderlist"
+            pathname === "/userdashboard/orderlist"
               ? "bg-gray-700"
               : "hover:bg-gray-700"
           }`}
@@ -135,9 +135,9 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
           )}
         </Link>
         <Link
-          href="/pages/userdashboard/useraddress"
+          href="/userdashboard/useraddress"
           className={`userdashboardasidestyle ${
-            pathname === "/pages/userdashboard/useraddress"
+            pathname === "/userdashboard/useraddress"
               ? "bg-gray-700"
               : "hover:bg-gray-700"
           }`}
@@ -150,9 +150,9 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
           )}
         </Link>
         <Link
-          href="/pages/userdashboard/userpayment"
+          href="/userdashboard/userpayment"
           className={`userdashboardasidestyle ${
-            pathname === "/pages/userdashboard/userpayment"
+            pathname === "/userdashboard/userpayment"
               ? "bg-gray-700"
               : "hover:bg-gray-700"
           }`}
@@ -169,9 +169,9 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
       {/* <div className="absolute flex flex-col w-full bottom-16 md:bottom-24 items-start justify-start md:items-start md:justify-center pl-0 md:pl-5 md:pr-5"> */}
       <div className="absolute flex flex-col space-y-0 md:space-y-2 bottom-16 md:bottom-24">
         <Link
-          href="/pages/userdashboard/usercustomercare"
+          href="/userdashboard/usercustomercare"
           className={`userdashboardasidestyle2 ${
-            pathname === "/pages/userdashboard/usercustomercare"
+            pathname === "/userdashboard/usercustomercare"
               ? "bg-gray-700"
               : "hover:bg-gray-700"
           }`}
@@ -185,8 +185,8 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
         </Link>
 
         {/* <Link
-                    href="/pages/userdashboard/usersettings"
-                    className={`userdashboardasidestyle2 ${pathname === "/pages/userdashboard/usersettings"
+                    href="/userdashboard/usersettings"
+                    className={`userdashboardasidestyle2 ${pathname === "/userdashboard/usersettings"
                         ? "bg-gray-700"
                         : "hover:bg-gray-700"
                         }`}
@@ -201,7 +201,7 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
           <button
             onClick={toggleSettingsMenu}
             className={`w-full flex items-center justify-start gap-2 p-2 rounded-md ${
-              pathname.includes("/pages/userdashboard/usersettings")
+              pathname.includes("/userdashboard/usersettings")
                 ? "bg-gray-700"
                 : "hover:bg-gray-700"
             }`}
@@ -216,9 +216,9 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
           {settingsOpen && (
             <div className="flex flex-col pl-6 space-y-1 mt-1">
               <Link
-                href="/pages/userdashboard/usersettings/profile"
+                href="/userdashboard/usersettings/profile"
                 className={`p-2 rounded-md ${
-                  pathname === "/pages/userdashboard/usersettings/profile"
+                  pathname === "/userdashboard/usersettings/profile"
                     ? "bg-gray-700"
                     : "hover:bg-gray-700"
                 }`}
@@ -226,9 +226,9 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
                 Profile Settings
               </Link>
               <Link
-                href="/pages/userdashboard/usersettings/password"
+                href="/userdashboard/usersettings/password"
                 className={`p-2 rounded-md ${
-                  pathname === "/pages/userdashboard/usersettings/password"
+                  pathname === "/userdashboard/usersettings/password"
                     ? "bg-gray-700"
                     : "hover:bg-gray-700"
                 }`}
@@ -236,9 +236,9 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
                 Password
               </Link>
               <Link
-                href="/pages/userdashboard/usersettings/notifications"
+                href="/userdashboard/usersettings/notifications"
                 className={`p-2 rounded-md ${
-                  pathname === "/pages/userdashboard/usersettings/notifications"
+                  pathname === "/userdashboard/usersettings/notifications"
                     ? "bg-gray-700"
                     : "hover:bg-gray-700"
                 }`}
@@ -246,9 +246,9 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
                 Notifications
               </Link>
               <Link
-                href="/pages/userdashboard/usersettings/deleteaccount"
+                href="/userdashboard/usersettings/deleteaccount"
                 className={`p-2 rounded-md ${
-                  pathname === "/pages/userdashboard/usersettings/deleteaccount"
+                  pathname === "/userdashboard/usersettings/deleteaccount"
                     ? "bg-gray-700"
                     : "hover:bg-gray-700"
                 }`}
@@ -267,7 +267,7 @@ const UserAsideNav: React.FC<UserNames> = ({ firstName, lastName, email }) => {
             router.push("/login");
           }}
           className={`userdashboardasidestyle2 ${
-            pathname === "/pages/userdashboard/logout"
+            pathname === "/userdashboard/logout"
               ? "bg-red-700"
               : "hover:bg-red-800"
           }`}

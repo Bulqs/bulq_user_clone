@@ -120,7 +120,7 @@ const SignUpWithBulq: React.FC<SignUpProps> = ({ onRegisterClick }) => {
                         <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-5 w-full sm:w-auto pop-out-button transition-all duration-500 z-30">
                             
                             {/* Primary Register Button -> Link */}
-                            <Link href="/pages/signup" passHref legacyBehavior>
+                            <Link href="/signup" passHref legacyBehavior>
                                 <a 
                                     onClick={onRegisterClick}
                                     className="group/btn relative inline-flex items-center justify-center px-10 py-5 text-lg font-bold text-appNav bg-white rounded-2xl shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_40px_rgba(255,255,255,0.5)] transition-all duration-300 transform active:scale-95 overflow-hidden"
@@ -134,7 +134,7 @@ const SignUpWithBulq: React.FC<SignUpProps> = ({ onRegisterClick }) => {
                             </Link>
                             
                             {/* Secondary Learn More Button -> Link */}
-                            <Link href="/pages/how-it-works" passHref legacyBehavior>
+                            <Link href="/how-it-works" passHref legacyBehavior>
                                 <a className="inline-flex items-center justify-center px-8 py-5 text-lg font-bold text-white border-2 border-white/20 rounded-2xl hover:bg-white/10 hover:border-white/40 transition-all duration-300 backdrop-blur-md active:scale-95">
                                     Learn More
                                 </a>

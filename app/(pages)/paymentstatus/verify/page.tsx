@@ -143,7 +143,7 @@ function PaymentVerifyContent() {
                     <h2 className="text-2xl font-bold text-gray-800 mb-2">Verification Failed</h2>
                     <p className="text-gray-500 mb-8">{error}</p>
                     <button onClick={() => window.location.reload()} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mb-3">Retry</button>
-                    <button onClick={() => router.push('/pages/home')} className="w-full bg-white border border-gray-200 text-gray-600 py-3 rounded-xl">Return to Dashboard</button>
+                    <button onClick={() => router.push('/home')} className="w-full bg-white border border-gray-200 text-gray-600 py-3 rounded-xl">Return to Dashboard</button>
                 </div>
             </div>
         );
@@ -156,7 +156,7 @@ function PaymentVerifyContent() {
             {/* Top Navigation */}
             <div className="w-full max-w-[800px] flex justify-between items-center mb-6">
                 <button 
-                    onClick={() => router.push('/pages/newuser')} 
+                    onClick={() => router.push('/newuser')} 
                     className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors text-sm font-medium"
                 >
                     <Home size={16} /> Dashboard
@@ -492,7 +492,7 @@ export default function PaymentVerifyPage() {
 //                     <h2 className="text-2xl font-bold text-gray-800 mb-2">Verification Failed</h2>
 //                     <p className="text-gray-500 mb-8">{error}</p>
 //                     <button onClick={() => window.location.reload()} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mb-3">Retry</button>
-//                     <button onClick={() => router.push('/pages/home')} className="w-full bg-white border border-gray-200 text-gray-600 py-3 rounded-xl">Return to Dashboard</button>
+//                     <button onClick={() => router.push('/home')} className="w-full bg-white border border-gray-200 text-gray-600 py-3 rounded-xl">Return to Dashboard</button>
 //                 </div>
 //             </div>
 //         );
@@ -505,7 +505,7 @@ export default function PaymentVerifyPage() {
 //             {/* Top Navigation */}
 //             <div className="w-full max-w-[800px] flex justify-between items-center mb-6">
 //                 <button 
-//                     onClick={() => router.push('/pages/newuser')} 
+//                     onClick={() => router.push('/newuser')} 
 //                     className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors text-sm font-medium"
 //                 >
 //                     <Home size={16} /> Dashboard

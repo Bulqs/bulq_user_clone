@@ -116,7 +116,7 @@ const VerificationContent = () => {
                         </div>
                         
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="w-full pt-4 relative z-10">
-                            <Button onClick={() => router.push('/pages/signin')} className="w-full bg-appNav hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all shadow-lg active:scale-95 text-lg">
+                            <Button onClick={() => router.push('/signin')} className="w-full bg-appNav hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all shadow-lg active:scale-95 text-lg">
                                 Proceed to Login
                             </Button>
                         </motion.div>
@@ -143,10 +143,10 @@ const VerificationContent = () => {
                         </div>
                         
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="w-full pt-4 relative z-10 flex gap-3">
-                            <Button onClick={() => router.push('/pages/home')} className="w-full bg-white/10 hover:bg-white/20 text-white py-4 rounded-xl font-bold transition-all backdrop-blur-sm">
+                            <Button onClick={() => router.push('/home')} className="w-full bg-white/10 hover:bg-white/20 text-white py-4 rounded-xl font-bold transition-all backdrop-blur-sm">
                                 Go Home
                             </Button>
-                            <Button onClick={() => router.push('/pages/signin')} className="w-full bg-appNav hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all shadow-lg">
+                            <Button onClick={() => router.push('/signin')} className="w-full bg-appNav hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all shadow-lg">
                                 Login Anyway
                             </Button>
                         </motion.div>

@@ -109,7 +109,7 @@ const ResetPasswordContent = () => {
                             <h2 className="text-3xl font-extrabold text-white tracking-tight">Invalid Request</h2>
                             <p className="text-gray-300 font-medium">No secure token found. Please use the link sent to your email.</p>
                         </div>
-                        <Button onClick={() => router.push('/pages/forgot-password')} className="w-full mt-4 bg-appNav hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all shadow-lg active:scale-95 text-lg">
+                        <Button onClick={() => router.push('/forgot-password')} className="w-full mt-4 bg-appNav hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all shadow-lg active:scale-95 text-lg">
                             Request New Link
                         </Button>
                     </div>
@@ -210,7 +210,7 @@ const ResetPasswordContent = () => {
                         </div>
                         
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="w-full pt-6 relative z-10">
-                            <Button onClick={() => router.push('/pages/signin')} className="w-full bg-appNav hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all shadow-lg active:scale-95 text-lg">
+                            <Button onClick={() => router.push('/signin')} className="w-full bg-appNav hover:bg-blue-600 text-white py-4 rounded-xl font-bold transition-all shadow-lg active:scale-95 text-lg">
                                 Proceed to Login
                             </Button>
                         </motion.div>
