@@ -24,7 +24,7 @@ export async function handleSocialLogin(userData: AuthResponse) {
     return { success: true };
 }
 
-const test_url: string = "http://localhost:8084/api/v1";
+// const test_url: string = "http://localhost:8084/api/v1";
 const CUSTOMER_BASE_URL = process.env.CUSTOMER_BASE_URL
 
 export async function LoginUser(payload: AuthRequest): Promise<AuthResponse> {

@@ -73,7 +73,7 @@ export const getCustomsDuties = () => fetchAPI<CustomsDuty[]>("/customs-duties")
 /**
  * Fetch a paginated list of users with advanced filtering.
  * ADMIN ONLY
- * Matches GET http://localhost:8084/api/v1/customers/users
+ * Matches GET ${CUSTOMER_API_BASE_URL}/api/v1/customers/users
  */
 export async function getPaginatedUsers(
     params: UserFilterParams

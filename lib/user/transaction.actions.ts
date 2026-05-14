@@ -147,6 +147,52 @@ export async function initiateShippingPayment(
 }
 
 /**
+ * Frontend: Calls initiateConsolidationPayment for provider=stripe/paystack.
+ * Backend (8188): Generates unique -CNSLDT- reference, communicates with provider, returns keys/url.
+ * Frontend: Mounts PaymentElement (Stripe) or redirects (Paystack).
+ * User: Enters card details for consolidation fee.
+ * Provider: Processes payment and redirects to your /verify page.
+ * Frontend: Calls verifyPaymentStatus and triggers your consolidation status update client.
+ */
+export async function initiateConsolidationPayment(
+    bookingId: string,
+    provider: string,
+    payload: PaymentInitiationRequest
+): Promise<PaymentSessionResponse> {
+    const authHeader = await getAuthHeader();
+
+    // Ensure provider is lowercase to avoid URL mapping issues
+    const providerPath = provider.toLowerCase();
+
+    try {
+        // Pointing to the new consolidation-specific endpoint
+        const res = await fetch(
+            `${TRANSACTION_BASE_URL}/shipping/${bookingId}/consolidate/payment/${providerPath}`, 
+            {
+                method: 'POST',
+                headers: { 
+                    ...authHeader, 
+                    'Content-Type': 'application/json',
+                    'accept': '*/*' 
+                },
+                body: JSON.stringify(payload),
+            }
+        );
+
+        if (!res.ok) {
+            const errorMsg = await res.text();
+            throw new Error(errorMsg || `Failed to initiate consolidation payment via ${provider}`);
+        }
+
+        return await res.json();
+        
+    } catch (error: any) {
+        console.error("Consolidation Payment Initiation Error:", error.message);
+        throw error;
+    }
+}
+
+/**
  * Verify the payment status for a specific shipment/booking.
  * Matches GET /api/v1/unified/shipping/{bookingId}/verify
  * Frontend "Post-Payment" Logic
@@ -183,6 +229,50 @@ export async function verifyPaymentStatus(
         
     } catch (error: any) {
         console.error("Payment Verification Error:", error.message);
+        throw error;
+    }
+}
+
+/**
+ * Frontend: Calls verifyConsolidationPaymentStatus after a consolidation payment completes.
+ * Backend (8188): Verifies the unique -CNSLDT- transaction and triggers Booking & Driver microservice updates.
+ * * @param bookingId The original shipping/booking ID
+ * @param reference The unique consolidation reference (e.g., from Paystack callback URL), if available
+ */
+export async function verifyConsolidationPaymentStatus(
+    bookingId: string,
+    reference?: string | null
+): Promise<PaymentVerificationResponse> {
+    const authHeader = await getAuthHeader();
+
+    try {
+        // Construct the base URL for the consolidation verify endpoint
+        let url = `${TRANSACTION_BASE_URL}/shipping/${bookingId}/consolidate/verify`;
+        
+        // Append the specific reference if the payment provider returned one in the URL
+        if (reference) {
+            url += `?reference=${encodeURIComponent(reference)}`;
+        }
+
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: { 
+                ...authHeader, 
+                'accept': '*/*' 
+            },
+            // Verification should always bypass cache for real-time accuracy
+            cache: 'no-store'
+        });
+
+        if (!res.ok) {
+            const errorMsg = await res.text();
+            throw new Error(errorMsg || "Failed to verify consolidation payment status");
+        }
+
+        return await res.json();
+        
+    } catch (error: any) {
+        console.error("Consolidation Payment Verification Error:", error.message);
         throw error;
     }
 }
