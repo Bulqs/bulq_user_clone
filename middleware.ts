@@ -32,6 +32,7 @@ export default async function middleware(req: NextRequest) {
     "/signin",
     "/signup",
     "/welcome",
+    "/oauth2/authorization/google",
 
     
     // Marketing & Info Pages
