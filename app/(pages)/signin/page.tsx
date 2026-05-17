@@ -10,6 +10,8 @@ import { NAVIGATION, User, USER_AUTHORITES, UserAside } from '@/types/user';
 import { LoginUser } from '@/lib/actions';
 import { useUserStore } from '@/lib/utils/store';
 
+const OAUTH_BASE_URL = process.env.CUSTOMER_BASE_URL;
+
 // --- Framer Motion Variants ---
 const pageTransition: Variants = {
     initial: { opacity: 0, x: -20 },
@@ -52,7 +54,7 @@ const UserLogin: React.FC = () => {
     const handleGoogleLogin = () => {
         // If your backend handles the redirect:
         // window.location.href = "http://localhost:8084/oauth2/authorization/google";
-        window.location.href = "https://www.sendbulq.com/oauth2/authorization/google";
+       window.location.href = `${OAUTH_BASE_URL}/oauth2/authorization/google`;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {

@@ -10,6 +10,9 @@ import { NAVIGATION, User, USER_AUTHORITES, UserAside } from '@/types/user';
 import { LoginUser } from '@/lib/actions';
 import { useUserStore } from '@/lib/utils/store';
 
+
+const OAUTH_BASE_URL = process.env.CUSTOMER_BASE_URL;
+
 interface LoginModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -45,7 +48,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSwitchToRegi
 
     const handleGoogleLogin = () => {
         // window.location.href = "http://localhost:8084/oauth2/authorization/google";
-        window.location.href = "https://www.sendbulq.com/oauth2/authorization/google";
+        window.location.href = `${OAUTH_BASE_URL}/oauth2/authorization/google`;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
